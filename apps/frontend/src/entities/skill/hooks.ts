@@ -38,7 +38,7 @@ export function useSkillsInfiniteQuery() {
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
   const [sortState, setSortState] = useState<{ sort: string; order: 'asc' | 'desc' }>({
-    sort: 'mention_count',
+    sort: 'created_at',
     order: 'desc',
   })
   const { sort, order } = sortState

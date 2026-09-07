@@ -42,7 +42,7 @@ router = APIRouter()
 
 DEFAULT_PAGE_SIZE = 25
 
-SORTABLE_SKILL_FIELDS = ("name", "level", "confidence", "market_relevance", "mention_count")
+SORTABLE_SKILL_FIELDS = ("created_at", "name", "level", "confidence", "market_relevance", "mention_count")
 
 
 def _cursor_decode(cursor: str) -> int:
@@ -96,7 +96,7 @@ def list_skills_v2(
     ),
     category: str = Query("", description="Legacy single category filter (use `categories` instead)"),
     pinned: bool = Query(False, description="Only include pinned skills"),
-    sort: str = Query("mention_count", description="Sort field"),
+    sort: str = Query("created_at", description="Sort field"),
     order: str = Query("desc", description="asc or desc"),
     page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=200),
     cursor: str = Query("", description="Opaque pagination cursor"),

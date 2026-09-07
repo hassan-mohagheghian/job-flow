@@ -307,7 +307,7 @@ def list_jobs_v2(
     page_size: int = Query(25, ge=1, le=100),
     cursor: str | None = Query(None),
     query: str | None = Query(None),
-    sort: str = Query("updated_at"),
+    sort: str = Query("created_at"),
     order: str = Query("desc"),
     processing_status: str | None = Query(None),
     tracking_status: list[str] | None = Query(None),

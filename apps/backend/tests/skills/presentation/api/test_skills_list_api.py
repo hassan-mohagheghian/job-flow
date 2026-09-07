@@ -206,7 +206,7 @@ class TestSkillListV2API:
         names = [i["name"] for i in data["items"]]
         assert names == ["Go", "Kubernetes", "Python"]
 
-    def test_default_sort_by_mention_count(self, client, sa_session):
+    def test_default_sort_by_created_at(self, client, sa_session):
         from skills.infrastructure import SQLAlchemySkillRepository
 
         low = _create_skill(sa_session, name="Low")
@@ -216,6 +216,7 @@ class TestSkillListV2API:
         repo.upsert_mentions(high.id, "job", "job-2")
         repo.upsert_mentions(low.id, "job", "job-3")
 
+        # Default list order is newest first (created_at desc), regardless of mentions.
         data = client.get("/api/skills/list").json()
         names = [i["name"] for i in data["items"]]
         assert names == ["High", "Low"]

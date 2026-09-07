@@ -65,7 +65,7 @@ export function JobsTable({
   items, total, loadedCount = 0, isLoading, isFetchingNextPage = false, hasNextPage = false, onFetchNextPage = () => {},
   onProcessV2, onViewDetails, onEdit, onDelete, onTogglePinned, onToggleDismissed, onRetry, onCancel, onApplication,
   showPinnedColumn = true, showRowNumberColumn = false,
-  sort = 'updated_at', order = 'desc', onSortChange = () => {},
+  sort = 'created_at', order = 'desc', onSortChange = () => {},
 }: JobsTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 

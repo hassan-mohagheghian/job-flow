@@ -653,7 +653,7 @@ class SQLAlchemyJobRepository(IJobRepository):
             "fit_score": JobModel.fit_score,
             "success_score": JobModel.success_score,
         }
-        sort_column = sort_map.get(sort, JobModel.updated_at)
+        sort_column = sort_map.get(sort, JobModel.created_at)
         sort_columns = SCORE_SORT_COLUMNS.get(sort, [sort_column])
         if order == "asc":
             q = q.order_by(*(c.asc().nulls_last() for c in sort_columns))
@@ -783,7 +783,7 @@ class SQLAlchemyJobRepository(IJobRepository):
             "fit_score": JobModel.fit_score,
             "success_score": JobModel.success_score,
         }
-        sort_column = sort_map.get(sort, JobModel.updated_at)
+        sort_column = sort_map.get(sort, JobModel.created_at)
         multi = sort in SCORE_SORT_COLUMNS
         sort_columns = SCORE_SORT_COLUMNS.get(sort, [sort_column])
 

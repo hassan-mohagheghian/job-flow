@@ -14,7 +14,7 @@ class ListJobsV2Request:
     page_size: int = 25
     cursor: str | None = None
     query: str | None = None
-    sort: str = "updated_at"
+    sort: str = "created_at"
     order: str = "desc"
     job_ids: list[str] | None = None
     exclude_job_ids: list[str] | None = None

@@ -10,7 +10,7 @@ const JOBS_KEY = 'jobs-v2-infinite'
 export function useJobsInfiniteQuery() {
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
-  const [sortState, setSortState] = useState<{ sort: string; order: 'asc' | 'desc' }>({ sort: 'updated_at', order: 'desc' })
+  const [sortState, setSortState] = useState<{ sort: string; order: 'asc' | 'desc' }>({ sort: 'created_at', order: 'desc' })
   const { sort, order } = sortState
   const [filterProcessingStatus, setFilterProcessingStatus] = useState<ProcessingStatusFilter>('')
   const [filterLocation, setFilterLocation] = useState('')
