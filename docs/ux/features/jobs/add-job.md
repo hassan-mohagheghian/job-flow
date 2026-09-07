@@ -428,7 +428,7 @@ A loading indicator is displayed.
 │ │  TYPE         Product               SALARY       €90k                    │ │
 │ │  LOCATION     Berlin                WORK TYPES   Remote                  │ │
 │ │  VISA         Yes                                                         │ │
-│ │  TRACKING     Ready to Apply                                              │ │
+│ │  TRACKING→APPLICATION Ready to Apply / No application yet            │ │
 │ │                                                                          │ │
 │ │ View full job details ›                                                  │ │
 │ └────────────────────────────────────────────────────────────────────────┘ │
@@ -437,7 +437,9 @@ A loading indicator is displayed.
 
 The summary payload comes from `error.details.job` (id, title, company,
 company_type, location, visa, salary, employment/work types, Overall/Fit/Success
-scores, rank, tracking status, url). "Open application" still uses
+scores, rank, application state (`tracking_status`), url). The Application row
+shows the `TrackingBadge` for the current application status, or "No
+application yet" when the job has no application. "Open application" still uses
 `error.details.job_id`.
 
 ---

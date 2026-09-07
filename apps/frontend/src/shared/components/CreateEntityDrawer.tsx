@@ -142,8 +142,14 @@ function JobSummaryCard({
             <SummaryRow label="Location" value={job.location} />
             <SummaryRow label="Visa" value={job.visa} />
             <SummaryRow
-              label="Tracking"
-              value={job.tracking_status ? <TrackingBadge status={job.tracking_status as TrackingStatus} /> : null}
+              label="Application"
+              value={
+                job.tracking_status ? (
+                  <TrackingBadge status={job.tracking_status as TrackingStatus} />
+                ) : (
+                  <span className="text-muted-foreground">No application yet</span>
+                )
+              }
             />
           </div>
           <div className="min-w-0">
