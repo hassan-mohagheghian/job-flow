@@ -47,7 +47,9 @@ All containers share the `job-search-network` Docker network and communicate via
 All commands are available via the `./start terraform` CLI:
 
 ```bash
-./start terraform up        # init + apply (create/update all resources)
+./start terraform up        # tests (Docker gate) + rebuild images + init + apply
+./start terraform up --skip-tests   # skip test gate (NOT recommended)
+./start terraform up --no-build     # skip rebuild — may deploy STALE code
 ./start terraform down      # destroy all containers, network, images
 ./start terraform destroy   # alias for down
 ./start terraform build     # build Docker images (backend + background)
@@ -57,8 +59,10 @@ All commands are available via the `./start terraform` CLI:
 
 ### What `terraform up` does
 
-1. Runs `terraform init` (downloads Docker provider plugin)
-2. Runs `terraform apply` with `terraform.tfvars.example` (auto-approved)
+1. Runs the pre-deploy test gate (`./scripts/docker-test.sh all`: backend pytest + frontend vitest in separate capped Docker containers) — aborts on failure
+2. Rebuilds all Docker images from current code (backend + background + frontend), so production always reflects the latest changes
+3. Runs `terraform init` (downloads Docker provider plugin)
+4. Runs `terraform apply` with `terraform.tfvars.example` (auto-approved)
 3. Provisions: network, volume, images, all 6 containers
 4. Alembic container runs migrations then exits
 5. Backend + background workers start and stay running

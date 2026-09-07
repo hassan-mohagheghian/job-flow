@@ -1047,14 +1047,32 @@ def _run_terraform_with_vars(args: list[str], auto_approve: bool = False) -> sub
 @terraform_app.command()
 def up(
     build: bool = typer.Option(
-        False, "--build", "-b", help="Build Docker images before applying"
+        True, "--build/--no-build", "-b", help="Rebuild Docker images from current code before applying (default: on)"
+    ),
+    skip_tests: bool = typer.Option(
+        False, "--skip-tests", help="Skip the pre-deploy Docker test gate (NOT recommended)"
     ),
 ):
-    """Start infrastructure with Terraform (build images + apply)"""
+    """Start infrastructure with Terraform (tests + build images + apply)"""
     _header("Terraform: Starting infrastructure")
+
+    if not skip_tests:
+        _log("Running pre-deploy test gate (Docker, capped resources)...")
+        result = subprocess.run(
+            ["./scripts/docker-test.sh", "all"],
+            cwd=str(REPO_ROOT),
+        )
+        if result.returncode != 0:
+            _err("Tests FAILED — aborting terraform up. Fix failures before deploying.")
+            raise typer.Exit(code=1)
+        _ok("All tests passed")
+    else:
+        _warn("Skipping pre-deploy tests (--skip-tests). Deploying untested code!")
 
     if build:
         _build_images()
+    else:
+        _warn("Skipping image rebuild (--no-build). Containers may run STALE code!")
 
     _log("Initializing Terraform...")
     result = _run_terraform(["init", "-backend=false"])

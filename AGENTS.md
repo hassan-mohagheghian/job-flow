@@ -126,6 +126,7 @@ app/
 15. **No database foreign keys across bounded contexts.** The platform will eventually split into microservices, so schemas must stay decoupled between contexts. Foreign keys **within** a single bounded context / schema are acceptable (DDD aggregates and their children are fine). But cross-context links must be **logical references only** — store the referenced entity's id as a plain column (e.g. `profile_id`, `skill_id`, `candidate_id`) **without** a `ForeignKey(...)` constraint or `ondelete` cascade. Never declare FKs between tables of different bounded contexts (e.g. do not FK `candidate_skills.skill_id` to `skill.skills.id`). Enforce referential integrity at the application/repository layer for cross-context links.
 16. **EDD is incremental: domain events are always defined, emitted and documented — but pub/sub is deferred.** Domain events are immutable facts (dataclasses extending `shared.domain.domain_event.DomainEvent`) defined in each context's `domain/events.py`. Services **collect and emit** them through the context's event publisher port during business operations, but the default implementation is an **in-memory collector** (no Redis, no SSE, no outbox) until a transport phase lands. Rules: (a) every event gets a catalog entry under `docs/domain/<context>/events.md` (trigger, payload, when it fires, consumers) — documenting the event is non-negotiable even if nothing consumes it yet; (b) events are emitted by the service that performs the state change, never by callers; (c) event emission must be **best-effort** and never change business behavior; (d) tests assert emitted events via the collector; (e) do **not** build pub/sub/outbox infrastructure in the same change as the events themselves — wire the port to a real transport in a dedicated later phase.
 17. **Never read generated/cache files** — they are regenerable artifacts with zero reasoning value (pure token burn): Python `__pycache__/`, `*.pyc`, `.venv/`, `.pytest_cache/`, `.ruff_cache/`, `.mypy_cache/`, `.coverage`, `*.egg-info/`; JS/TS `node_modules/`, `.next/`, `dist/`, `build/`, `coverage/`, `*.tsbuildinfo`, `.vite/`, `.turbo/`, `*.map`. Read the sources (`package.json`, `pyproject.toml`) instead; view lockfiles (`uv.lock`, `package-lock.json`, `pnpm-lock.yaml`) only to answer exact-version questions.
+18. **All tests MUST run in Docker — never on the host.** Agents must use `./scripts/docker-test.sh` (separate capped containers: backend pytest + frontend vitest, each limited to 1/4 host CPUs and 1/8 host RAM). Direct host runs (`uv run pytest`, `npx vitest`, `./start test`) are forbidden for agents because they pollute the host env and hog CPU/RAM. Note: `docker stats` CPU % is per-core, so `100%` there = 1 fully-used core = the 1/4-host cap working as intended. **Never run Terraform before the tests pass:** `start terraform up` runs the Docker test gate + rebuilds images automatically — do not pass `--skip-tests`/`--no-build` unless the user explicitly asks.
 
 ## Versioning
 
@@ -152,20 +153,15 @@ CI runs `./scripts/check-version.sh` on every push/PR, so a version touched in o
 
 ## Testing
 
+Agents MUST use Docker (rule 18) — the commands below are what
+`./scripts/docker-test.sh` runs *inside* its capped containers, listed here
+for documentation only:
+
 ```bash
-# Backend
-uv run pytest apps/backend/tests/ -v
-
-# Frontend
-cd apps/frontend && npx vitest run
-
-# All
-uv run pytest apps/backend/tests/ -v && cd apps/frontend && npx vitest run
-
-# With coverage (via the dev CLI)
-./start test backend --coverage
-./start test frontend --coverage
-./start test all --coverage
+# Preferred (agents): separate capped containers, 1/4 CPU + 1/8 RAM each
+./scripts/docker-test.sh backend   # backend pytest only
+./scripts/docker-test.sh frontend  # frontend vitest only
+./scripts/docker-test.sh all       # both in parallel
 ```
 
 ## Development Workflow
@@ -201,9 +197,9 @@ Investigate → Write implementation prompt → Update tests/docs → Code → R
    - Keep tests and docs in sync as you code — no drift between code, tests, and docs.
 5. **Refine (after coding)**
    - Run the relevant test suite and fix failures.
-   - Refactor for clarity, then run the checks for the changed layer:
-     - Backend: `uv run pytest apps/backend/tests/ -v`
-     - Frontend: `cd apps/frontend && npx vitest run` plus `npm run lint` and `npm run typecheck`
+    - Refactor for clarity, then run the checks for the changed layer:
+      - Backend: `./scripts/docker-test.sh backend`
+      - Frontend: `./scripts/docker-test.sh frontend` plus `npm run lint` and `npm run typecheck`
    - Re-read your change against the tests and docs and tighten anything inaccurate.
 
 Rule: a change must not alter behavior without the corresponding test and doc updates.
