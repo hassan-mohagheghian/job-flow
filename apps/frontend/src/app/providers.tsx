@@ -6,6 +6,7 @@ import { Toaster } from '@/shared/ui/sonner'
 import { AuthProvider } from '@/shared/lib/auth-context'
 import { AuthGuard } from '@/shared/lib/auth-guard'
 import { queryClient } from '@/shared/lib/query-client'
+import { GlobalAddJobProvider } from '@/features/jobs-v2/components/GlobalAddJobProvider'
 import type { ReactNode } from 'react'
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -14,7 +15,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthGuard>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            {children}
+            <GlobalAddJobProvider>
+              {children}
+            </GlobalAddJobProvider>
             <Toaster />
           </TooltipProvider>
         </QueryClientProvider>

@@ -3,7 +3,7 @@
 ## Purpose
 
 This flow describes how the user adds a new Job by **dragging a link from
-another browser tab** into the app and dropping it onto the Jobs page.
+another browser tab** into the app and dropping it onto **any page**.
 
 The drop only **opens the Add Job drawer pre-filled** with the dropped URL. It
 never auto-creates or auto-queues a job — the user then chooses **Add** (save
@@ -14,19 +14,19 @@ only) or **Add & Queue** (save + process) as usual.
 ## Trigger
 
 The user drags a link from another tab (a job posting) into the app and drops
-it onto either:
+it anywhere on the current page — Jobs, Companies, Skills, Candidate, or any
+other route.
 
-- the **Add Job** button, or
-- **anywhere on the Jobs page**.
-
-If the user is not already on the Jobs page, they first navigate there via the
-Jobs menu item (the drop surface only exists on the Jobs page).
+A global drop surface (`GlobalAddJobProvider`, mounted in the app
+`Providers`) is active on every route **except `/jobs*`**: the Jobs pages
+keep their own page-local overlay + drawer (`DropJobOverlay` in the Jobs
+widget), so the global surface disables itself there to avoid double overlays
+or double drawers.
 
 ---
 
 ## Preconditions
 
-- The user is on the **Jobs page** (drop target present).
 - The dragged payload contains an `http(s)` URL (delivered by the browser via
   `text/uri-list` or `text/plain`).
 
@@ -36,19 +36,16 @@ Jobs menu item (the drop surface only exists on the Jobs page).
 
 ```text
 ┌────────────────────────────────────────────────────────────────┐
-│ Jobs (10)                                                       │
-│                                                    ┌─────────┐ │
-│   [Queue]                                [Add Job] │ <- drop │ │
-│                                                    └─────────┘ │
+│ Any page (Companies, Skills, …)                                 │
 │                                                                │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  …dragging a URL anywhere here shows a                   │  │
-│  │     "Drop to add job" overlay                            │  │
+│  │     "Drop to add job" overlay (global, fixed)            │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                │
+│  Jobs pages: same overlay, owned by the Jobs widget instead.   │
+│  Add Job button (Jobs header): dedicated drop target.          │
 └────────────────────────────────────────────────────────────────┘
-        drop target 1 = Add Job button (highlights emerald on hover)
-        drop target 2 = entire Jobs page (full-page drop surface)
 ```
 
 ---
@@ -56,22 +53,23 @@ Jobs menu item (the drop surface only exists on the Jobs page).
 ## Flow
 
 ```text
-On Jobs page, drag a link from another tab
+On any page, drag a link from another tab
 
         │
 
         ▼
 
-Hover over Add Job button OR any point on the page
+Hover over any point on the page   (/jobs*: page-local overlay instead)
 
         │
 
-        ├──────────────────────────────────────────── Drop over button
-        │           button highlights (emerald ring)
+        ▼
+"Drop to add job" indicator overlay            (global, fixed overlay;
+                                                skipped when the drop was
+                                                already handled, e.g. the
+                                                Add Job button)
         │
-        ▼                                       Drop anywhere on page
-"Drop to add job" indicator overlay            full-page drop surface
-        │
+
         ▼
 Drop the link
 
