@@ -171,8 +171,11 @@ resource "docker_container" "alembic" {
 # =============================================================================
 
 resource "docker_container" "backend" {
-  name  = "${var.project_name}-backend"
+  name = "${var.project_name}-backend"
   image = docker_image.backend.name
+  # Public DNS: host uses systemd-resolved stub (127.0.0.53) with VPN uplink,
+  # which Docker's embedded DNS can't always reach (fetch_sources DNS failures).
+  dns = ["8.8.8.8", "1.1.1.1"]
 
   command = [
     "sh", "-c",
@@ -220,8 +223,11 @@ resource "docker_container" "backend" {
 # =============================================================================
 
 resource "docker_container" "background" {
-  name  = "${var.project_name}-background"
+  name = "${var.project_name}-background"
   image = docker_image.background.name
+  # Public DNS: host uses systemd-resolved stub (127.0.0.53) with VPN uplink,
+  # which Docker's embedded DNS can't always reach (fetch_sources DNS failures).
+  dns = ["8.8.8.8", "1.1.1.1"]
 
   command = [
     "sh", "-c",
