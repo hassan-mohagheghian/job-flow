@@ -1049,25 +1049,13 @@ def up(
     build: bool = typer.Option(
         True, "--build/--no-build", "-b", help="Rebuild Docker images from current code before applying (default: on)"
     ),
-    skip_tests: bool = typer.Option(
-        False, "--skip-tests", help="Skip the pre-deploy Docker test gate (NOT recommended)"
-    ),
 ):
-    """Start infrastructure with Terraform (tests + build images + apply)"""
-    _header("Terraform: Starting infrastructure")
+    """Deploy to production with Terraform (rebuild images + apply).
 
-    if not skip_tests:
-        _log("Running pre-deploy test gate (Docker, capped resources)...")
-        result = subprocess.run(
-            ["./scripts/docker-test.sh", "all"],
-            cwd=str(REPO_ROOT),
-        )
-        if result.returncode != 0:
-            _err("Tests FAILED — aborting terraform up. Fix failures before deploying.")
-            raise typer.Exit(code=1)
-        _ok("All tests passed")
-    else:
-        _warn("Skipping pre-deploy tests (--skip-tests). Deploying untested code!")
+    Does NOT run tests — run 'start terraform test' first; deploying
+    untested code is the user's own responsibility.
+    """
+    _header("Terraform: Starting infrastructure")
 
     if build:
         _build_images()
@@ -1093,6 +1081,31 @@ def up(
     console.print("  Frontend: http://localhost:5173")
     console.print("  Swagger:  http://localhost:5000/api/docs")
     console.print()
+
+
+@terraform_app.command()
+def test(
+    suite: str = typer.Argument(
+        "all", help="Test suite: backend, frontend, or all"
+    ),
+):
+    """Run the test suites in capped Docker containers (backend/frontend/all).
+
+    Run this BEFORE 'start terraform up' — deploying is production-only and
+    never runs tests. It is the user's responsibility to test first.
+    """
+    if suite not in ("backend", "frontend", "all"):
+        _err(f"Unknown suite '{suite}'. Choose: backend, frontend, all.")
+        raise typer.Exit(code=2)
+    _header(f"Terraform: Running {suite} tests (Docker, capped resources)")
+    result = subprocess.run(
+        ["./scripts/docker-test.sh", suite],
+        cwd=str(REPO_ROOT),
+    )
+    if result.returncode != 0:
+        _err(f"'{suite}' tests FAILED. Fix failures before deploying.")
+        raise typer.Exit(code=1)
+    _ok(f"'{suite}' tests passed")
 
 
 @terraform_app.command()

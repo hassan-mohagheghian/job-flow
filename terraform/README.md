@@ -47,9 +47,11 @@ All containers share the `job-search-network` Docker network and communicate via
 All commands are available via the `./start terraform` CLI:
 
 ```bash
-./start terraform up        # tests (Docker gate) + rebuild images + init + apply
-./start terraform up --skip-tests   # skip test gate (NOT recommended)
-./start terraform up --no-build     # skip rebuild — may deploy STALE code
+./start terraform test            # tests only (backend + frontend, capped Docker)
+./start terraform test backend    # backend pytest only
+./start terraform test frontend   # frontend vitest only
+./start terraform up              # PRODUCTION: rebuild images + init + apply (NO tests!)
+./start terraform up --no-build   # skip rebuild — may deploy STALE code
 ./start terraform down      # destroy all containers, network, images
 ./start terraform destroy   # alias for down
 ./start terraform build     # build Docker images (backend + background)
@@ -57,12 +59,18 @@ All commands are available via the `./start terraform` CLI:
 ./start terraform logs      # tail logs from all containers
 ```
 
-### What `terraform up` does
+### What `terraform up` does (production — NO tests)
 
-1. Runs the pre-deploy test gate (`./scripts/docker-test.sh all`: backend pytest + frontend vitest in separate capped Docker containers) — aborts on failure
-2. Rebuilds all Docker images from current code (backend + background + frontend), so production always reflects the latest changes
-3. Runs `terraform init` (downloads Docker provider plugin)
-4. Runs `terraform apply` with `terraform.tfvars.example` (auto-approved)
+1. Rebuilds all Docker images from current code (backend + background + frontend), so production always reflects the latest changes
+2. Runs `terraform init` (downloads Docker provider plugin)
+3. Runs `terraform apply` with `terraform.tfvars.example` (auto-approved)
+
+Testing is a separate step and the user's responsibility:
+
+```bash
+./start terraform test all   # run BEFORE up; aborts deploy thinking on failure
+./start terraform up         # deploy only after tests pass
+```
 3. Provisions: network, volume, images, all 6 containers
 4. Alembic container runs migrations then exits
 5. Backend + background workers start and stay running
