@@ -1068,8 +1068,23 @@ def up(
         _err("Terraform init failed")
         raise typer.Exit(code=1)
 
+    # The image tags (:latest) never change, so plain `apply` sees no diff
+    # and keeps STALE containers running. After a rebuild, force-recreate the
+    # image-based containers so production actually runs the new code.
+    # (Postgres/redis have no build step and keep their state — never replaced.)
+    apply_args = ["apply"]
+    if build:
+        _log("Recreating app containers from rebuilt images...")
+        for resource in (
+            "docker_container.alembic",
+            "docker_container.backend",
+            "docker_container.background",
+            "docker_container.frontend",
+        ):
+            apply_args.append(f"-replace={resource}")
+
     _log("Applying Terraform configuration...")
-    result = _run_terraform_with_vars(["apply"], auto_approve=True)
+    result = _run_terraform_with_vars(apply_args, auto_approve=True)
     if result.returncode != 0:
         _err("Terraform apply failed")
         raise typer.Exit(code=1)
