@@ -57,7 +57,7 @@ export function SkillsTable({
   items, total, loadedCount = 0, isLoading, isFetchingNextPage = false, hasNextPage = false, onFetchNextPage = () => {},
   onViewDetails, onEdit, onDelete, onBreakDown, onMerge, onTogglePinned, showPinnedColumn = true,
   showSelectColumn = false, showRowNumberColumn = false, selectedIds = new Set<number>(), onToggleSelect, onToggleSelectAll,
-  sort = 'created_at', order = 'desc', onSortChange = () => {},
+  sort = 'mention_count', order = 'desc', onSortChange = () => {},
 }: SkillsTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
