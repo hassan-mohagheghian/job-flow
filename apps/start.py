@@ -980,7 +980,9 @@ def _build_images():
         _log("Building frontend locally (npm run build)...")
         build_env = os.environ.copy()
         build_env["BACKEND_URL"] = "http://job-search-backend:5000"
-        build_env["NEXT_PUBLIC_API_URL"] = "http://localhost:5000"
+        # NOTE: do NOT set NEXT_PUBLIC_API_URL — the browser must use the
+        # relative /api rewrite (proxied server-side) so LAN/mobile clients
+        # work. Baking localhost:5000 breaks phones (localhost = the phone).
         result = subprocess.run(
             ["npm", "run", "build"],
             cwd=str(REPO_ROOT / "apps" / "frontend"),

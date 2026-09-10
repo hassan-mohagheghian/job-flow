@@ -275,7 +275,6 @@ resource "docker_container" "frontend" {
 
   env = [
     "PORT=5173",
-    "NEXT_PUBLIC_API_URL=http://localhost:${var.backend_port}",
     "BACKEND_URL=http://${var.project_name}-backend:5000",
   ]
 
