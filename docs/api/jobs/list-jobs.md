@@ -158,8 +158,8 @@ application record (logical `job_id` reference — the value is not stored on th
 job). Values:
 
 - `not_applied` — the job has no application record.
-- `recommended`, `preparing`, `ready_to_apply`, `applied`, `interview`,
-  `offer`, `accepted`, `rejected`, `withdrawn` — match jobs whose application
+- `seen`, `preparing`, `ready_to_apply`, `applied`, `interview`,
+  `offer`, `accepted`, `rejected`, `withdrawn`, `expired` — match jobs whose application
   status equals the value.
 
 `not_applied` returns jobs with **no** application; any other value returns only

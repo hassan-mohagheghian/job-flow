@@ -24,6 +24,7 @@ const STATUS_OPTIONS: ApplicationStatus[] = [
   'accepted',
   'rejected',
   'withdrawn',
+  'expired',
 ]
 
 export function ApplicationTracker({ application }: ApplicationTrackerProps) {

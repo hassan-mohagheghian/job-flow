@@ -21,12 +21,16 @@ Workspace (`/jobs/{job_id}/application`).
 
 | Value | Meaning |
 | ----- | ------- |
-| `recommended` | Default on creation; the job is worth applying to. |
+| `seen` | Default on creation; the job has been seen. |
 | `preparing` | The user is preparing (generating plan/documents). |
 | `ready_to_apply` | Artifacts are ready. |
 | `applied` | The user applied (may set `applied_at`). |
+| `interview` | Interviewing with the company. |
+| `offer` | Received an offer. |
+| `accepted` | Offer accepted / hired. |
 | `rejected` | Outcome rejected. |
 | `withdrawn` | The user withdrew. |
+| `expired` | Posting-side terminal: the job is no longer accepting applications. |
 
 ## Document Types
 
@@ -55,7 +59,7 @@ node. A skill-gap roadmap for an application lives in the Roadmaps context
 ## Status Timeline
 
 Every status transition is recorded as an `application_status_timeline` row
-(`status`, `changed_at`). On application creation a `recommended` event is
+(`status`, `changed_at`). On application creation a `seen` event is
 written with `changed_at = created_at`. Each status change appends a new event;
 the time defaults to **now** but can be overridden (`timeline_at` on the PATCH
 body) or corrected/removed later via the timeline endpoints. The application's
@@ -64,7 +68,7 @@ body) or corrected/removed later via the timeline endpoints. The application's
 ## Business Rules
 
 - An application is created explicitly for a job (`POST /api/applications {job_id}`),
-  defaulting to status `recommended`. There is at most one application per job
+  defaulting to status `seen`. There is at most one application per job
   (`get_by_job_id`).
 - Documents are **versioned**: each successful generation writes a new row (higher
   `version`); edits bump `version`.

@@ -154,7 +154,7 @@ new roadmap/document appears; the card shows the result and a **Dismiss** button
 | Element | Behavior |
 | ------- | -------- |
 | Back to Job | `router.push('/jobs?job={id}')`; the Jobs page opens the detail drawer for that job. |
-| Status select | `PATCH /api/applications/{id}` with the chosen status; list: recommended, preparing, ready_to_apply, applied, interview, offer, accepted, rejected, withdrawn. The change is recorded in the status timeline (time = now). |
+| Status select | `PATCH /api/applications/{id}` with the chosen status; list: preparing, ready_to_apply, applied, interview, offer, accepted, rejected, withdrawn, expired. The change is recorded in the status timeline (time = now). |
 | Status timeline | Each status node shows its time in an editable `datetime-local` input (`PATCH /api/applications/timeline/{id}`); a trash icon deletes the node (`DELETE /api/applications/timeline/{id}`). See `application-tracker.md`. |
 | Follow-ups | Add (note + optional date), toggle done, delete — see `application-tracker.md`. |
 | Roadmap Generate | `POST /api/applications/{id}/roadmap/generate` → 202 (`artifact="roadmap"`), SSE progress, roadmap refetch on completion. Label becomes **Regenerate** once a roadmap exists. |

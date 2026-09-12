@@ -39,7 +39,7 @@ Returns the full application detail: core fields + `status_timeline`,
 
 `POST /api/applications`  — body `{ "job_id": "..." }`
 
-Creates the application with status `recommended`; returns the full detail (201).
+Creates the application with status `seen`; returns the full detail (201).
 The pipeline allows at most one application per job.
 
 ## Update Application
@@ -47,8 +47,9 @@ The pipeline allows at most one application per job.
 `PATCH /api/applications/{application_id}` — body `{ "status"?, "applied_at"?,
 "timeline_at"? }`
 
-Allows changing `status` (one of `recommended`, `preparing`, `ready_to_apply`,
-`applied`, `rejected`, `withdrawn`) and `applied_at` (ISO date or `null` to
+Allows changing `status` (one of `seen`, `preparing`, `ready_to_apply`,
+`applied`, `interview`, `offer`, `accepted`, `rejected`, `withdrawn`,
+`expired`) and `applied_at` (ISO date or `null` to
 clear). Changing `status` records a new timeline node whose time defaults to
 **now**; pass `timeline_at` (ISO datetime) to override it.
 

@@ -56,6 +56,7 @@ const TRACKING_FILTER_LABELS: Record<TrackingStatusFilter, string> = {
   accepted: "Accepted",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
+  expired: "Expired",
 };
 
 const TRACKING_OPTIONS = Object.entries(TRACKING_FILTER_LABELS).map(

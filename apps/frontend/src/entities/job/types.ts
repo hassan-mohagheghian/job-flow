@@ -105,6 +105,7 @@ export type TrackingStatus =
   | 'accepted'
   | 'rejected'
   | 'withdrawn'
+  | 'expired'
 
 export type TrackingStatusFilter = TrackingStatus
 

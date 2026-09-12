@@ -12,6 +12,7 @@ describe('ApplicationStatusBadge', () => {
       { status: 'applied', label: 'Applied' },
       { status: 'rejected', label: 'Rejected' },
       { status: 'withdrawn', label: 'Withdrawn' },
+      { status: 'expired', label: 'Expired' },
     ] as const
 
     for (const { status, label } of cases) {

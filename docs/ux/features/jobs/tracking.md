@@ -4,7 +4,7 @@
 
 The Jobs page shows a **Tracking** column and filter that reflect where each job
 stands in the **application funnel**: not applied → applied → interview → offer →
-accepted (or rejected / withdrawn). The tracking status is derived from the
+accepted (or rejected / withdrawn / expired). The tracking status is derived from the
 job's **application status** (the Applications context); a job with no
 application shows **Not Applied**. It complements the existing **Status**
 (processing) column rather than replacing it.
@@ -17,7 +17,7 @@ Values:
 | Value | Meaning |
 | ----- | ------- |
 | `not_applied` | The job has no application record (derived, not stored). |
-| `recommended` | Application created; not yet prepared. |
+| `seen` | Application created; not yet prepared. |
 | `preparing` | Preparing materials. |
 | `ready_to_apply` | Materials ready; not yet submitted. |
 | `applied` | Application submitted. |
@@ -26,6 +26,7 @@ Values:
 | `accepted` | Offer accepted / hired. |
 | `rejected` | Rejected by the company. |
 | `withdrawn` | Application withdrawn. |
+| `expired` | Posting-side terminal: the job is no longer accepting applications. |
 
 The tracking value is **not stored on the job** (no new job column). It is
 resolved on read by the Jobs API via the application repository (logical
@@ -48,7 +49,7 @@ resolved on read by the Jobs API via the application repository (logical
 - **Tracking column**: a color-coded badge (`TrackingBadge`) between the Rec and
   Status columns. Jobs without an application show the gray **Not Applied** badge.
 - **Tracking filter** (`JobsToolbar`): a select labeled **Tracking** with options
-  All / Not Applied / Applied / Interview / Offer / Accepted / Rejected / Withdrawn.
+   All / Not Applied / Applied / Interview / Offer / Accepted / Rejected / Withdrawn / Expired.
   It maps to the `tracking_status` query param on `GET /api/jobs/list` and counts
   toward the active-filter count / Clear button.
 
@@ -73,7 +74,7 @@ Both drawers show a read-only **Tracking** badge:
 The application status select (`ApplicationTracker`) and badge
 (`ApplicationStatusBadge`) now include the new funnel values
 `interview`, `offer`, and `accepted` alongside the existing
-recommended / preparing / ready_to_apply / applied / rejected / withdrawn.
+seen / preparing / ready_to_apply / applied / rejected / withdrawn / expired.
 
 ```mermaid
 flowchart LR
@@ -81,8 +82,11 @@ flowchart LR
     RA --> A[applied] --> I[interview] --> O[offer] --> AC[accepted]
     A --> REJ[rejected]
     A --> W[withdrawn]
+    A --> EX[expired]
     I --> REJ
     O --> REJ
+    I --> EX
+    O --> EX
 ```
 
 ## Backend

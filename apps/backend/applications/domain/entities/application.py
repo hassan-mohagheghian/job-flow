@@ -31,7 +31,8 @@ class ApplicationStatus:
     timeline node when the application is created, cannot be deleted, and is not
     user-selectable. The actionable funnel is seen → preparing →
     ready_to_apply → applied → interview → offer → accepted, with rejected /
-    withdrawn as terminal states.
+    withdrawn / expired as terminal states (expired is posting-side: the job
+    is no longer accepting applications).
     """
 
     SEEN = "seen"
@@ -43,6 +44,7 @@ class ApplicationStatus:
     ACCEPTED = "accepted"
     REJECTED = "rejected"
     WITHDRAWN = "withdrawn"
+    EXPIRED = "expired"
 
     ALL = (
         SEEN,
@@ -54,6 +56,7 @@ class ApplicationStatus:
         ACCEPTED,
         REJECTED,
         WITHDRAWN,
+        EXPIRED,
     )
 
     SELECTABLE = (
@@ -65,6 +68,7 @@ class ApplicationStatus:
         ACCEPTED,
         REJECTED,
         WITHDRAWN,
+        EXPIRED,
     )
 
 

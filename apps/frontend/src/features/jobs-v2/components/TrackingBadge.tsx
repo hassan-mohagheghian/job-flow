@@ -17,6 +17,7 @@ const statusConfig: Record<string, { color: string; label: string }> = {
   accepted: { color: 'bg-emerald-600/15 text-emerald-600 border-emerald-600/20', label: 'Accepted' },
   rejected: { color: 'bg-red-500/15 text-red-500 border-red-500/20', label: 'Rejected' },
   withdrawn: { color: 'bg-gray-500/15 text-gray-500 border-gray-500/20', label: 'Withdrawn' },
+  expired: { color: 'bg-orange-500/15 text-orange-500 border-orange-500/20', label: 'Expired' },
 }
 
 export function TrackingBadge({ status, className }: TrackingBadgeProps) {

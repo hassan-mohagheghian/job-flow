@@ -70,6 +70,7 @@ TRACKING_STATUSES = {
     "accepted",
     "rejected",
     "withdrawn",
+    "expired",
 }
 
 

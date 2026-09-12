@@ -44,7 +44,7 @@ Workspace at /jobs/{id}/application
    status `recommended` (201) and the three sections appear.
 3. **Track the pipeline**: the tracker section shows status and its timeline.
    - The user moves status through `recommended → preparing → ready_to_apply → applied`
-     (or `rejected` / `withdrawn`). Each change appends a timeline node with the time set
+      (or `rejected` / `withdrawn` / `expired`). Each change appends a timeline node with the time set
      to *now* (editable in the timeline box).
 4. **Schedule follow-ups**: add a note + optional date; toggle ☐/☑ as actions happen.
 5. **Generate the roadmap and documents** (see the generation flow), then mark the

@@ -1489,6 +1489,7 @@ dropdown omitted `Seen`, `Preparing` and `Ready to Apply`):
 │ ▢ Accepted             │
 │ ▢ Rejected             │
 │ ▢ Withdrawn            │
+│ ▢ Expired              │
 │ Clear                  │  clears this filter
 └────────────────────────┘
 ```

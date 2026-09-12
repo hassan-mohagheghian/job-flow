@@ -60,7 +60,7 @@
 ### Application
 - **What**: A per-job application record (`applications` context, schema `application`) that drives the Job Application Workspace (`/jobs/{job_id}/application`). Aggregates follow-ups and versioned documents (tailored resume / cover letter).
 - **Cross-context**: `job_id` is a logical reference to the Jobs context — plain column, no FK (AGENTS.md rule 15). At most one application per job; creation defaults status to `recommended`.
-- **Status**: `recommended` → `preparing` → `ready_to_apply` → `applied` (outcomes `rejected` / `withdrawn`).
+- **Status**: `seen` → `preparing` → `ready_to_apply` → `applied` (outcomes `rejected` / `withdrawn` / `expired`).
 - **Artifacts**: `application_documents` (markdown content, `document_type` `tailored_resume` | `cover_letter`), versioned per successful generation. A skill-gap roadmap for the application lives in the Roadmaps context (source `APPLICATION`).
 - **Generation**: documents are produced asynchronously by the processing pipeline (`application_resume` / `application_cover_letter` executions) — a consumer of existing job/company/candidate intelligence, never a re-analysis.
 - **Events (EDD)**: domain events (see `docs/domain/applications/events.md`) are emitted through the `ApplicationEventPublisher` port during create/update/follow-up/document operations; the default implementation is an in-memory collector — pub/sub transport is deferred (AGENTS.md rule 16).

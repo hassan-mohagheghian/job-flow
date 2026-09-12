@@ -8,6 +8,7 @@ export type ApplicationStatus =
   | 'accepted'
   | 'rejected'
   | 'withdrawn'
+  | 'expired'
 
 export type ApplicationDocumentType = 'tailored_resume' | 'cover_letter'
 

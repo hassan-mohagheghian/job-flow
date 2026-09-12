@@ -47,7 +47,7 @@ ApplicationTracker
 
 | Element | Behavior |
 | ------- | -------- |
-| Status select | Options: `recommended`, `preparing`, `ready_to_apply`, `applied`, `interview`, `offer`, `accepted`, `rejected`, `withdrawn`. On change → `PATCH /api/applications/{id} {status}`. The backend records a new timeline node with `changed_at = now`. This is the job-tracking status surfaced on the Jobs list and drawers — see `docs/ux/features/jobs/tracking.md`. |
+| Status select | Options: `preparing`, `ready_to_apply`, `applied`, `interview`, `offer`, `accepted`, `rejected`, `withdrawn`, `expired`. On change → `PATCH /api/applications/{id} {status}`. The backend records a new timeline node with `changed_at = now`. This is the job-tracking status surfaced on the Jobs list and drawers — see `docs/ux/features/jobs/tracking.md`. |
 | Timeline time | Each node shows its `changed_at` as a `datetime-local` input. Editing it commits `PATCH /api/applications/timeline/{id} {changed_at}` (ISO with local offset). |
 | Timeline delete | Trash icon (visible on row hover) → `DELETE /api/applications/timeline/{id}`. Removes that node from the history. |
 | Follow-up toggle | Circle button `☐`/`☑`; toggling sends `PATCH /api/applications/follow-ups/{id} {completed: true|false}`. Completed rows render the note struck-through and dimmed. |
