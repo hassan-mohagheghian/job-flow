@@ -61,13 +61,16 @@ resolved on read by the Jobs API via the application repository (logical
 
 ## Job Detail / Job Edit Drawers
 
-Both drawers show a read-only **Tracking** badge:
+Both drawers show an editable **Tracking** status (`TrackingStatusSelect`):
 
-- **Job Detail drawer**: a "Tracking" row in the details grid showing the badge.
-- **Job Edit drawer**: a read-only "Tracking" field showing the badge with a hint
-  ("Edit in the application workspace"). The tracking status is **not editable**
-  here; it is changed via the application status select in the application
-  workspace.
+- **Job Detail drawer**: a "Tracking" row with a status select. Changing it
+  PATCHes the application status immediately (same mutation as the application
+  workspace) and refreshes the job list/detail caches.
+- **Job Edit drawer**: a "Tracking" field with the same select, independent of
+  Save. The header also keeps the "Application" button to the workspace.
+- Jobs with no application show a **Mark expired** button instead, which
+  creates the application and sets it to `expired` in one step (e.g. triaging
+  a dead posting from the create-drawer duplicate card).
 
 ## Application Workspace
 

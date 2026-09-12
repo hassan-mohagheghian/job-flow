@@ -19,7 +19,7 @@ import {
 } from "@/shared/ui/select";
 import { Button } from "@/shared/ui/button";
 import { CircleNotch, Pencil, Warning, X, Plus } from "@phosphor-icons/react";
-import { TrackingBadge } from "./TrackingBadge";
+import { TrackingStatusSelect } from "./TrackingStatusSelect";
 import { jobApi } from "@/entities/job/api";
 import type {
   JobDetail,
@@ -203,11 +203,8 @@ export function JobEditDrawer({ jobId, onOpenChange }: JobEditDrawerProps) {
               />
             </Field>
             <Field label="Tracking">
-              <div className="flex items-center gap-2 pt-1">
-                <TrackingBadge status={detail.tracking_status} />
-                <span className="text-2xs text-muted-foreground">
-                  Edit in the application workspace
-                </span>
+              <div className="pt-1">
+                <TrackingStatusSelect jobId={detail.id} />
               </div>
             </Field>
             <Field label="Role">

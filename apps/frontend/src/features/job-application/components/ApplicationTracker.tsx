@@ -15,7 +15,7 @@ interface ApplicationTrackerProps {
   application: ApplicationDetail
 }
 
-const STATUS_OPTIONS: ApplicationStatus[] = [
+export const STATUS_OPTIONS: ApplicationStatus[] = [
   'preparing',
   'ready_to_apply',
   'applied',

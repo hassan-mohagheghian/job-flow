@@ -31,7 +31,7 @@ import { GradeBadge } from "@/shared/components/GradeBadge";
 import { RankBadge } from "@/shared/components/RankBadge";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
-import { TrackingBadge } from "./TrackingBadge";
+import { TrackingStatusSelect } from "./TrackingStatusSelect";
 import { CompanyPicker } from "./CompanyPicker";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -628,7 +628,7 @@ function JobDetailContent({
             <DetailRow
               label="Tracking"
               value={
-                <TrackingBadge status={detail.tracking_status} className="align-middle" />
+                <TrackingStatusSelect jobId={detail.id} />
               }
             />
           </div>

@@ -25,9 +25,9 @@ import { readClipboardUrl } from "@/shared/lib/clipboard";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { GradeBadge } from "@/shared/components/GradeBadge";
 import { RankBadge } from "@/shared/components/RankBadge";
-import type { JobSummary, TrackingStatus } from "@/entities/job/types";
+import type { JobSummary } from "@/entities/job/types";
 import { formatCompanyType } from "@/entities/company/lib";
-import { TrackingBadge } from "@/features/jobs-v2/components/TrackingBadge";
+import { TrackingStatusSelect } from "@/features/jobs-v2/components/TrackingStatusSelect";
 
 export type CreateEntityMode = "job" | "company";
 
@@ -143,13 +143,7 @@ function JobSummaryCard({
             <SummaryRow label="Visa" value={job.visa} />
             <SummaryRow
               label="Application"
-              value={
-                job.tracking_status ? (
-                  <TrackingBadge status={job.tracking_status as TrackingStatus} />
-                ) : (
-                  <span className="text-muted-foreground">No application yet</span>
-                )
-              }
+              value={<TrackingStatusSelect jobId={job.id} />}
             />
           </div>
           <div className="min-w-0">

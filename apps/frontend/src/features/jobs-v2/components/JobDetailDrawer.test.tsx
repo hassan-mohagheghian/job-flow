@@ -4,6 +4,7 @@ import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { JobDetailDrawer } from './JobDetailDrawer'
 import { jobApi } from '@/entities/job/api'
+import { applicationApi } from '@/entities/application/api'
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -12,6 +13,14 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/entities/job/api', () => ({
   jobApi: {
     getDetail: vi.fn(),
+  },
+}))
+
+vi.mock('@/entities/application/api', () => ({
+  applicationApi: {
+    getByJob: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
   },
 }))
 
@@ -46,6 +55,11 @@ const sampleDetail = {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(jobApi.getDetail).mockResolvedValue(sampleDetail as any)
+  vi.mocked(applicationApi.getByJob).mockResolvedValue({
+    id: 'app-1',
+    job_id: 'job-1',
+    status: 'applied',
+  } as any)
 })
 
 function renderDrawer(
@@ -172,10 +186,11 @@ describe('JobDetailDrawer published by', () => {
 })
 
 describe('JobDetailDrawer tracking', () => {
-  it('renders the job tracking badge', async () => {
+  it('renders an editable tracking status select with the current status', async () => {
     renderDrawer('job-1')
 
-    await waitFor(() => expect(screen.getByText('Applied')).toBeInTheDocument())
+    const trigger = await screen.findByRole('combobox', { name: 'Tracking status' })
+    expect(trigger).toHaveTextContent('applied')
   })
 })
 

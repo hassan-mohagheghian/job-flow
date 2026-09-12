@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreateEntityDrawer, { type CreateEntityFormData } from './CreateEntityDrawer'
+import { applicationApi } from '@/entities/application/api'
 
 vi.mock('@/shared/components/Drawer', () => ({
   Drawer: ({ open, children }: any) => (open ? <div>{children}</div> : null),
@@ -14,6 +16,21 @@ const readClipboardUrlMock = vi.fn()
 vi.mock('@/shared/lib/clipboard', () => ({
   readClipboardUrl: (...args: any[]) => readClipboardUrlMock(...args),
 }))
+
+vi.mock('@/entities/application/api', () => ({
+  applicationApi: {
+    getByJob: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+}))
+
+function renderWithProviders(ui: React.ReactElement) {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
+}
 
 beforeEach(() => {
   readClipboardUrlMock.mockReset()
@@ -227,7 +244,7 @@ describe('CreateEntityDrawer — error state', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('renders a summary of the existing job below the error', () => {
+  it('renders a summary of the existing job below the error', async () => {
     const existingJob = {
       id: 'job-dup',
       title: 'Senior Backend Engineer',
@@ -247,7 +264,7 @@ describe('CreateEntityDrawer — error state', () => {
       tracking_status: null,
       updated_at: null,
     }
-    render(
+    renderWithProviders(
       <CreateEntityDrawer
         open
         onOpenChange={vi.fn()}
@@ -264,6 +281,7 @@ describe('CreateEntityDrawer — error state', () => {
     expect(screen.getByText('#3')).toBeInTheDocument()
     const posting = screen.getByRole('link', { name: 'Open job posting' })
     expect(posting).toHaveAttribute('href', 'https://acme.example/careers/senior')
+    expect(await screen.findByRole('button', { name: /mark expired/i })).toBeInTheDocument()
   })
 
   it('invokes onViewJobDetails when View full job details is clicked', () => {
@@ -287,7 +305,7 @@ describe('CreateEntityDrawer — error state', () => {
       url: null,
       updated_at: null,
     }
-    render(
+    renderWithProviders(
       <CreateEntityDrawer
         open
         onOpenChange={vi.fn()}
