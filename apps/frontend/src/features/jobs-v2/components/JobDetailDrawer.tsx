@@ -32,6 +32,7 @@ import { RankBadge } from "@/shared/components/RankBadge";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
 import { TrackingStatusSelect } from "./TrackingStatusSelect";
+import { DismissDialog } from "./DismissDialog";
 import { CompanyPicker } from "./CompanyPicker";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -520,6 +521,46 @@ function ProcessingErrorBanner({
   );
 }
 
+function DismissToggle({ jobId, jobTitle, dismissed }: { jobId: string; jobTitle: string | null; dismissed?: boolean }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const setDismissed = useMutation({
+    mutationFn: ({ dismissed, note }: { dismissed: boolean; note?: string }) =>
+      jobApi.setDismissed(jobId, dismissed, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
+      queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+  });
+  if (dismissed) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setDismissed.mutate({ dismissed: false })} disabled={setDismissed.isPending}>
+        {setDismissed.isPending ? 'Restoring…' : 'Undismiss'}
+      </Button>
+    );
+  }
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        Mark as dismissed
+      </Button>
+      <DismissDialog
+        open={open}
+        onOpenChange={setOpen}
+        jobTitle={jobTitle ?? undefined}
+        onDismiss={(note) => {
+          setDismissed.mutate(
+            { dismissed: true, note: note || undefined },
+            { onSuccess: () => setOpen(false) },
+          );
+        }}
+        isPending={setDismissed.isPending}
+      />
+    </>
+  );
+}
+
 function JobDetailContent({
   detail,
   onReprocess,
@@ -628,7 +669,10 @@ function JobDetailContent({
             <DetailRow
               label="Tracking"
               value={
-                <TrackingStatusSelect jobId={detail.id} />
+                <div className="flex flex-col gap-1.5">
+                  <TrackingStatusSelect jobId={detail.id} />
+                  <DismissToggle jobId={detail.id} jobTitle={detail.title} dismissed={detail.dismissed} />
+                </div>
               }
             />
           </div>

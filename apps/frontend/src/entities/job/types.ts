@@ -287,6 +287,7 @@ export interface JobDetail {
   links: JobLinkItem[]
   tags: string[]
   tracking_status: TrackingStatus | null
+  dismissed?: boolean
   easy_apply: boolean | null
   updated_at: string | null
   created_at: string | null

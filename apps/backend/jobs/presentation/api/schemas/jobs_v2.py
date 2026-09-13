@@ -271,6 +271,7 @@ class JobDetailResponseSchema(BaseModel):
     notes: list[JobNoteItem] = Field(default_factory=list)
     links: list[JobLinkItem] = Field(default_factory=list)
     tracking_status: str | None = None
+    dismissed: bool = False
     easy_apply: bool | None = None
     updated_at: str | None = None
     created_at: str | None = None

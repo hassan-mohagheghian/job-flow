@@ -56,7 +56,6 @@ interface JobsPageProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onTogglePinned: (id: string) => void
-  onToggleDismissed: (id: string) => void
   onRetry?: (id: string) => void
   onCancel?: (id: string) => void
   onApplication?: (id: string) => void
@@ -95,7 +94,7 @@ export function JobsPage({
   filterTrackingStatus, onFilterTrackingStatusChange,
   filterCreatedDate, onFilterCreatedDateChange,
   activeFilterCount, onClearFilters,
-  onProcessV2, onReprocess, onViewDetails, onEdit, onDelete, onTogglePinned, onToggleDismissed, onRetry, onCancel, onApplication, isProcessing,
+  onProcessV2, onReprocess, onViewDetails, onEdit, onDelete, onTogglePinned, onRetry, onCancel, onApplication, isProcessing,
   showPinnedColumn = true, onTogglePinnedColumn,
   showRowNumberColumn = false, onToggleRowNumberColumn,
   queueDrawerOpen, onQueueDrawerOpenChange, queueReloadKey,
@@ -205,7 +204,6 @@ export function JobsPage({
             onEdit={onEdit}
             onDelete={onDelete}
             onTogglePinned={onTogglePinned}
-            onToggleDismissed={onToggleDismissed}
             onRetry={onRetry}
             onCancel={onCancel}
             onApplication={onApplication}

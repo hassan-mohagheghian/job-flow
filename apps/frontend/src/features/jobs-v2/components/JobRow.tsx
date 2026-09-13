@@ -20,7 +20,6 @@ interface JobRowProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onTogglePinned: (id: string, pinned: boolean) => void
-  onToggleDismissed: (id: string) => void
   onRetry?: (id: string) => void
   onCancel?: (id: string) => void
   onApplication?: (id: string) => void
@@ -31,7 +30,7 @@ interface JobRowProps {
 }
 
 export function JobRow({
-  job, onProcessV2, onViewDetails, onEdit, onDelete, onTogglePinned, onToggleDismissed, onRetry, onCancel, onApplication,
+  job, onProcessV2, onViewDetails, onEdit, onDelete, onTogglePinned, onRetry, onCancel, onApplication,
   showPinnedColumn = true, showRowNumberColumn = false, rowNumber, gridTemplate,
 }: JobRowProps) {
   const processingStatus: PStatus | null = job.latest_processing_execution?.status ?? null
@@ -57,17 +56,6 @@ export function JobRow({
       {showPinnedColumn && (
         <div className="py-2 px-2 flex items-center justify-center" onClick={e => e.stopPropagation()}>
           <PinButton pinned={job.pinned} onToggle={() => onTogglePinned(job.id, !job.pinned)} entityLabel="job" />
-          {!job.dismissed && (
-            <button
-              type="button"
-              aria-label="Dismiss job"
-              onClick={() => onToggleDismissed(job.id)}
-              className="inline-flex items-center justify-center w-6 h-6 rounded text-muted-foreground/50 hover:text-orange-500 transition-colors"
-              title="Dismiss — mark as dismissed"
-            >
-              ×
-            </button>
-          )}
         </div>
       )}
       <div className="py-2 px-3 flex items-center">
