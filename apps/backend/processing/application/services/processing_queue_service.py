@@ -11,10 +11,23 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from urllib.parse import urlparse
 
 from processing.domain.enums import ExecutionStatus
 from processing.domain.entities.processing_execution import ProcessingExecution
 from processing.domain.repositories.processing_execution_repository import IProcessingExecutionRepository
+
+
+def _truncate_url(url: str | None, max_length: int = 60) -> str | None:
+    """Return a shortened display label derived from *url*, or ``None``."""
+    if not url:
+        return None
+    parsed = urlparse(url)
+    label = parsed.netloc + parsed.path
+    label = label.rstrip("/")
+    if len(label) > max_length:
+        label = label[: max_length - 1] + "\u2026"
+    return label or None
 
 
 class ProcessingQueueService:
@@ -136,7 +149,12 @@ class ProcessingQueueService:
     @staticmethod
     def _title(job, company, execution: ProcessingExecution) -> str:
         if job:
-            return job.get("title") or job.get("role") or execution.target_id
+            return (
+                job.get("title")
+                or job.get("role")
+                or _truncate_url(job.get("url"))
+                or execution.target_id
+            )
         if company:
-            return company.get("name") or execution.target_id
+            return company.get("name") or _truncate_url(company.get("url")) or execution.target_id
         return execution.target_id

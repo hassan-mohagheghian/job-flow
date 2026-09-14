@@ -336,7 +336,7 @@ export function ProcessingDrawer({
           applyPendingEvents(executionId);
         }
       } catch {
-        loadedRef.current.add(executionId);
+        // Do NOT mark as loaded — allow retry on next tick / SSE event.
       } finally {
         inFlightRef.current.delete(executionId);
       }
@@ -465,6 +465,28 @@ export function ProcessingDrawer({
     setWorkflow,
     clearWorkflow,
   ]);
+
+  // Periodic refresh — safety net when SSE events are missed or the drawer
+  // was opened after events already fired.  Only refreshes while there are
+  // active (processing/queued) entries.
+  useEffect(() => {
+    if (!open) return;
+    const hasActive =
+      snapshot.processing.length > 0 || snapshot.queued.length > 0;
+    if (!hasActive) return;
+    const id = setInterval(() => {
+      loadSnapshot();
+      for (const entry of [
+        ...snapshot.processing,
+        ...snapshot.queued,
+      ]) {
+        if (matchesTarget(entry)) {
+          loadWorkflow(entry.execution_id);
+        }
+      }
+    }, 5_000);
+    return () => clearInterval(id);
+  }, [open, snapshot, loadSnapshot, loadWorkflow, matchesTarget]);
 
   const runAction = useCallback(
     async (label: string, action: () => Promise<unknown>) => {

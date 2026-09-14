@@ -1,6 +1,9 @@
 import type { SSEEventEnvelope, SSEEventType } from '@/entities/processing/types'
 import { AUTH_TOKEN_KEY, SSE_RECONNECT_BASE_DELAY, SSE_RECONNECT_MAX_DELAY } from '@/shared/config/constants'
 
+let enableLogging = false
+export function setSSELogging(enabled: boolean) { enableLogging = enabled }
+
 // Prefer a direct backend connection when NEXT_PUBLIC_API_URL is baked in
 // (local dev: avoids the Next dev-proxy gzip buffering documented in
 // docs/api/sse/processing-events.md). Fall back to the same-origin relative
@@ -53,11 +56,20 @@ function connect() {
 
   for (const type of EVENT_TYPES) {
     socket.addEventListener(type, (e) => {
+      let data: SSEEventEnvelope
       try {
-        const data: SSEEventEnvelope = JSON.parse((e as MessageEvent).data)
-        listeners.forEach((listener) => listener(type, data))
+        data = JSON.parse((e as MessageEvent).data)
       } catch {
-        // ignore malformed events
+        return
+      }
+      for (const listener of listeners) {
+        try {
+          listener(type, data)
+        } catch (err) {
+          if (enableLogging) {
+            console.error('[SSE] listener error', type, err)
+          }
+        }
       }
     })
   }
