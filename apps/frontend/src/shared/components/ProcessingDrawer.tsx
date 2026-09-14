@@ -27,6 +27,7 @@ import { subscribeProcessingEvents } from "@/shared/api/processingEvents";
 import type {
   QueueEntry,
   QueueSnapshot,
+  SSEEventEnvelope,
   WorkflowStep,
   WorkflowProgress,
 } from "@/entities/processing/types";
@@ -267,6 +268,7 @@ export function ProcessingDrawer({
   const workflowsRef = useRef<Record<string, WorkflowProgress | null>>({});
   const loadedRef = useRef<Set<string>>(new Set());
   const inFlightRef = useRef<Set<string>>(new Set());
+  const pendingEventsRef = useRef<Map<string, SSEEventEnvelope[]>>(new Map());
 
   const matchesTarget = useCallback(
     (entry: QueueEntry) => {
@@ -298,6 +300,25 @@ export function ProcessingDrawer({
     setWorkflows({ ...workflowsRef.current });
   }, []);
 
+  const applyPendingEvents = useCallback(
+    (executionId: string) => {
+      const pending = pendingEventsRef.current.get(executionId);
+      if (!pending || pending.length === 0) return;
+      const existing = workflowsRef.current[executionId];
+      if (!existing) return;
+      let workflow = existing;
+      for (const evt of pending) {
+        const step = evt.payload?.step;
+        if (step) {
+          workflow = mergeWorkflowStep(workflow, step);
+        }
+      }
+      pendingEventsRef.current.delete(executionId);
+      setWorkflow(executionId, workflow);
+    },
+    [setWorkflow],
+  );
+
   const loadWorkflow = useCallback(
     async (executionId: string) => {
       if (workflowsRef.current[executionId]) return;
@@ -312,6 +333,7 @@ export function ProcessingDrawer({
         loadedRef.current.add(executionId);
         if (detail.workflow) {
           setWorkflow(executionId, detail.workflow);
+          applyPendingEvents(executionId);
         }
       } catch {
         loadedRef.current.add(executionId);
@@ -319,7 +341,7 @@ export function ProcessingDrawer({
         inFlightRef.current.delete(executionId);
       }
     },
-    [setWorkflow],
+    [setWorkflow, applyPendingEvents],
   );
 
   const ensureWorkflow = useCallback(
@@ -367,18 +389,37 @@ export function ProcessingDrawer({
         if (!incoming) return;
         const existing = workflowsRef.current[data.execution_id];
         if (!existing) {
-          // No workflow yet — the execution started after the drawer's initial
-          // fetch returned null. Bootstrap from the server now that the runner
-          // has persisted the workflow progress.
+          // Buffer the event until the workflow is loaded from the server.
+          if (!pendingEventsRef.current.has(data.execution_id)) {
+            pendingEventsRef.current.set(data.execution_id, []);
+          }
+          pendingEventsRef.current.get(data.execution_id)!.push(data);
           ensureWorkflow(data.execution_id);
           return;
         }
         setWorkflow(data.execution_id, mergeWorkflowStep(existing, incoming));
+        // Update entry card's current_step from the incoming step.
+        if (type === "workflow.step.started" && incoming.title) {
+          setSnapshot((prev) => ({
+            ...prev,
+            processing: prev.processing.map((e) =>
+              e.execution_id === data.execution_id
+                ? { ...e, current_step: incoming.title }
+                : e,
+            ),
+            queued: prev.queued.map((e) =>
+              e.execution_id === data.execution_id
+                ? { ...e, current_step: incoming.title }
+                : e,
+            ),
+          }));
+        }
         return;
       }
 
       if (type === "queue.entry.removed") {
         loadedRef.current.delete(data.execution_id);
+        pendingEventsRef.current.delete(data.execution_id);
         clearWorkflow(data.execution_id);
         loadSnapshot();
         return;
@@ -392,6 +433,24 @@ export function ProcessingDrawer({
       ) {
         if (!workflowsRef.current[data.execution_id]) {
           ensureWorkflow(data.execution_id);
+        } else {
+          applyPendingEvents(data.execution_id);
+        }
+        // Clear current_step on terminal events (snapshot refresh will handle it).
+        if (type !== "execution.started") {
+          setSnapshot((prev) => ({
+            ...prev,
+            processing: prev.processing.map((e) =>
+              e.execution_id === data.execution_id
+                ? { ...e, current_step: null }
+                : e,
+            ),
+            queued: prev.queued.map((e) =>
+              e.execution_id === data.execution_id
+                ? { ...e, current_step: null }
+                : e,
+            ),
+          }));
         }
       }
       loadSnapshot();
@@ -402,6 +461,7 @@ export function ProcessingDrawer({
     loadSnapshot,
     loadWorkflow,
     ensureWorkflow,
+    applyPendingEvents,
     setWorkflow,
     clearWorkflow,
   ]);
