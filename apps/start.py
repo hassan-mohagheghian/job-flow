@@ -977,6 +977,10 @@ def _build_images():
         return True, "background"
 
     def build_frontend():
+        _log("Cleaning frontend build cache...")
+        frontend_next = REPO_ROOT / "apps" / "frontend" / ".next"
+        if frontend_next.exists():
+            shutil.rmtree(frontend_next, ignore_errors=True)
         _log("Building frontend locally (npm run build)...")
         build_env = os.environ.copy()
         build_env["BACKEND_URL"] = "http://job-search-backend:5000"
