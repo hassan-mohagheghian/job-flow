@@ -90,6 +90,7 @@ export interface JobSummary {
   success_score: number | null
   rank: number | null
   tracking_status: string | null
+  recommendation: string | null
   url: string | null
   updated_at: string | null
 }

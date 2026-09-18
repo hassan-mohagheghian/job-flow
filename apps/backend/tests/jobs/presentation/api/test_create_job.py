@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from jobs.infrastructure.models.job_model import JobModel
+from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
 from processing.infrastructure.models.processing_execution_model import ProcessingExecutionModel
 
 
@@ -136,6 +137,26 @@ def test_create_duplicate_linkedin_job_returns_409(client, test_db):
     assert body["error"]["message"] == "A Job with the same primary URL already exists."
     assert body["error"]["details"]["job_id"] == first.json()["id"]
     assert body["error"]["details"]["job"]["id"] == first.json()["id"]
+
+
+def test_create_duplicate_job_includes_recommendation(client, test_db):
+    """The duplicate error response includes the recommendation from job analysis."""
+    url = "https://www.linkedin.com/jobs/view/5555555555/"
+    with patch("shared.infrastructure.taskiq.client.enqueue_execution_sync"):
+        first = client.post("/api/jobs", json={"job_post_url": url})
+        assert first.status_code == 201
+
+    job_id = first.json()["id"]
+    analysis = JobAnalysisModel(
+        job_id=job_id, recommendation="apply", payload=None, user_id="test-user"
+    )
+    test_db.add(analysis)
+    test_db.commit()
+
+    second = client.post("/api/jobs", json={"job_post_url": url})
+    assert second.status_code == 409
+    body = second.json()
+    assert body["error"]["details"]["job"]["recommendation"] == "apply"
 
 
 def test_create_linkedin_different_job_ids_succeed(client, test_db):

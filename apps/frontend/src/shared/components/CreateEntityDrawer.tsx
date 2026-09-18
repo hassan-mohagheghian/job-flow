@@ -28,6 +28,7 @@ import { RankBadge } from "@/shared/components/RankBadge";
 import type { JobSummary } from "@/entities/job/types";
 import { formatCompanyType } from "@/entities/company/lib";
 import { TrackingStatusSelect } from "@/features/jobs-v2/components/TrackingStatusSelect";
+import { RecommendationBadge } from "@/features/jobs-v2/components/RecommendationBadge";
 
 export type CreateEntityMode = "job" | "company";
 
@@ -141,6 +142,10 @@ function JobSummaryCard({
             )}
             <SummaryRow label="Location" value={job.location} />
             <SummaryRow label="Visa" value={job.visa} />
+            <SummaryRow
+              label="Recommendation"
+              value={<RecommendationBadge recommendation={job.recommendation} />}
+            />
             <SummaryRow
               label="Application"
               value={<TrackingStatusSelect jobId={job.id} />}

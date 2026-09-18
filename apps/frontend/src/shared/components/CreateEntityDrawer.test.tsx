@@ -262,6 +262,7 @@ describe('CreateEntityDrawer — error state', () => {
       company_id: null,
       company_type: 'Product',
       tracking_status: null,
+      recommendation: 'apply',
       updated_at: null,
     }
     renderWithProviders(
@@ -279,6 +280,7 @@ describe('CreateEntityDrawer — error state', () => {
     expect(screen.getByText('Berlin')).toBeInTheDocument()
     expect(screen.getByText('85')).toBeInTheDocument()
     expect(screen.getByText('#3')).toBeInTheDocument()
+    expect(screen.getByText('Apply')).toBeInTheDocument()
     const posting = screen.getByRole('link', { name: 'Open job posting' })
     expect(posting).toHaveAttribute('href', 'https://acme.example/careers/senior')
     expect(await screen.findByRole('button', { name: /mark expired/i })).toBeInTheDocument()
@@ -302,6 +304,7 @@ describe('CreateEntityDrawer — error state', () => {
       success_score: null,
       rank: null,
       tracking_status: null,
+      recommendation: null,
       url: null,
       updated_at: null,
     }

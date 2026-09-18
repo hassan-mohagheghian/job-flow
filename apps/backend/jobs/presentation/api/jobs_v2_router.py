@@ -110,6 +110,7 @@ def create_job(
     exec_repo: SQLAlchemyProcessingExecutionRepository = Depends(get_processing_execution_repo),
     company_repo: SQLAlchemyCompanyRepository = Depends(get_company_repo),
     application_repo: SQLAlchemyApplicationRepository = Depends(get_application_repo),
+    analysis_repo: SQLAlchemyJobAnalysisRepository = Depends(get_job_analysis_repo),
 ):
     """Create a new job from a job posting URL.
 
@@ -119,15 +120,18 @@ def create_job(
     """
     existing = find_duplicate_job(repo, body.job_post_url)
     if existing:
+        existing_id = existing.get("id")
+        recommendations = analysis_repo.recommendations_by_job_ids([existing_id])
         raise JobAlreadyExistsError(
-            job_id=existing.get("id"),
+            job_id=existing_id,
             job=_job_summary(
                 existing,
-                rank=repo.score_rank(existing["id"]),
+                rank=repo.score_rank(existing_id),
                 company_type=_linked_company_type(existing, company_repo),
-                tracking_status=application_repo.statuses_by_job_ids([existing["id"]]).get(
-                    existing["id"]
+                tracking_status=application_repo.statuses_by_job_ids([existing_id]).get(
+                    existing_id
                 ),
+                recommendation=recommendations.get(existing_id),
             ),
         )
 
@@ -200,6 +204,7 @@ def _job_summary(
     rank: int | None = None,
     company_type: str | None = None,
     tracking_status: str | None = None,
+    recommendation: str | None = None,
 ) -> dict[str, Any]:
     """Build a compact summary of an existing job for the duplicate error.
 
@@ -222,6 +227,7 @@ def _job_summary(
         "success_score": job.get("success_score"),
         "rank": rank,
         "tracking_status": tracking_status,
+        "recommendation": recommendation,
         "url": job.get("url"),
         "updated_at": job.get("updated_at"),
     }

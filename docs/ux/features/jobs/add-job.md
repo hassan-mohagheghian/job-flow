@@ -427,7 +427,8 @@ A loading indicator is displayed.
 │ │  COMPANY      Acme GmbH             EMPLOYMENT   Full-time               │ │
 │ │  TYPE         Product               SALARY       €90k                    │ │
 │ │  LOCATION     Berlin                WORK TYPES   Remote                  │ │
-│ │  VISA         Yes                                                         │ │
+│ │  VISA         Yes                                                        │ │
+│ │  RECOMMENDATION [Apply]                                                  │ │
 │ │  TRACKING→APPLICATION Ready to Apply / No application yet            │ │
 │ │                                                                          │ │
 │ │ View full job details ›                                                  │ │
@@ -437,10 +438,12 @@ A loading indicator is displayed.
 
 The summary payload comes from `error.details.job` (id, title, company,
 company_type, location, visa, salary, employment/work types, Overall/Fit/Success
-scores, rank, application state (`tracking_status`), url). The Application row
-shows the `TrackingBadge` for the current application status, or "No
-application yet" when the job has no application. "Open application" still uses
-`error.details.job_id`.
+scores, rank, application state (`tracking_status`), recommendation, url). The
+Recommendation row shows the AI recommendation badge (Apply / Consider / Skip)
+when analysis has run, or "—" when no recommendation is available. The
+Application row shows the `TrackingBadge` for the current application status, or
+"No application yet" when the job has no application. "Open application" still
+uses `error.details.job_id`.
 
 ---
 
