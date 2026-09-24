@@ -85,6 +85,14 @@ class TestCompanyPinnedV2API:
         data = client.get("/api/companies/list").json()
         assert data["items"][0]["pinned"] is False
 
+    def test_get_detail_carries_pinned(self, client, sa_session):
+        company = _create_company(sa_session, name="Tech Corp")
+
+        assert client.get(f"/api/companies/{company.id}").json()["pinned"] is False
+
+        client.put(f"/api/companies/{company.id}/pinned", json={"pinned": True})
+        assert client.get(f"/api/companies/{company.id}").json()["pinned"] is True
+
     def test_set_pinned_missing_company_returns_404(self, client, sa_session):
         resp = client.put("/api/companies/does-not-exist/pinned", json={"pinned": True})
         assert resp.status_code == 404

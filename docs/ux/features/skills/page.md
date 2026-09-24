@@ -54,11 +54,11 @@ Skills Page
 │ ⛭ Skills (128)                    Loaded 25 of 128          ↻  + Add Skill   │
 ├───────────────────────────────────────────────────────────────────────────────┤
 │ Search .........................            [Category ▾⌕] [Pinned] [Columns] [Clear]│
-│ # │ Select │ Pin │ Name │ Category │ Level │ Roles │ Demand │ Conf. │ Created │ Mentions │
-│───│───────│─────│─────────────────────────────────────────────────────────────│
-│ 1 │       │ ●  │ K8s  │ engineering│ Lv.4 │ DevOps│ 90%   │ 85%   │ 2m      │ 3        │
-│ 2 │       │ ○  │ Kafka│ technical │ Lv.2 │ Data  │ 70%   │ 60%   │ 5m      │ 1        │
-│ 3 │       │ ○  │ DDD  │ domain    │ Lv.3 │ Backend│ —    │ 45%   │ 1h      │ 0        │
+│ # │ Select │ Name │ Category │ Level │ Roles │ Demand │ Conf. │ Created │ Mentions │
+│──────────────────────────────────────────────────────────────────────────────────────────────────────────────────│
+│ 1 │       │ K8s  │ engineering│ Lv.4 │ DevOps│ 90%   │ 85%   │ 2m      │ 3        │
+│ 2 │       │ Kafka│ technical │ Lv.2 │ Data  │ 70%   │ 60%   │ 5m      │ 1        │
+│ 3 │       │ DDD  │ domain    │ Lv.3 │ Backend│ —    │ 45%   │ 1h      │ 0        │
 │                                                                               │
 │                                        Loading more skills...                 │
 │                                                                               │
@@ -106,7 +106,6 @@ Responsibilities
 - Search skills.
 - Filter skills by multiple categories (OR semantics).
 - Filter skills by pinned state.
-- Toggle the Pin column.
 - Clear active filters.
 
 Controls
@@ -116,7 +115,7 @@ Controls
 | Search   | Search by name, role, path, or alias.           |
 | Category | Multi-select category filter (searchable dropdown; OR across selected categories). |
 | Pinned   | Toggle pinned-only view.                        |
-| Columns  | Show / hide the Row number, Select and Pin columns. |
+| Columns  | Show / hide the Row number and Select columns. (Pinned state is managed from the Skill Detail Drawer.) |
 | Clear    | Clears all active filters.                      |
 
 Search is debounced (300ms) via the shared `DebouncedInput` primitive.
@@ -256,7 +255,6 @@ Configuration
 | ---------- | -------------------------------------------------- |
 | #          | Row number within the loaded result set (toggleable) |
 | Select     | Checkbox toggling row selection (multi-select)     |
-| Pin        | Pushpin toggle for pinned skills                   |
 | Name       | Skill name + origin badge (AI/Manual) + alias count badge |
 | Category   | All category badges for the skill (one per category) |
 | Level      | Skill proficiency level (Lv.1 … Lv.10)             |
@@ -267,8 +265,9 @@ Configuration
 | Mentions   | Total job/company mentions referencing this skill (sortable) |
 
 There is no `Actions` column — row actions are revealed on hover (see
-`features/skills/skill-row.md#actions`). The Row number, Select and Pin columns
-are hidden by default; each can be toggled via the toolbar Columns dropdown.
+`features/skills/skill-row.md#actions`). The Row number and Select columns are
+hidden by default; each can be toggled via the toolbar Columns dropdown.
+Pinned state is managed from the Skill Detail Drawer header, not from the row.
 
 Rows highlight on hover (and while any inner control has focus) with a muted
 background and an inset ring, so the focused row is always visually identifiable
@@ -301,14 +300,10 @@ The only bulk action today is **Merge N into...**. See
 
 ## Pin
 
-A leading pushpin button toggling the skill's pinned flag.
-
-- Empty pin: not pinned.
-- Filled (primary color) pin: pinned.
-
-The toggle is optimistic — the pin updates immediately and is rolled back on
-failure. The button is a separate interactive element and does not trigger row
-selection.
+The row itself has **no** pin button. Pinned state is shown and toggled from
+the **Skill Detail Drawer** header (see `features/skills/skill-detail.md`).
+The drawer header pushpin is optimistic — the pin updates immediately and is
+rolled back on failure.
 
 ## Name
 

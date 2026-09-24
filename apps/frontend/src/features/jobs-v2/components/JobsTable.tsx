@@ -21,11 +21,9 @@ interface JobsTableProps {
   onViewDetails: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onTogglePinned: (id: string, pinned: boolean) => void
   onRetry?: (id: string) => void
   onCancel?: (id: string) => void
   onApplication?: (id: string) => void
-  showPinnedColumn?: boolean
   showRowNumberColumn?: boolean
   sort?: string
   order?: 'asc' | 'desc'
@@ -44,7 +42,6 @@ interface ColumnDef {
   scoreOptions?: ScoreSortOption[]
 }
 
-const PIN_COLUMN: ColumnDef = { label: 'Pin' }
 const ROW_NUMBER_COLUMN: ColumnDef = { label: '#' }
 
 const COLUMN_DEFS: ColumnDef[] = [
@@ -62,8 +59,8 @@ const COLUMN_DEFS: ColumnDef[] = [
 
 export function JobsTable({
   items, total, loadedCount = 0, isLoading, isFetchingNextPage = false, hasNextPage = false, onFetchNextPage = () => {},
-  onProcessV2, onViewDetails, onEdit, onDelete, onTogglePinned, onRetry, onCancel, onApplication,
-  showPinnedColumn = true, showRowNumberColumn = false,
+  onProcessV2, onViewDetails, onEdit, onDelete, onRetry, onCancel, onApplication,
+  showRowNumberColumn = false,
   sort = 'created_at', order = 'desc', onSortChange = () => {},
 }: JobsTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -72,7 +69,6 @@ export function JobsTable({
 
   const defaultTemplate = [
     ...(showRowNumberColumn ? [LEADING_COLUMN_WIDTH] : []),
-    ...(showPinnedColumn ? [LEADING_COLUMN_WIDTH] : []),
     COLUMN_GRID_TEMPLATE,
   ].join(' ')
 
@@ -80,7 +76,6 @@ export function JobsTable({
 
   const visibleColumnDefs = [
     ...(showRowNumberColumn ? [ROW_NUMBER_COLUMN] : []),
-    ...(showPinnedColumn ? [PIN_COLUMN] : []),
     ...COLUMN_DEFS,
   ]
   const gridStyle = { gridTemplateColumns: gridTemplate }
@@ -221,11 +216,9 @@ export function JobsTable({
                   onViewDetails={onViewDetails}
                   onEdit={onEdit}
                   onDelete={onDelete}
-                  onTogglePinned={(_id, pinned) => onTogglePinned(job.id, pinned)}
                   onRetry={onRetry}
                   onCancel={onCancel}
                   onApplication={onApplication}
-                  showPinnedColumn={showPinnedColumn}
                   showRowNumberColumn={showRowNumberColumn}
                   rowNumber={virtualItem.index + 1}
                   gridTemplate={gridTemplate}

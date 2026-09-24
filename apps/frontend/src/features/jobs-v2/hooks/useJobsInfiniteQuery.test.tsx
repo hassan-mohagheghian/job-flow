@@ -519,6 +519,8 @@ describe('useJobsInfiniteQuery.pinnedMutation', () => {
       expect(result.current.items).toHaveLength(1)
     })
 
+    qc.setQueryData(['job-detail', 'job-1'], { id: 'job-1', pinned: false } as any)
+
     act(() => {
       result.current.pinnedMutation.mutate({ jobId: 'job-1', pinned: true })
     })
@@ -528,6 +530,8 @@ describe('useJobsInfiniteQuery.pinnedMutation', () => {
       const pages = cached[0]?.[1]?.pages ?? []
       expect(pages[0].items[0].pinned).toBe(true)
     })
+
+    expect(qc.getQueryData(['job-detail', 'job-1'])).toMatchObject({ pinned: true })
 
     act(() => { resolvePinned({ pinned: true }) })
     await waitFor(() => {
@@ -544,6 +548,8 @@ describe('useJobsInfiniteQuery.pinnedMutation', () => {
       expect(result.current.items).toHaveLength(1)
     })
 
+    qc.setQueryData(['job-detail', 'job-1'], { id: 'job-1', pinned: false } as any)
+
     await act(async () => {
       result.current.pinnedMutation.mutate({ jobId: 'job-1', pinned: true })
     })
@@ -555,5 +561,7 @@ describe('useJobsInfiniteQuery.pinnedMutation', () => {
     const cached = qc.getQueriesData<{ pages: { items: JobListItem[] }[] }>({ queryKey: ['jobs-v2-infinite'] })
     const pages = cached[0]?.[1]?.pages ?? []
     expect(pages[0].items[0].pinned).toBe(false)
+
+    expect(qc.getQueryData(['job-detail', 'job-1'])).toMatchObject({ pinned: false })
   })
 })

@@ -186,8 +186,8 @@ describe('JobsToolbar created-date filter', () => {
 })
 
 describe('JobsToolbar columns toggle', () => {
-  it('renders a Columns dropdown when a toggle handler is provided', () => {
-    renderToolbar({ onTogglePinnedColumn: vi.fn() })
+  it('renders a Columns dropdown when a row-number toggle handler is provided', () => {
+    renderToolbar({ onToggleRowNumberColumn: vi.fn() })
     expect(screen.getByText('Columns')).toBeInTheDocument()
   })
 
@@ -196,31 +196,21 @@ describe('JobsToolbar columns toggle', () => {
     expect(screen.queryByText('Columns')).not.toBeInTheDocument()
   })
 
-  it('shows a check on the Pinned option when the column is visible', async () => {
-    const user = userEvent.setup()
-    renderToolbar({ showPinnedColumn: true, onTogglePinnedColumn: vi.fn() })
-    await user.click(screen.getByText('Columns'))
-    const menu = await screen.findByRole('menu')
-    expect(within(menu).getByText('Pinned')).toBeInTheDocument()
-  })
-
-  it('reports a column toggle when the Pinned option is clicked', async () => {
-    const user = userEvent.setup()
-    const onTogglePinnedColumn = vi.fn()
-    renderToolbar({ showPinnedColumn: false, onTogglePinnedColumn })
-    await user.click(screen.getByText('Columns'))
-    const option = within(await screen.findByRole('menu')).getByText('Pinned')
-    await user.click(option)
-    expect(onTogglePinnedColumn).toHaveBeenCalledWith(true)
-  })
-
   it('shows the Row number option and reports its toggle', async () => {
     const user = userEvent.setup()
     const onToggleRowNumberColumn = vi.fn()
-    renderToolbar({ showRowNumberColumn: false, onToggleRowNumberColumn, onTogglePinnedColumn: vi.fn() })
+    renderToolbar({ showRowNumberColumn: false, onToggleRowNumberColumn })
     await user.click(screen.getByText('Columns'))
     const option = within(await screen.findByRole('menu')).getByText('Row number')
     await user.click(option)
     expect(onToggleRowNumberColumn).toHaveBeenCalledWith(true)
+  })
+
+  it('does not list a Pinned option in the Columns dropdown', async () => {
+    const user = userEvent.setup()
+    renderToolbar({ showRowNumberColumn: true, onToggleRowNumberColumn: vi.fn() })
+    await user.click(screen.getByText('Columns'))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).queryByText('Pinned')).not.toBeInTheDocument()
   })
 })

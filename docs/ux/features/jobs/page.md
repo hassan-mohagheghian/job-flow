@@ -62,12 +62,12 @@ Jobs Page
 │ Sort ▼                                         Filters ▼                                   Refresh          │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                              │
-│ # │ Pin │ Job │ Company │ Location │ Scores │ Rec │ Processing │ Updated │
+│ # │ Job │ Company │ Location │ Scores │ Rec │ Processing │ Updated │
 │──────────────────────────────────────────────────────────────────────────────────────────────────────────────│
 │                                                                                                              │
-│ 1 │ ●  │ Senior Backend Engineer │ GetYourGuide │ Berlin │ [A+] #2 │ O 94 │ S 91 │ F 95 │ ★ Apply │ Ready │ 2m │
-│ 2 │ ○  │ Backend Engineer        │ Karla        │ Berlin │ [A+] #5 │ O 90 │ S 88 │ F 90 │ ☆ Apply │ Running │ now │
-│ 3 │ ○  │ Python Developer        │ Flexa        │ Remote │ [A] #9  │ O 83 │ S 84 │ F 86 │ — Skip │ Failed │ 5m │
+│ 1 │ Senior Backend Engineer │ GetYourGuide │ Berlin │ [A+] #2 │ O 94 │ S 91 │ F 95 │ ★ Apply │ Ready │ 2m │
+│ 2 │ Backend Engineer        │ Karla        │ Berlin │ [A+] #5 │ O 90 │ S 88 │ F 90 │ ☆ Apply │ Running │ now │
+│ 3 │ Python Developer        │ Flexa        │ Remote │ [A] #9  │ O 83 │ S 84 │ F 86 │ — Skip │ Failed │ 5m │
 │                                                                                                              │
 │                                         Loading more jobs...                                                 │
 │                                                                                                              │
@@ -142,7 +142,7 @@ Controls
 | Tracking       | Multi-select filter by application tracking status (OR). |
 | Date           | Filter by created-at preset (Today / Yesterday / Last Week / Last Month). |
 | Sort           | Sort current result set.                 |
-| Columns        | Show / hide the Row number and Pin columns. |
+| Columns        | Show / hide the Row number column. (Pinned state is managed from the Job Details Drawer.) |
 | Clear          | Clears all active filters.               |
 | Refresh        | Reload current query.                    |
 
@@ -311,7 +311,6 @@ Selecting a row opens the Job Details Drawer.
 | Column         | Description                                         |
 | -------------- | --------------------------------------------------- |
 | #              | Row number within the loaded result set (toggleable) |
-| Pin            | Pushpin toggle for pinned jobs                     |
 | Job            | Job title and employment type                       |
 | Company        | Company logo and company name                       |
 | Location       | City, country or Remote                             |
@@ -326,9 +325,9 @@ Selecting a row opens the Job Details Drawer.
 | Updated        | Relative update time                                |
 
 There is no `Actions` column — row actions are revealed on hover (see
-`# Row Actions` below). The Row number column is hidden by default; the Pin
-column is shown by default.
-Both can be toggled via the toolbar Columns dropdown.
+`# Row Actions` below). The Row number column is hidden by default and can be
+toggled via the toolbar Columns dropdown. Pinned state is managed from the Job
+Details Drawer header, not from the row.
 
 Rows support **dynamic height**: when a cell's content (especially Tags) exceeds
 one line, the row grows to fit up to two lines. Content exceeding two lines is
@@ -419,16 +418,10 @@ Remote
 
 ## Pin
 
-Displays a pushpin toggle for the job's pinned flag.
-
-```text
-●   pinned
-
-○   not pinned
-```
-
-The toggle is optimistic and does not reload the list. Activating the Pinned
-filter in the toolbar shows only pinned jobs.
+The row itself has **no** pin button. Pinned state is shown and toggled from
+the **Job Details Drawer** header (see `# Job Details Drawer`). The drawer
+header pushpin is optimistic and does not reload the list. Activating the
+Pinned filter in the toolbar shows only pinned jobs.
 
 ---
 
@@ -1023,7 +1016,7 @@ The Job Details drawer (shared `Drawer`, default `lg`, placement `right`)
 shows a single scrollable page:
 
 ```text
-┌─ Job Details ───────────────────────────── Application  ↻  ✎  ✕ ┐
+┌─ Job Details ─────────────────────── [●] Application  ↻  ✎  ✕ ┐
 │ [GradeBadge]  Overall: 78   Success: 74   Fit: 82  #3  [Why]│ ← score strip
 │                                                         │
 │ Software Engineer (Senior)                              │
@@ -1067,11 +1060,12 @@ shows a single scrollable page:
   the popover open and clicking again closes it. The popover lists *Why it
   fits*, *Chance of success* and *Concerns* — the same content that used to
   be an inline `Scores Explanation` section.
-- **Header actions**: `[Application]` opens the application workspace, a
-  `↻ Reprocess` ghost button re-queues the job (same `onProcessV2` flow as the
-  row's Reprocess action — the Queue drawer opens and the execution list
-  refreshes), and `✎ Edit` opens the edit drawer. Reprocess renders only when a
-  reprocess handler is provided.
+- **Header actions**: a pushpin **Pin** toggle (managed as described in
+  `features/jobs/pinned-job.md`), `[Application]` opens the application
+  workspace, a `↻ Reprocess` ghost button re-queues the job (same
+  `onProcessV2` flow as the row's Reprocess action — the Queue drawer opens
+  and the execution list refreshes), and `✎ Edit` opens the edit drawer.
+  Reprocess renders only when a reprocess handler is provided.
 - **Recommendation** is highlighted with `border-primary/20 bg-primary/5`
   (matching the Company Detail).
 - **Published by** sits just before **Processing** at the end of the drawer
@@ -1398,7 +1392,7 @@ Search preserves
 
 Supported filters
 
-- Pin
+- Pinned (see `# Pinned Filter` below)
 - Recommendation
 - Processing Status
 - Location

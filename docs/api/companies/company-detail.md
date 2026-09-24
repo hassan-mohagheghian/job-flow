@@ -57,6 +57,7 @@ for the same path.
   "logo_url": "https://...",
   "founded_year": "2015",
   "job_count": 3,
+  "pinned": false,
   "status": "completed",
   "current_node": null,
   "progress_pct": 100.0,

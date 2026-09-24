@@ -45,8 +45,6 @@ interface CompaniesPageProps {
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   onTogglePinned: (id: string, pinned: boolean) => void
-  showPinnedColumn?: boolean
-  onTogglePinnedColumn?: (value: boolean) => void
   showRowNumberColumn?: boolean
   onToggleRowNumberColumn?: (value: boolean) => void
   onRelate: (companyId: string, mainCompanyId: string | null) => void
@@ -74,7 +72,6 @@ export function CompaniesPage({
   filterPinned, onFilterPinnedChange,
   activeFilterCount, onClearFilters,
   onViewDetails, onReprocess, onEdit, onDelete, onTogglePinned,
-  showPinnedColumn = true, onTogglePinnedColumn,
   showRowNumberColumn = false, onToggleRowNumberColumn,
   onRelate, relatePending,
   queueDrawerOpen, onQueueDrawerOpenChange,
@@ -148,8 +145,6 @@ export function CompaniesPage({
         items={items}
         activeFilterCount={activeFilterCount}
         onClearFilters={onClearFilters}
-        showPinnedColumn={showPinnedColumn}
-        onTogglePinnedColumn={onTogglePinnedColumn}
         showRowNumberColumn={showRowNumberColumn}
         onToggleRowNumberColumn={onToggleRowNumberColumn}
       />
@@ -165,8 +160,6 @@ export function CompaniesPage({
         onReprocess={onReprocess}
         onEdit={onEdit}
         onDelete={onDelete}
-        onTogglePinned={onTogglePinned}
-        showPinnedColumn={showPinnedColumn}
         showRowNumberColumn={showRowNumberColumn}
         sort={sort}
         order={order}
@@ -182,6 +175,7 @@ export function CompaniesPage({
         onOpenChange={onDetailCompanyIdChange}
         onReprocess={onReprocess}
         onEdit={onEdit}
+        onTogglePinned={onTogglePinned}
         onRelate={onRelate}
         relatePending={relatePending}
         onOpenJob={onOpenJob}

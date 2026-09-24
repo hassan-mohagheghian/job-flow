@@ -10,7 +10,7 @@ The Skill Detail drawer shows everything the AI knows about a skill.
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
-│ </> Kubernetes [AI]   Edit                                ✕ │
+│ </> Kubernetes [AI]  [●]  Edit                          ✕ │
 ├────────────────────────────────────────────────────────────┤
 │ ★ Lv.4   Confidence: 85%   Market: 90%                    │
 │                                                            │
@@ -66,6 +66,7 @@ flowchart LR
 | Element      | Behavior                                         |
 | ------------ | ------------------------------------------------ |
 | Title        | Skill name + OriginBadge.                        |
+| Pin button   | Pushpin toggle for the skill's pinned flag (`[●]` pinned / `[○]` not pinned), shown first in the header before Edit. Optimistic — updates immediately, rolled back on failure. |
 | Edit button  | Switches to the Edit drawer (`onEdit`).          |
 | Close        | Closes the drawer, clears `?skill=` param.       |
 

@@ -77,11 +77,11 @@ Placement is right by default; all variants become full-screen on mobile.
 │ Search .......................................................................       │
 │ Sort ▼                  Filters ▼                                        Refresh     │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
-│ # │ Pin │ Job                  │ Company    │ Location │ Scores        │ Tags         │ Rec │ Tracking│ Proc.  │ Updated │
+│ # │ Job                  │ Company    │ Location │ Scores        │ Tags         │ Rec │ Tracking│ Proc.  │ Updated │
 │─────────────────────────────────────────────────────────────────────────────────────────────────────────────│
-│ 1 │ ●  │ Senior Backend Eng.  │ GetYourGuid│ Berlin   │ [A++] #2 O 94 S 91 F 95 │ [python] [remote] │ Apply│ [Applied]│ Ready  │ 2m      │
-│ 2 │ ○  │ Backend Engineer     │ Karla      │ Berlin   │ [A+] #5 O 90 S 88 F 90  │ [java]    │ Apply│ [Interview]│ Running│ now    │
-│ 3 │ ○  │ Python Developer     │ Flexa      │ Remote   │ [A] #9 O 83 S 84 F 86   │            │ Skip │ [Not Applied]│ Dismissed│ 5m   │
+│ 1 │ Senior Backend Eng.  │ GetYourGuid│ Berlin   │ [A++] #2 O 94 S 91 F 95 │ [python] [remote] │ Apply│ [Applied]│ Ready  │ 2m      │
+│ 2 │ Backend Engineer     │ Karla      │ Berlin   │ [A+] #5 O 90 S 88 F 90  │ [java]    │ Apply│ [Interview]│ Running│ now    │
+│ 3 │ Python Developer     │ Flexa      │ Remote   │ [A] #9 O 83 S 84 F 86   │            │ Skip │ [Not Applied]│ Dismissed│ 5m   │
 │                                                                                     │
 │                                       Loading more jobs...                          │
 └─────────────────────────────────────────────────────────────────────────────────────┘
@@ -390,14 +390,14 @@ Full specs: `docs/ux/features/rules/`.
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
 │ Search ............................................        [Industry ▾] [Type ▾] [Status ▾] [Pinned] [Columns] [Clear]│
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
-│ # │ Pin │ Name │ Industry │ Type │ Location │ Size │ Jobs │ Scores │ Status │ Updated │ Created │
-│───│─────┼──────┼──────────┼──────┼──────────┼──────┼──────┼────────┼─────────┼─────────┼─────────│
-│ 1 │ ●  │ Acme │ Software │ Product │ Berlin │ 1-50 │ 12  │ [A+] O 88 S 90 F 85 │ Completed │ 2m │ 2h │
-│ 2 │ ○  │ Acme │ Software │ Product │ Berlin │ —    │ 0   │ [—] O — S — F — │ Completed │ 5m │ 1d │
-│ 3 │ ○  │ Inc  │          │ Unknown │        │      │      │ alias            │           │     │     │
-│ 4 │ ○  │ Beta │ Fintech  │ Consulting │ Munich │ 51-200│ 4 │ [B] O 58 S 55 F 60 │ Completed │ 5m │ 1d │
-│ ○  │ Head │ Recruit  │ Recruiting │ Berlin │ 1-50 │ 7¹ │ [—] F — S — O — │ Completed │ 5m │ 1d │
-│ ○  │ Nova │ Health   │ Unknown │ —    │ —    │ 0   │ [—] F — S — O — │ Failed   │ 1h │ 2d │
+│ # │ Name │ Industry │ Type │ Location │ Size │ Jobs │ Scores │ Status │ Updated │ Created │
+│───┼──────┼──────────┼──────┼──────────┼──────┼──────┼────────┼─────────┼─────────┼─────────│
+│ 1 │ Acme │ Software │ Product │ Berlin │ 1-50 │ 12  │ [A+] O 88 S 90 F 85 │ Completed │ 2m │ 2h │
+│ 2 │ Acme │ Software │ Product │ Berlin │ —    │ 0   │ [—] O — S — F — │ Completed │ 5m │ 1d │
+│ 3 │ Inc  │          │ Unknown │        │      │      │ alias            │           │     │     │
+│ 4 │ Beta │ Fintech  │ Consulting │ Munich │ 51-200│ 4 │ [B] O 58 S 55 F 60 │ Completed │ 5m │ 1d │
+│   │ Head │ Recruit  │ Recruiting │ Berlin │ 1-50 │ 7¹ │ [—] F — S — O — │ Completed │ 5m │ 1d │
+│   │ Nova │ Health   │ Unknown │ —    │ —    │ 0   │ [—] F — S — O — │ Failed   │ 1h │ 2d │
 │                                                                                          │
 │                                       Loading more companies...                           │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
@@ -604,11 +604,11 @@ floating toolbar at the right edge of the row — there is no fixed Actions colu
 │ </> Skills (128)                     Loaded 25 of 128           + Add Skill   │
 ├───────────────────────────────────────────────────────────────────────────────┤
 │ Search .........................                     [Category ▾] [Pinned] [Columns] │
-│ # │ Select │ Pin │ Name              │ Category   │ Lv │ Roles     │ Demand │ Conf │ Created │
-│───│─────── │─────│───────────────────│────────────│────│───────────│────────│──────│─────────│
-│ 1 │ ☐      │ ●  │ Kubernetes 2 aliases│ engineering│ 4  │ DevOps    │ 90%    │ 85%  │ 2m      │
-│ 2 │ ☐      │ ○  │ Kafka             │ technical  │ 2  │ Data      │ 70%    │ 60%  │ 5m      │
-│ 3 │ ☐      │ ○  │ DDD               │ domain     │ 3  │ Backend   │ —      │ 45%  │ 1h      │
+│ # │ Select │ Name              │ Category   │ Lv │ Roles     │ Demand │ Conf │ Created │
+│───│─────── │───────────────────│────────────│────│───────────│────────│──────│─────────│
+│ 1 │ ☐      │ Kubernetes 2 aliases│ engineering│ 4  │ DevOps    │ 90%    │ 85%  │ 2m      │
+│ 2 │ ☐      │ Kafka             │ technical  │ 2  │ Data      │ 70%    │ 60%  │ 5m      │
+│ 3 │ ☐      │ DDD               │ domain     │ 3  │ Backend   │ —      │ 45%  │ 1h      │
 │                                                                               │
 │                                        Loading more skills...                 │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -621,9 +621,10 @@ When rows are selected the toolbar shows a bulk action bar:
 │ 2 selected   [⟳ Merge 2 into...]   [Clear]                                       │
 ```
 
-The Row number, Select and Pin columns are toggled via the Columns dropdown;
+The Row number and Select columns are toggled via the Columns dropdown;
 merging selected skills into one target reuses the single-merge target picker
-dialog. Rows highlight on hover (and while any inner control has focus) with a
+dialog. Pinned state is managed from the Skill Detail drawer header, not from
+the row. Rows highlight on hover (and while any inner control has focus) with a
 muted background and inset ring.
 ```
 

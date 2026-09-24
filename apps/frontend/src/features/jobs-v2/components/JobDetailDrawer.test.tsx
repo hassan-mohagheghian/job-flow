@@ -66,6 +66,7 @@ function renderDrawer(
   jobId: string | null,
   onEdit: (id: string) => void = vi.fn(),
   onReprocess: (id: string) => void = vi.fn(),
+  onTogglePinned?: (id: string, pinned: boolean) => void,
 ) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -77,6 +78,7 @@ function renderDrawer(
         onOpenChange={vi.fn()}
         onEdit={onEdit}
         onReprocess={onReprocess}
+        onTogglePinned={onTogglePinned}
       />
     </QueryClientProvider>
   )
@@ -332,5 +334,32 @@ describe('JobDetailDrawer processing failure', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Check processing status' }))
     await waitFor(() => expect(jobApi.getDetail).toHaveBeenCalledTimes(2))
+  })
+})
+
+describe('JobDetailDrawer pinned', () => {
+  it('renders the pin button with the job pinned state', async () => {
+    vi.mocked(jobApi.getDetail).mockResolvedValue({ ...sampleDetail, pinned: true } as any)
+    renderDrawer('job-1', vi.fn(), vi.fn(), vi.fn())
+
+    await waitFor(() => expect(screen.getByText('Staff Engineer')).toBeInTheDocument())
+    expect(screen.getByLabelText('Unpin job')).toBeInTheDocument()
+  })
+
+  it('calls onTogglePinned with the toggled state', async () => {
+    const onTogglePinned = vi.fn()
+    renderDrawer('job-1', vi.fn(), vi.fn(), onTogglePinned)
+
+    await waitFor(() => expect(screen.getByText('Staff Engineer')).toBeInTheDocument())
+    fireEvent.click(screen.getByLabelText('Pin job for attention'))
+    expect(onTogglePinned).toHaveBeenCalledWith('job-1', true)
+  })
+
+  it('does not render the pin button without an onTogglePinned handler', async () => {
+    renderDrawer('job-1')
+
+    await waitFor(() => expect(screen.getByText('Staff Engineer')).toBeInTheDocument())
+    expect(screen.queryByLabelText('Pin job for attention')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Unpin job')).not.toBeInTheDocument()
   })
 })

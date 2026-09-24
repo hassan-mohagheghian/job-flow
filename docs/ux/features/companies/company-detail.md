@@ -15,7 +15,7 @@ visa-seeking software engineer.
 
 ```text
 ┌──────────────────────────────────────────────┐
-│ Company Details       [Reprocess] [Edit]  ✕  │
+│ Company Details  [●] [Reprocess] [Edit] ✕ │
 ├──────────────────────────────────────────────┤
 │ [A+]  Overall 88  Success 90  Fit 85   🔗Web │
 │ ◉ Acme GmbH                          🔗Ext.  │
@@ -56,10 +56,13 @@ visa-seeking software engineer.
 
 ## Header Actions
 
-- **Reprocess** — a ghost button in the top-right of the drawer header, before
-  Edit (mirrors the Job Detail drawer's `[Action] [Edit]` layout). It
-  re-enqueues the company for processing.
-- **Edit** — a ghost button in the top-right of the drawer header, next to
+- **Pin** — a pushpin toggle for the company's pinned flag (`[●]` pinned /
+  `[○]` not pinned), shown first in the header (before Reprocess). It is
+  optimistic — the pin updates immediately and is rolled back on failure.
+- **Reprocess** — a ghost button in the top-right of the drawer header, after
+  the pin and before Edit (mirrors the Job Detail drawer's
+  `[Action] [Edit]` layout). It re-enqueues the company for processing.
+- **Edit** — a ghost button in the top-right of the drawer header, after
   Reprocess, beside the "Company Details" title. It opens the **Edit Company**
   drawer for the same company (`CompanyEditDrawer`), reusing the page-level edit
   state. The detail drawer stays open underneath.

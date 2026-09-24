@@ -19,8 +19,6 @@ interface SkillsToolbarProps {
   onFilterPinnedChange?: (value: boolean) => void
   activeFilterCount: number
   onClearFilters: () => void
-  showPinnedColumn?: boolean
-  onTogglePinnedColumn?: (value: boolean) => void
   showSelectColumn?: boolean
   onToggleSelectColumn?: (value: boolean) => void
   showRowNumberColumn?: boolean
@@ -41,8 +39,6 @@ export function SkillsToolbar({
   onFilterPinnedChange,
   activeFilterCount,
   onClearFilters,
-  showPinnedColumn = true,
-  onTogglePinnedColumn,
   showSelectColumn = false,
   onToggleSelectColumn,
   showRowNumberColumn = false,
@@ -96,16 +92,14 @@ export function SkillsToolbar({
               Pinned
             </Button>
           )}
-          {(onToggleSelectColumn || onTogglePinnedColumn || onToggleRowNumberColumn) && (
+          {(onToggleSelectColumn || onToggleRowNumberColumn) && (
             <ColumnsDropdown
               options={[
                 ...(onToggleRowNumberColumn ? [{ key: 'rowNumber', label: 'Row number', checked: showRowNumberColumn }] : []),
                 ...(onToggleSelectColumn ? [{ key: 'select', label: 'Select', checked: showSelectColumn }] : []),
-                ...(onTogglePinnedColumn ? [{ key: 'pinned', label: 'Pinned', checked: showPinnedColumn }] : []),
               ]}
               onToggle={(key, checked) => {
                 if (key === 'rowNumber') onToggleRowNumberColumn?.(checked)
-                else if (key === 'pinned') onTogglePinnedColumn?.(checked)
                 else onToggleSelectColumn?.(checked)
               }}
             />

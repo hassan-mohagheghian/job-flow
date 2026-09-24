@@ -172,6 +172,7 @@ class CompanyDetailResponseSchema(BaseModel):
     main_company: CompanyMainRef | None = None
     alias_count: int = 0
     is_alias: bool = False
+    pinned: bool = False
     recruiter_job_count: int = 0
     recruiter_for: list[RecruiterForSchema] = Field(default_factory=list)
     recruiter_jobs: list[CompanyJobRefSchema] = Field(default_factory=list)

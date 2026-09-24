@@ -35,36 +35,11 @@ function renderRow(job: JobListItem, overrides: Record<string, unknown> = {}) {
     onViewDetails: vi.fn(),
     onEdit: vi.fn(),
     onDelete: vi.fn(),
-    onTogglePinned: vi.fn(),
     onToggleDismissed: vi.fn(),
     ...overrides,
   }
   return render(<JobRow {...(props as any)} />)
 }
-
-describe('JobRow pinned', () => {
-  it('renders the pinned toggle with the job pinned state', () => {
-    renderRow(makeJob({ pinned: true }), { showPinnedColumn: true })
-    expect(screen.getByLabelText('Unpin job')).toBeInTheDocument()
-  })
-
-  it('calls onTogglePinned when the pin is clicked and stops row selection', () => {
-    const onTogglePinned = vi.fn()
-    const onViewDetails = vi.fn()
-    renderRow(makeJob(), { onTogglePinned, onViewDetails, showPinnedColumn: true })
-
-    fireEvent.click(screen.getByLabelText('Pin job for attention'))
-
-    expect(onTogglePinned).toHaveBeenCalled()
-    expect(onViewDetails).not.toHaveBeenCalled()
-  })
-
-  it('hides the pinned toggle when the column is off', () => {
-    renderRow(makeJob({ pinned: true }), { showPinnedColumn: false })
-    expect(screen.queryByLabelText('Unpin job')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Pin job for attention')).not.toBeInTheDocument()
-  })
-})
 
 describe('JobRow row-number column', () => {
   it('renders no row number when the column is off', () => {

@@ -27,7 +27,6 @@ function JobsPageV2Adapter() {
   const [addJobClipboardUrl, setAddJobClipboardUrl] = useState<string | null>(null)
   const [detailJobId, setDetailJobId] = useState<string | null>(null)
   const [editJobId, setEditJobId] = useState<string | null>(null)
-  const [showPinnedColumn, setShowPinnedColumn] = useState(true)
   const [showRowNumberColumn, setShowRowNumberColumn] = useState(true)
   const { dialog: confirmDialog, showConfirm, onClose: closeConfirm } = useConfirmDialog()
   const router = useRouter()
@@ -127,11 +126,9 @@ function JobsPageV2Adapter() {
       .catch(() => toast.error('Failed to cancel processing'))
   }, [items, refetch])
 
-  const handleTogglePinned = useCallback((id: string) => {
-    const job = items.find(j => j.id === id)
-    if (!job) return
-    pinnedMutation.mutate({ jobId: id, pinned: !job.pinned })
-  }, [items, pinnedMutation])
+  const handleTogglePinned = useCallback((id: string, pinned: boolean) => {
+    pinnedMutation.mutate({ jobId: id, pinned })
+  }, [pinnedMutation])
 
   const handleOpenApplication = useCallback((id: string) => {
     router.push(`/jobs/${id}/application`)
@@ -193,8 +190,6 @@ function JobsPageV2Adapter() {
           onRetry={handleRetry}
           onCancel={handleCancel}
           onApplication={handleOpenApplication}
-          showPinnedColumn={showPinnedColumn}
-          onTogglePinnedColumn={setShowPinnedColumn}
           showRowNumberColumn={showRowNumberColumn}
           onToggleRowNumberColumn={setShowRowNumberColumn}
           isProcessing={processMutation.isPending}

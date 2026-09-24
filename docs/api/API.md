@@ -58,6 +58,7 @@ block produced by the Job Analysis phase:
   "title": "Senior Backend Engineer",
   "company_name": "Acme Inc",
   "rank": 3,
+  "pinned": true,
   "scores": { "overall": 79, "fit": 85, "success": 70 },
   "analysis": {
     "recommendation": "consider",

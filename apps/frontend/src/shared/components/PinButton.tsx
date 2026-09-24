@@ -7,9 +7,10 @@ interface PinButtonProps {
   pinned: boolean
   onToggle: () => void
   entityLabel?: string
+  className?: string
 }
 
-export function PinButton({ pinned, onToggle, entityLabel }: PinButtonProps) {
+export function PinButton({ pinned, onToggle, entityLabel, className }: PinButtonProps) {
   const label = entityLabel ? `Pin ${entityLabel} for attention` : 'Pin for attention'
   const unpinLabel = entityLabel ? `Unpin ${entityLabel}` : 'Unpin'
   return (
@@ -19,7 +20,7 @@ export function PinButton({ pinned, onToggle, entityLabel }: PinButtonProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className={cn('h-6 w-6 p-0', className)}
             onClick={onToggle}
             aria-label={pinned ? unpinLabel : label}
             aria-pressed={pinned}

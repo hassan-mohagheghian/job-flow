@@ -21,6 +21,7 @@ import type { SkillListItem } from "@/entities/skill/types";
 import { CategoryBadges, OriginBadge } from "./SkillRow";
 import { useSkillReferencedJobs } from "@/entities/skill/hooks";
 import { GradeBadge } from "@/shared/components/GradeBadge";
+import { PinButton } from "@/shared/components/PinButton";
 import { gradeForScore } from "@/shared/lib/grade";
 import { SkillResources } from "./SkillResources";
 
@@ -32,6 +33,7 @@ interface SkillDetailDrawerProps {
   onDelete: (id: number) => void;
   onBreakDown: (id: number) => void;
   onOpenJob?: (id: string) => void;
+  onTogglePinned?: (id: number, pinned: boolean) => void;
 }
 
 function ReferencedJobsList({
@@ -125,6 +127,7 @@ export function SkillDetailDrawer({
   onDelete,
   onBreakDown,
   onOpenJob,
+  onTogglePinned,
 }: SkillDetailDrawerProps) {
   const open = !!skill && !!skillId;
 
@@ -154,17 +157,27 @@ export function SkillDetailDrawer({
         }
         onClose={() => onOpenChange(null)}
         actions={
-          onEdit && skillId != null ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 text-xs text-muted-foreground"
-              onClick={() => onEdit(skillId as number)}
-              aria-label="Edit skill"
-            >
-              <PencilSimple className="w-3.5 h-3.5" /> Edit
-            </Button>
-          ) : undefined
+          <>
+            {onTogglePinned ? (
+              <PinButton
+                pinned={skill.pinned ?? false}
+                onToggle={() => onTogglePinned(skill.id, !(skill.pinned ?? false))}
+                entityLabel="skill"
+                className="h-7 w-7"
+              />
+            ) : undefined}
+            {onEdit && skillId != null ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs text-muted-foreground"
+                onClick={() => onEdit(skillId as number)}
+                aria-label="Edit skill"
+              >
+                <PencilSimple className="w-3.5 h-3.5" /> Edit
+              </Button>
+            ) : undefined}
+          </>
         }
       />
       <DrawerContent>

@@ -482,6 +482,14 @@ class TestJobPinnedV2API:
         data = client.get("/api/jobs/list").json()
         assert data["items"][0]["pinned"] is False
 
+    def test_get_detail_carries_pinned(self, client, test_db):
+        job = _create_job(test_db, id=1, title="Pinned")
+
+        assert client.get(f"/api/jobs/{job.id}").json()["pinned"] is False
+
+        client.put(f"/api/jobs/{job.id}/pinned", json={"pinned": True})
+        assert client.get(f"/api/jobs/{job.id}").json()["pinned"] is True
+
     def test_set_pinned_missing_job_returns_404(self, client, test_db):
         resp = client.put("/api/jobs/does-not-exist/pinned", json={"pinned": True})
         assert resp.status_code == 404

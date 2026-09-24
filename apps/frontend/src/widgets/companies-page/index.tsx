@@ -18,7 +18,6 @@ function CompaniesPageAdapter() {
   const [addCompanyDrawerOpen, setAddCompanyDrawerOpen] = useState(false)
   const [detailCompanyId, setDetailCompanyId] = useState<string | null>(null)
   const [editCompanyId, setEditCompanyId] = useState<string | null>(null)
-  const [showPinnedColumn, setShowPinnedColumn] = useState(true)
   const [showRowNumberColumn, setShowRowNumberColumn] = useState(true)
   const { dialog: confirmDialog, showConfirm, onClose: closeConfirm } = useConfirmDialog()
 
@@ -144,8 +143,6 @@ function CompaniesPageAdapter() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onTogglePinned={handleTogglePinned}
-        showPinnedColumn={showPinnedColumn}
-        onTogglePinnedColumn={setShowPinnedColumn}
         showRowNumberColumn={showRowNumberColumn}
         onToggleRowNumberColumn={setShowRowNumberColumn}
         onRelate={handleRelate}

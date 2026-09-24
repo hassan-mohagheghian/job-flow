@@ -91,8 +91,6 @@ interface JobsToolbarProps {
   onFilterCreatedDateChange: (value: CreatedDateFilter) => void;
   activeFilterCount: number;
   onClearFilters: () => void;
-  showPinnedColumn?: boolean;
-  onTogglePinnedColumn?: (value: boolean) => void;
   showRowNumberColumn?: boolean;
   onToggleRowNumberColumn?: (value: boolean) => void;
 }
@@ -118,8 +116,6 @@ export function JobsToolbar({
   onFilterCreatedDateChange,
   activeFilterCount,
   onClearFilters,
-  showPinnedColumn = true,
-  onTogglePinnedColumn,
   showRowNumberColumn = false,
   onToggleRowNumberColumn,
 }: JobsToolbarProps) {
@@ -276,31 +272,17 @@ export function JobsToolbar({
             />
             Pinned
           </Button>
-          {(onTogglePinnedColumn || onToggleRowNumberColumn) && (
+          {onToggleRowNumberColumn && (
             <ColumnsDropdown
               options={[
-                ...(onToggleRowNumberColumn
-                  ? [
-                      {
-                        key: "rowNumber",
-                        label: "Row number",
-                        checked: showRowNumberColumn,
-                      },
-                    ]
-                  : []),
-                ...(onTogglePinnedColumn
-                  ? [
-                      {
-                        key: "pinned",
-                        label: "Pinned",
-                        checked: showPinnedColumn,
-                      },
-                    ]
-                  : []),
+                {
+                  key: "rowNumber",
+                  label: "Row number",
+                  checked: showRowNumberColumn,
+                },
               ]}
               onToggle={(key, checked) => {
                 if (key === "rowNumber") onToggleRowNumberColumn?.(checked);
-                else onTogglePinnedColumn(checked);
               }}
             />
           )}

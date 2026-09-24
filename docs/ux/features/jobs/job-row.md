@@ -13,8 +13,6 @@ The Jobs page is built from repeated Job Rows.
 Desktop
 
 ```
-Pin
-
 Title
 
 Company
@@ -54,7 +52,6 @@ content via the browser's native title tooltip.
 
 Each row displays:
 
-- Pin
 - Job Title
 - Company
 - Location
@@ -72,15 +69,8 @@ Each row displays:
 
 # Pin
 
-A leading pushpin button toggling the job's pinned flag (see
-`features/jobs/pinned-job.md`).
-
-- Empty pin: not pinned.
-- Filled pin: pinned.
-
-The toggle is optimistic — the pin updates immediately and is rolled back on
-failure. The button is a separate interactive element and does not trigger row
-selection.
+The job row has **no** pin button. Pinned state is shown and toggled from the
+**Job Details Drawer** header (see `features/jobs/pinned-job.md`).
 
 ---
 

@@ -499,6 +499,7 @@ def _build_company_detail(
         main_company=main_company,
         alias_count=repo.count_aliases(id),
         is_alias=bool(parent_company_id),
+        pinned=bool(company.get("pinned")),
         created_at=company.get("created_at"),
         updated_at=company.get("updated_at"),
     )

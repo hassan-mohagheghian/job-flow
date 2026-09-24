@@ -289,6 +289,7 @@ export interface JobDetail {
   tags: string[]
   tracking_status: TrackingStatus | null
   dismissed?: boolean
+  pinned?: boolean
   easy_apply: boolean | null
   updated_at: string | null
   created_at: string | null

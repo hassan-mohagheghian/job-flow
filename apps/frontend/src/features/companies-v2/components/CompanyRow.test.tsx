@@ -40,7 +40,6 @@ function renderRow(company: CompanyListItem) {
       onReprocess={vi.fn()}
       onEdit={vi.fn()}
       onDelete={vi.fn()}
-      onTogglePinned={vi.fn()}
     />
   )
 }
@@ -91,60 +90,6 @@ describe('CompanyRow scores', () => {
       parent_company_id: 'company-2',
     }))
     expect(screen.getByText('alias')).toBeInTheDocument()
-  })
-})
-
-describe('CompanyRow pinned', () => {
-  it('renders the pinned toggle with the company pinned state', () => {
-    render(
-      <CompanyRow
-        company={makeCompany({ pinned: true })}
-        onViewDetails={vi.fn()}
-        onReprocess={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTogglePinned={vi.fn()}
-        showPinnedColumn
-      />
-    )
-    expect(screen.getByLabelText('Unpin company')).toBeInTheDocument()
-  })
-
-  it('calls onTogglePinned when the pin is clicked and stops row selection', () => {
-    const onTogglePinned = vi.fn()
-    const onViewDetails = vi.fn()
-    render(
-      <CompanyRow
-        company={makeCompany()}
-        onViewDetails={onViewDetails}
-        onReprocess={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTogglePinned={onTogglePinned}
-        showPinnedColumn
-      />
-    )
-
-    fireEvent.click(screen.getByLabelText('Pin company for attention'))
-
-    expect(onTogglePinned).toHaveBeenCalled()
-    expect(onViewDetails).not.toHaveBeenCalled()
-  })
-
-  it('hides the pinned toggle when the column is off', () => {
-    render(
-      <CompanyRow
-        company={makeCompany({ pinned: true })}
-        onViewDetails={vi.fn()}
-        onReprocess={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onTogglePinned={vi.fn()}
-        showPinnedColumn={false}
-      />
-    )
-    expect(screen.queryByLabelText('Unpin company')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Pin company for attention')).not.toBeInTheDocument()
   })
 })
 
@@ -222,7 +167,6 @@ describe('CompanyRow row-number column', () => {
         onReprocess={vi.fn()}
         onEdit={vi.fn()}
         onDelete={vi.fn()}
-        onTogglePinned={vi.fn()}
         showRowNumberColumn
         rowNumber={5}
       />
@@ -249,7 +193,6 @@ describe('CompanyRow hover actions', () => {
         onReprocess={vi.fn()}
         onEdit={vi.fn()}
         onDelete={onDelete}
-        onTogglePinned={vi.fn()}
       />
     )
 

@@ -28,6 +28,7 @@ import { formatCompanyType } from "@/entities/company/lib";
 import DateTime from "@/shared/components/DateTime";
 import NotesLinksReadOnly from "@/shared/components/NotesLinksReadOnly";
 import { GradeBadge } from "@/shared/components/GradeBadge";
+import { PinButton } from "@/shared/components/PinButton";
 import { RankBadge } from "@/shared/components/RankBadge";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
@@ -53,6 +54,7 @@ interface JobDetailDrawerProps {
   onOpenChange: (jobId: string | null) => void;
   onEdit?: (id: string) => void;
   onReprocess?: (id: string) => void;
+  onTogglePinned?: (id: string, pinned: boolean) => void;
 }
 
 function stepIcon(status: JobDetailWorkflowStep["status"]) {
@@ -769,6 +771,7 @@ export function JobDetailDrawer({
   onOpenChange,
   onEdit,
   onReprocess,
+  onTogglePinned,
 }: JobDetailDrawerProps) {
   const router = useRouter();
   const {
@@ -793,6 +796,14 @@ export function JobDetailDrawer({
         onClose={() => onOpenChange(null)}
         actions={
           <div className="flex items-center gap-1">
+            {onTogglePinned && jobId && detail ? (
+              <PinButton
+                pinned={detail.pinned ?? false}
+                onToggle={() => onTogglePinned(jobId, !(detail.pinned ?? false))}
+                entityLabel="job"
+                className="h-7 w-7"
+              />
+            ) : undefined}
             {onReprocess && jobId ? (
               <Button
                 variant="ghost"

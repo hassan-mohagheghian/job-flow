@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { jobApi } from '@/entities/job/api'
-import type { JobListItem, ProcessingStatus, ProcessingStatusFilter, RecommendationFilter, TrackingStatusFilter, CreatedDateFilter, InfiniteJobSearchResult } from '@/entities/job/types'
+import type { JobListItem, JobDetail, ProcessingStatus, ProcessingStatusFilter, RecommendationFilter, TrackingStatusFilter, CreatedDateFilter, InfiniteJobSearchResult } from '@/entities/job/types'
 import { PAGE_SIZE } from '@/shared/config/constants'
 const JOBS_KEY = 'jobs-v2-infinite'
 
@@ -186,7 +186,9 @@ export function useJobsInfiniteQuery() {
     mutationFn: ({ jobId, pinned }: { jobId: string; pinned: boolean }) => jobApi.setPinned(jobId, pinned),
     onMutate: async ({ jobId, pinned }) => {
       await queryClient.cancelQueries({ queryKey: [JOBS_KEY] })
+      await queryClient.cancelQueries({ queryKey: ['job-detail', jobId] })
       const previousData = queryClient.getQueriesData<{ pages: { items: JobListItem[] }[] }>({ queryKey: [JOBS_KEY] })
+      const previousDetail = queryClient.getQueryData<JobDetail>(['job-detail', jobId])
       queryClient.setQueriesData<{ pages: { items: JobListItem[] }[] }>(
         { queryKey: [JOBS_KEY] },
         (old) => {
@@ -202,7 +204,10 @@ export function useJobsInfiniteQuery() {
           }
         }
       )
-      return { previousData }
+      queryClient.setQueryData<JobDetail>(['job-detail', jobId], (old) =>
+        old ? { ...old, pinned } : old
+      )
+      return { previousData, previousDetail }
     },
     onError: (_err, _vars, context) => {
       if (context?.previousData) {
@@ -210,9 +215,13 @@ export function useJobsInfiniteQuery() {
           queryClient.setQueryData(key, data)
         }
       }
+      if (context?.previousDetail) {
+        queryClient.setQueryData(['job-detail', _vars.jobId], context.previousDetail)
+      }
     },
-    onSettled: () => {
+    onSettled: (_data, _error, vars) => {
       queryClient.invalidateQueries({ queryKey: [JOBS_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['job-detail', vars.jobId] })
     },
   })
 

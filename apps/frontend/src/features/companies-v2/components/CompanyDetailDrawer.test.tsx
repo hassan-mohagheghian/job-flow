@@ -35,7 +35,7 @@ function makeDetail(overrides: Partial<CompanyDetail> = {}): CompanyDetail {
   }
 }
 
-function renderDrawer(companyId: string | null, onOpenChange: (id: string | null) => void = vi.fn(), onEdit: (id: string) => void = vi.fn(), onOpenJob: (id: string) => void = vi.fn(), onReprocess: (id: string) => void = vi.fn()) {
+function renderDrawer(companyId: string | null, onOpenChange: (id: string | null) => void = vi.fn(), onEdit: (id: string) => void = vi.fn(), onOpenJob: (id: string) => void = vi.fn(), onReprocess: (id: string) => void = vi.fn(), onTogglePinned?: (id: string, pinned: boolean) => void) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -46,6 +46,7 @@ function renderDrawer(companyId: string | null, onOpenChange: (id: string | null
         onOpenChange={onOpenChange}
         onReprocess={onReprocess}
         onEdit={onEdit}
+        onTogglePinned={onTogglePinned}
         onRelate={vi.fn()}
         relatePending={false}
         onOpenJob={onOpenJob}
@@ -296,5 +297,34 @@ describe('CompanyDetailDrawer header jobs badge', () => {
 
     await waitFor(() => expect(screen.getByText('Acme GmbH')).toBeInTheDocument())
     expect(screen.getByText('3 jobs')).toBeInTheDocument()
+  })
+})
+
+describe('CompanyDetailDrawer pinned', () => {
+  it('renders the pin button with the company pinned state', async () => {
+    vi.mocked(companyApi.get).mockResolvedValue(makeDetail({ pinned: true }))
+    renderDrawer('company-1', vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn())
+
+    await waitFor(() => expect(screen.getByText('Acme GmbH')).toBeInTheDocument())
+    expect(screen.getByLabelText('Unpin company')).toBeInTheDocument()
+  })
+
+  it('calls onTogglePinned with the toggled state', async () => {
+    const onTogglePinned = vi.fn()
+    vi.mocked(companyApi.get).mockResolvedValue(makeDetail())
+    renderDrawer('company-1', vi.fn(), vi.fn(), vi.fn(), vi.fn(), onTogglePinned)
+
+    await waitFor(() => expect(screen.getByText('Acme GmbH')).toBeInTheDocument())
+    fireEvent.click(screen.getByLabelText('Pin company for attention'))
+    expect(onTogglePinned).toHaveBeenCalledWith('company-1', true)
+  })
+
+  it('does not render the pin button without an onTogglePinned handler', async () => {
+    vi.mocked(companyApi.get).mockResolvedValue(makeDetail())
+    renderDrawer('company-1')
+
+    await waitFor(() => expect(screen.getByText('Acme GmbH')).toBeInTheDocument())
+    expect(screen.queryByLabelText('Pin company for attention')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Unpin company')).not.toBeInTheDocument()
   })
 })

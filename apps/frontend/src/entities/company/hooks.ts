@@ -5,6 +5,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { companyApi } from './api'
 import type {
   CompanyDetail,
+  CompanyListItem,
   CompanyEditInput,
   InfiniteCompanySearchResult,
 } from './types'
@@ -125,8 +126,10 @@ export function useCompaniesInfiniteQuery() {
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => companyApi.setPinned(id, pinned),
     onMutate: async ({ id, pinned }) => {
       await queryClient.cancelQueries({ queryKey: [COMPANIES_KEY] })
-      const previousData = queryClient.getQueriesData<{ pages: { items: CompanyDetail[] }[] }>({ queryKey: [COMPANIES_KEY] })
-      queryClient.setQueriesData<{ pages: { items: CompanyDetail[] }[] }>(
+      await queryClient.cancelQueries({ queryKey: [COMPANY_DETAIL_KEY, id] })
+      const previousData = queryClient.getQueriesData<{ pages: { items: CompanyListItem[] }[] }>({ queryKey: [COMPANIES_KEY] })
+      const previousDetail = queryClient.getQueryData<CompanyDetail>([COMPANY_DETAIL_KEY, id])
+      queryClient.setQueriesData<{ pages: { items: CompanyListItem[] }[] }>(
         { queryKey: [COMPANIES_KEY] },
         (old) => {
           if (!old) return old
@@ -141,10 +144,24 @@ export function useCompaniesInfiniteQuery() {
           }
         }
       )
-      return previousData
+      queryClient.setQueryData<CompanyDetail>([COMPANY_DETAIL_KEY, id], (old) =>
+        old ? { ...old, pinned } : old
+      )
+      return { previousData, previousDetail }
     },
     onError: (_err, _vars, context) => {
-      if (context) queryClient.setQueriesData({ queryKey: [COMPANIES_KEY] }, context)
+      if (context?.previousData) {
+        for (const [key, data] of context.previousData) {
+          queryClient.setQueryData(key, data)
+        }
+      }
+      if (context?.previousDetail) {
+        queryClient.setQueryData([COMPANY_DETAIL_KEY, _vars.id], context.previousDetail)
+      }
+    },
+    onSettled: (_data, _error, vars) => {
+      queryClient.invalidateQueries({ queryKey: [COMPANIES_KEY] })
+      queryClient.invalidateQueries({ queryKey: [COMPANY_DETAIL_KEY, vars.id] })
     },
   })
 

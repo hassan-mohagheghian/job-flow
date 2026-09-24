@@ -13,7 +13,6 @@ interface ColumnDef {
   field?: string
 }
 
-const PIN_COLUMN: ColumnDef = { label: 'Pin' }
 const SELECT_COLUMN: ColumnDef = { label: 'Select' }
 const ROW_NUMBER_COLUMN: ColumnDef = { label: '#' }
 
@@ -41,8 +40,6 @@ interface SkillsTableProps {
   onDelete: (id: number) => void
   onBreakDown: (id: number) => void
   onMerge: (id: number) => void
-  onTogglePinned?: (id: number, pinned: boolean) => void
-  showPinnedColumn?: boolean
   showSelectColumn?: boolean
   showRowNumberColumn?: boolean
   selectedIds?: Set<number>
@@ -55,7 +52,7 @@ interface SkillsTableProps {
 
 export function SkillsTable({
   items, total, loadedCount = 0, isLoading, isFetchingNextPage = false, hasNextPage = false, onFetchNextPage = () => {},
-  onViewDetails, onEdit, onDelete, onBreakDown, onMerge, onTogglePinned, showPinnedColumn = true,
+  onViewDetails, onEdit, onDelete, onBreakDown, onMerge,
   showSelectColumn = false, showRowNumberColumn = false, selectedIds = new Set<number>(), onToggleSelect, onToggleSelectAll,
   sort = 'mention_count', order = 'desc', onSortChange = () => {},
 }: SkillsTableProps) {
@@ -66,11 +63,10 @@ export function SkillsTable({
   const visibleColumnDefs = [
     ...(showRowNumberColumn ? [ROW_NUMBER_COLUMN] : []),
     ...(showSelectColumn ? [SELECT_COLUMN] : []),
-    ...(showPinnedColumn ? [PIN_COLUMN] : []),
     ...COLUMN_DEFS,
   ]
   const gridStyle = {
-    gridTemplateColumns: buildSkillGridTemplate(showRowNumberColumn, showSelectColumn, showPinnedColumn),
+    gridTemplateColumns: buildSkillGridTemplate(showRowNumberColumn, showSelectColumn),
   }
 
   const selectedCount = items.filter((s) => selectedIds.has(s.id)).length
@@ -205,8 +201,6 @@ export function SkillsTable({
                   onDelete={onDelete}
                   onBreakDown={onBreakDown}
                   onMerge={onMerge}
-                  onTogglePinned={onTogglePinned}
-                  showPinnedColumn={showPinnedColumn}
                   showSelectColumn={showSelectColumn}
                   showRowNumberColumn={showRowNumberColumn}
                   rowNumber={virtualItem.index + 1}

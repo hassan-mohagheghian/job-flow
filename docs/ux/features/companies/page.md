@@ -66,11 +66,11 @@ Companies Page
 │ Search .........................        [Industry ▾] [Type ▾] [Status ▾] [Pinned] [Columns] [Clear]│
 ├───────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                               │
-│ # │ Pin │ Name │ Industry │ Type │ Location │ Size │ Jobs │ Scores │ Status │ Updated │ Created │
-│───│─────│──────│──────────│──────│──────────│──────│──────│────────┼─────────┼─────────┼─────────│
-│ 1 │ ●  │ Acme │ Software │ Product │ Berlin │ 1-50 │ 12   │ [A+] O 88 │ S 90 │ F 85 │ Completed │ 2m │ 2h │
-│ 2 │ ○  │ Beta │ Fintech  │ Consulting │ Munich │ 51-200│ 4    │ [B] F 60  │ S 55 │ O 58 │ Completed │ 5m │ 1d │
-│ 3 │ ○  │ Nova │ Health   │ —    │ —    │ 0    │ [—] F —   │ S —  │ O —  │ —         │ 1h │ 2d │
+│ # │ Name │ Industry │ Type │ Location │ Size │ Jobs │ Scores │ Status │ Updated │ Created │
+│──────────────────────────────────────────────────────────────────────────────────────────────────────────────────│
+│ 1 │ Acme │ Software │ Product │ Berlin │ 1-50 │ 12   │ [A+] O 88 │ S 90 │ F 85 │ Completed │ 2m │ 2h │
+│ 2 │ Beta │ Fintech  │ Consulting │ Munich │ 51-200│ 4    │ [B] F 60  │ S 55 │ O 58 │ Completed │ 5m │ 1d │
+│ 3 │ Nova │ Health   │ —    │ —    │ 0    │ [—] F —   │ S —  │ O —  │ —         │ 1h │ 2d │
 │                                                                                               │
 │                                        Loading more companies...                              │
 │                                                                                               │
@@ -125,7 +125,6 @@ Responsibilities
 - Filter companies by company type (product / recruiting / staffing / consulting).
 - Filter companies by processing status.
 - Filter companies by pinned state.
-- Toggle the Pin column.
 - Clear active filters.
 
 Controls
@@ -137,7 +136,7 @@ Controls
 | Type     | Filter by company type (Product, Recruiting agency, Staffing, Consulting, Unknown). |
 | Status   | Filter by exact processing status.             |
 | Pinned   | Toggle pinned-only view.                       |
-| Columns  | Show / hide the Row number and Pin columns.    |
+| Columns  | Show / hide the Row number column. (Pinned state is managed from the Company Detail Drawer.) |
 | Clear    | Clears all active filters.                     |
 
 Changing filters never reloads the entire page.
@@ -227,7 +226,6 @@ Configuration
 | Column   | Description                                            |
 | -------- | ------------------------------------------------------ |
 | #        | Row number within the loaded result set (toggleable)   |
-| Pin      | Pushpin toggle for pinned companies                    |
 | Name     | Company logo and name                                  |
 | Industry | Industry classification                                |
 | Type     | Company type badge (Product / Recruiting Agency / Staffing / Consulting / Unknown) |
@@ -241,8 +239,8 @@ Configuration
 
 There is no `Actions` column — row actions are revealed on hover (see
 `features/companies/company-row.md#actions`). The Row number column is hidden
-by default; the Pin column is shown by default.
-Both can be toggled via the toolbar Columns dropdown.
+by default and can be toggled via the toolbar Columns dropdown. Pinned state
+is managed from the Company Detail Drawer header, not from the row.
 
 Rows highlight on hover (and while any inner control has focus) with a muted
 background and an inset ring, so the focused row is always visually identifiable
@@ -254,14 +252,10 @@ in a long list.
 
 ## Pin
 
-A leading pushpin button toggling the company's pinned flag.
-
-- Empty pin: not pinned.
-- Filled (primary color) pin: pinned.
-
-The toggle is optimistic — the pin updates immediately and is rolled back on
-failure. The button is a separate interactive element and does not trigger row
-selection.
+The row itself has **no** pin button. Pinned state is shown and toggled from
+the **Company Detail Drawer** header (see `features/companies/company-detail.md`).
+The drawer header pushpin is optimistic — the pin updates immediately and is
+rolled back on failure.
 
 ## Name
 

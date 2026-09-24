@@ -42,8 +42,6 @@ interface SkillsPageProps {
   onEdit: (id: number) => void
   onDelete: (id: number) => void
   onTogglePinned?: (id: number, pinned: boolean) => void
-  showPinnedColumn?: boolean
-  onTogglePinnedColumn?: (value: boolean) => void
   showSelectColumn?: boolean
   onToggleSelectColumn?: (value: boolean) => void
   showRowNumberColumn?: boolean
@@ -66,7 +64,6 @@ export function SkillsPage({
   filterPinned = false, onFilterPinnedChange,
   activeFilterCount, onClearFilters,
   onViewDetails, onEdit, onDelete, onTogglePinned,
-  showPinnedColumn = true, onTogglePinnedColumn,
   showSelectColumn = false, onToggleSelectColumn,
   showRowNumberColumn = false, onToggleRowNumberColumn,
   addSkillDrawerOpen, onAddSkillDrawerOpenChange,
@@ -216,8 +213,6 @@ export function SkillsPage({
         onFilterPinnedChange={onFilterPinnedChange}
         activeFilterCount={activeFilterCount}
         onClearFilters={onClearFilters}
-        showPinnedColumn={showPinnedColumn}
-        onTogglePinnedColumn={onTogglePinnedColumn}
         showSelectColumn={showSelectColumn}
         onToggleSelectColumn={onToggleSelectColumn}
         showRowNumberColumn={showRowNumberColumn}
@@ -246,8 +241,6 @@ export function SkillsPage({
           const skill = items.find((s) => s.id === id)
           if (skill) setRowMergeSkill({ id: skill.id, name: skill.name })
         }}
-        onTogglePinned={onTogglePinned}
-        showPinnedColumn={showPinnedColumn}
         showSelectColumn={showSelectColumn}
         showRowNumberColumn={showRowNumberColumn}
         selectedIds={selectedIds}
@@ -263,6 +256,7 @@ export function SkillsPage({
         onOpenChange={onDetailSkillIdChange}
         onEdit={onEdit}
         onDelete={onDelete}
+        onTogglePinned={onTogglePinned}
         onBreakDown={(id) => {
           const skill = items.find((s) => s.id === id)
           if (skill) setBreakdownSkill({ id: skill.id, name: skill.name })

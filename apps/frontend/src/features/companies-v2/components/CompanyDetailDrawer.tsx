@@ -29,6 +29,7 @@ import { isRecruiterCompany, formatCompanyType } from "@/entities/company/lib";
 import { useCompanyQuery } from "@/entities/company/hooks";
 import CompanyJobsTab from "./CompanyJobsTab";
 import NotesLinksReadOnly from "@/shared/components/NotesLinksReadOnly";
+import { PinButton } from "@/shared/components/PinButton";
 import { CompanyGradeBadge } from "./CompanyGradeBadge";
 import { CompanyScoreCard } from "./CompanyScoreCard";
 import { RelateCompanyDialog } from "./RelateCompanyDialog";
@@ -189,6 +190,7 @@ interface CompanyDetailDrawerProps {
   relatePending: boolean;
   onOpenJob?: (id: string) => void;
   onNavigateToJob?: (id: string) => void;
+  onTogglePinned?: (id: string, pinned: boolean) => void;
 }
 
 export function CompanyDetailDrawer({
@@ -200,6 +202,7 @@ export function CompanyDetailDrawer({
   relatePending,
   onOpenJob,
   onNavigateToJob,
+  onTogglePinned,
 }: CompanyDetailDrawerProps) {
   const { data: company, isLoading, isError } = useCompanyQuery(companyId);
   const [relateDialogOpen, setRelateDialogOpen] = useState(false);
@@ -216,6 +219,14 @@ export function CompanyDetailDrawer({
         onClose={() => onOpenChange(null)}
         actions={
           <div className="flex items-center gap-1">
+            {onTogglePinned && company ? (
+              <PinButton
+                pinned={company.pinned ?? false}
+                onToggle={() => onTogglePinned(company.id, !(company.pinned ?? false))}
+                entityLabel="company"
+                className="h-7 w-7"
+              />
+            ) : undefined}
             {onReprocess && companyId ? (
               <Button
                 variant="ghost"

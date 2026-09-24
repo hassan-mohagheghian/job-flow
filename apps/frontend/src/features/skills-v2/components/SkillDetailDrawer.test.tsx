@@ -40,7 +40,7 @@ function makeSkill(overrides: Partial<SkillListItem> = {}): SkillListItem {
   }
 }
 
-function renderDrawer(skill: SkillListItem, onOpenJob?: () => void) {
+function renderDrawer(skill: SkillListItem, onOpenJob?: () => void, onTogglePinned?: (id: number, pinned: boolean) => void) {
   return render(
     <SkillDetailDrawer
       skillId={skill.id}
@@ -48,6 +48,7 @@ function renderDrawer(skill: SkillListItem, onOpenJob?: () => void) {
       onOpenChange={vi.fn()}
       onEdit={vi.fn()}
       onDelete={vi.fn()}
+      onTogglePinned={onTogglePinned}
       onBreakDown={vi.fn()}
       onOpenJob={onOpenJob}
     />
@@ -124,5 +125,26 @@ describe('SkillDetailDrawer', () => {
     expect(
       screen.getByText('No jobs reference this skill yet.')
     ).toBeInTheDocument()
+  })
+})
+
+describe('SkillDetailDrawer pinned', () => {
+  it('renders the pin button with the skill pinned state', () => {
+    renderDrawer(makeSkill({ pinned: true }), vi.fn(), vi.fn())
+    expect(screen.getByLabelText('Unpin skill')).toBeInTheDocument()
+  })
+
+  it('calls onTogglePinned with the toggled state', () => {
+    const onTogglePinned = vi.fn()
+    renderDrawer(makeSkill(), vi.fn(), onTogglePinned)
+
+    fireEvent.click(screen.getByLabelText('Pin skill for attention'))
+    expect(onTogglePinned).toHaveBeenCalledWith(1, true)
+  })
+
+  it('does not render the pin button without an onTogglePinned handler', () => {
+    renderDrawer(makeSkill())
+    expect(screen.queryByLabelText('Pin skill for attention')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Unpin skill')).not.toBeInTheDocument()
   })
 })

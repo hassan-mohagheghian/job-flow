@@ -5,7 +5,6 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import DateTime from '@/shared/components/DateTime'
 import { buildSkillGridTemplate } from './skillsColumns'
 import { SkillActions } from './SkillActions'
-import { PinButton } from '@/shared/components/PinButton'
 import { categoryColorClass } from '@/entities/skill/categoryColors'
 
 export function CategoryBadge({ category }: { category?: string }) {
@@ -55,8 +54,6 @@ export function SkillRow({
   onDelete,
   onBreakDown,
   onMerge,
-  showPinnedColumn = true,
-  onTogglePinned,
   showSelectColumn = false,
   selected = false,
   onToggleSelect,
@@ -69,8 +66,6 @@ export function SkillRow({
   onDelete: (id: number) => void
   onBreakDown: (id: number) => void
   onMerge: (id: number) => void
-  showPinnedColumn?: boolean
-  onTogglePinned?: (id: number, pinned: boolean) => void
   showSelectColumn?: boolean
   selected?: boolean
   onToggleSelect?: (id: number) => void
@@ -83,7 +78,7 @@ export function SkillRow({
   const confidenceColor = confidence == null ? 'text-muted-foreground' : confidence >= 80 ? 'text-green-500' : confidence >= 50 ? 'text-yellow-500' : 'text-orange-500'
   const demandColor = demand == null ? 'text-muted-foreground' : demand >= 80 ? 'text-green-500' : demand >= 50 ? 'text-yellow-500' : 'text-orange-500'
 
-  const gridTemplateColumns = buildSkillGridTemplate(showRowNumberColumn, showSelectColumn, showPinnedColumn)
+  const gridTemplateColumns = buildSkillGridTemplate(showRowNumberColumn, showSelectColumn)
 
   return (
     <div
@@ -103,11 +98,6 @@ export function SkillRow({
             onCheckedChange={() => onToggleSelect?.(skill.id)}
             aria-label={`Select ${skill.name}`}
           />
-        </div>
-      )}
-      {showPinnedColumn && (
-        <div className="py-2 px-2 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          <PinButton pinned={skill.pinned} onToggle={() => onTogglePinned?.(skill.id, !skill.pinned)} entityLabel="skill" />
         </div>
       )}
       <div className="py-2 px-3 flex items-center">

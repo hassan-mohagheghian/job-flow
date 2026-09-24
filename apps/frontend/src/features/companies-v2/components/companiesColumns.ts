@@ -2,9 +2,8 @@ export const COMPANY_GRID_TEMPLATE = 'minmax(180px, 2fr) minmax(120px, 1.3fr) 13
 
 export const LEADING_COLUMN_WIDTH = '44px'
 
-export function buildCompanyGridTemplate(showRowNumber: boolean, showPinned: boolean): string {
+export function buildCompanyGridTemplate(showRowNumber: boolean): string {
   const leading: string[] = []
   if (showRowNumber) leading.push(LEADING_COLUMN_WIDTH)
-  if (showPinned) leading.push(LEADING_COLUMN_WIDTH)
   return leading.length ? `${leading.join(' ')} ${COMPANY_GRID_TEMPLATE}` : COMPANY_GRID_TEMPLATE
 }

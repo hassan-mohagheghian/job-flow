@@ -8,7 +8,6 @@ import { formatCityLocation } from '@/shared/lib/formatLocation'
 import DateTime from '@/shared/components/DateTime'
 import { GradeBadge } from '@/shared/components/GradeBadge'
 import { gradeForScore } from '@/shared/lib/grade'
-import { PinButton } from '@/shared/components/PinButton'
 import { cn } from '@/shared/lib/utils'
 import { buildCompanyGridTemplate } from './companiesColumns'
 import { CompanyActions } from './CompanyActions'
@@ -19,15 +18,13 @@ interface CompanyRowProps {
   onReprocess: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onTogglePinned: (id: string, pinned: boolean) => void
-  showPinnedColumn?: boolean
   showRowNumberColumn?: boolean
   rowNumber?: number
 }
 
 export function CompanyRow({
-  company, onViewDetails, onReprocess, onEdit, onDelete, onTogglePinned,
-  showPinnedColumn = true, showRowNumberColumn = false, rowNumber,
+  company, onViewDetails, onReprocess, onEdit, onDelete,
+  showRowNumberColumn = false, rowNumber,
 }: CompanyRowProps) {
   const grade = company.scores?.overall_grade ?? (company.scores?.overall != null ? gradeForScore(company.scores.overall) : null)
   const processingStatus = (company.processing?.status ?? null) as ProcessingStatus | null
@@ -44,18 +41,13 @@ export function CompanyRow({
         "group relative grid border-b border-border/40 hover:bg-muted/50 hover:ring-1 hover:ring-inset hover:ring-border/60 focus-within:bg-muted/50 cursor-pointer transition-colors items-center",
         typeTint
       )}
-      style={{ gridTemplateColumns: buildCompanyGridTemplate(showRowNumberColumn, showPinnedColumn) }}
+      style={{ gridTemplateColumns: buildCompanyGridTemplate(showRowNumberColumn) }}
       onClick={() => onViewDetails(company.id)}
       data-recruiter={recruiter ? "true" : "false"}
     >
       {showRowNumberColumn && (
         <div className="py-2 px-3 flex items-center justify-center">
           <span className="text-2xs text-muted-foreground tabular-nums">{rowNumber ?? ''}</span>
-        </div>
-      )}
-      {showPinnedColumn && (
-        <div className="py-2 px-2 flex items-center justify-center" onClick={e => e.stopPropagation()}>
-          <PinButton pinned={company.pinned} onToggle={() => onTogglePinned(company.id, !company.pinned)} entityLabel="company" />
         </div>
       )}
       <div className="py-2 px-3 flex items-center">

@@ -157,6 +157,7 @@ export interface CompanyDetail {
   main_company?: CompanyMainRef | null
   alias_count?: number
   is_alias?: boolean
+  pinned?: boolean
   created_at?: string | null
   updated_at?: string | null
   [key: string]: unknown

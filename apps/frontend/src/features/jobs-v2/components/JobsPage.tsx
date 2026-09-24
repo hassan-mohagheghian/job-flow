@@ -55,12 +55,10 @@ interface JobsPageProps {
   onViewDetails: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onTogglePinned: (id: string) => void
+  onTogglePinned: (id: string, pinned: boolean) => void
   onRetry?: (id: string) => void
   onCancel?: (id: string) => void
   onApplication?: (id: string) => void
-  showPinnedColumn?: boolean
-  onTogglePinnedColumn?: (value: boolean) => void
   showRowNumberColumn?: boolean
   onToggleRowNumberColumn?: (value: boolean) => void
   isProcessing: boolean
@@ -95,7 +93,6 @@ export function JobsPage({
   filterCreatedDate, onFilterCreatedDateChange,
   activeFilterCount, onClearFilters,
   onProcessV2, onReprocess, onViewDetails, onEdit, onDelete, onTogglePinned, onRetry, onCancel, onApplication, isProcessing,
-  showPinnedColumn = true, onTogglePinnedColumn,
   showRowNumberColumn = false, onToggleRowNumberColumn,
   queueDrawerOpen, onQueueDrawerOpenChange, queueReloadKey,
   addJobDrawerOpen, onAddJobDrawerOpenChange, onOpenAddJob, onAddJobUrl, addJobClipboardUrl, onJobQueued,
@@ -186,8 +183,6 @@ export function JobsPage({
             onFilterCreatedDateChange={onFilterCreatedDateChange}
             activeFilterCount={activeFilterCount}
             onClearFilters={onClearFilters}
-            showPinnedColumn={showPinnedColumn}
-            onTogglePinnedColumn={onTogglePinnedColumn}
             showRowNumberColumn={showRowNumberColumn}
             onToggleRowNumberColumn={onToggleRowNumberColumn}
           />
@@ -203,11 +198,9 @@ export function JobsPage({
             onViewDetails={onViewDetails}
             onEdit={onEdit}
             onDelete={onDelete}
-            onTogglePinned={onTogglePinned}
             onRetry={onRetry}
             onCancel={onCancel}
             onApplication={onApplication}
-            showPinnedColumn={showPinnedColumn}
             showRowNumberColumn={showRowNumberColumn}
             sort={sort}
             order={order}
@@ -226,6 +219,7 @@ export function JobsPage({
         onOpenChange={onDetailJobIdChange}
         onEdit={onEdit}
         onReprocess={onReprocess}
+        onTogglePinned={onTogglePinned}
       />
       <JobEditDrawer
         jobId={editJobId}

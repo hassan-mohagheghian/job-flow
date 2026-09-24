@@ -118,30 +118,6 @@ describe('SkillRow', () => {
   })
 })
 
-describe('SkillRow pinned column', () => {
-  it('hides the pin button when the column is off', () => {
-    renderRow(makeSkill({ pinned: true }), { showPinnedColumn: false })
-    expect(screen.queryByLabelText('Unpin skill')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Pin skill for attention')).not.toBeInTheDocument()
-  })
-
-  it('renders the pin button when the column is shown', () => {
-    renderRow(makeSkill({ pinned: true }), { showPinnedColumn: true })
-    expect(screen.getByLabelText('Unpin skill')).toBeInTheDocument()
-  })
-
-  it('calls onTogglePinned when the pin button is clicked and stops row selection', () => {
-    const onTogglePinned = vi.fn()
-    const onViewDetails = vi.fn()
-    renderRow(makeSkill(), { showPinnedColumn: true, onTogglePinned, onViewDetails })
-
-    fireEvent.click(screen.getByLabelText('Pin skill for attention'))
-
-    expect(onTogglePinned).toHaveBeenCalledWith(1, true)
-    expect(onViewDetails).not.toHaveBeenCalled()
-  })
-})
-
 describe('SkillRow select column', () => {
   it('renders no checkbox when the select column is off', () => {
     renderRow(makeSkill())

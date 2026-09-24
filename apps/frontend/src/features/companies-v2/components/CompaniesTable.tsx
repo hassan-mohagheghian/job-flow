@@ -19,8 +19,6 @@ interface CompaniesTableProps {
   onReprocess: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onTogglePinned: (id: string, pinned: boolean) => void
-  showPinnedColumn?: boolean
   showRowNumberColumn?: boolean
   sort?: string
   order?: 'asc' | 'desc'
@@ -39,7 +37,6 @@ interface ColumnDef {
   scoreOptions?: ScoreSortOption[]
 }
 
-const PIN_COLUMN: ColumnDef = { label: 'Pin' }
 const ROW_NUMBER_COLUMN: ColumnDef = { label: '#' }
 
 const COLUMN_DEFS: ColumnDef[] = [
@@ -57,7 +54,7 @@ const COLUMN_DEFS: ColumnDef[] = [
 
 export function CompaniesTable({
   items, total, loadedCount = 0, isLoading, isFetchingNextPage = false, hasNextPage = false, onFetchNextPage = () => {},
-  onViewDetails, onReprocess, onEdit, onDelete, onTogglePinned, showPinnedColumn = true,
+  onViewDetails, onReprocess, onEdit, onDelete,
   showRowNumberColumn = false,
   sort = 'created_at', order = 'desc', onSortChange = () => {},
 }: CompaniesTableProps) {
@@ -67,10 +64,9 @@ export function CompaniesTable({
 
   const visibleColumnDefs = [
     ...(showRowNumberColumn ? [ROW_NUMBER_COLUMN] : []),
-    ...(showPinnedColumn ? [PIN_COLUMN] : []),
     ...COLUMN_DEFS,
   ]
-  const gridStyle = { gridTemplateColumns: buildCompanyGridTemplate(showRowNumberColumn, showPinnedColumn) }
+  const gridStyle = { gridTemplateColumns: buildCompanyGridTemplate(showRowNumberColumn) }
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -184,8 +180,6 @@ export function CompaniesTable({
                   onReprocess={onReprocess}
                   onEdit={onEdit}
                   onDelete={onDelete}
-                  onTogglePinned={onTogglePinned}
-                  showPinnedColumn={showPinnedColumn}
                   showRowNumberColumn={showRowNumberColumn}
                   rowNumber={virtualItem.index + 1}
                 />

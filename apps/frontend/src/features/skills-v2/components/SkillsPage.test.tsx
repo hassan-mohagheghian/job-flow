@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -162,17 +162,6 @@ describe('SkillsPage', () => {
     expect(screen.getByRole('button', { name: 'Refresh skills' })).toBeDisabled()
   })
 
-  it('renders the Pin column header when the pinned column is shown', () => {
-    renderPage(baseProps({
-      items: [makeSkill(1, 'Kubernetes')],
-      total: 1,
-      loadedCount: 1,
-      showPinnedColumn: true,
-      onTogglePinnedColumn: vi.fn(),
-    }))
-    expect(screen.getByText('Pin')).toBeInTheDocument()
-  })
-
   it('focuses the search input when F is pressed', () => {
     renderPage(baseProps())
     const search = screen.getByLabelText('Search skills')
@@ -182,14 +171,12 @@ describe('SkillsPage', () => {
     expect(search).toHaveFocus()
   })
 
-  it('reports a column toggle when the Pinned option is clicked', async () => {
+  it('does not expose a Pinned option in the Columns dropdown', async () => {
     const user = userEvent.setup()
-    const onTogglePinnedColumn = vi.fn()
-    renderPage(baseProps({ showPinnedColumn: false, onTogglePinnedColumn }))
+    renderPage(baseProps({ showRowNumberColumn: true, onToggleRowNumberColumn: vi.fn() }))
     await user.click(screen.getByText('Columns'))
-    const option = await screen.findByText('Pinned')
-    await user.click(option)
-    expect(onTogglePinnedColumn).toHaveBeenCalledWith(true)
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).queryByText('Pinned')).not.toBeInTheDocument()
   })
 
   it('reports a column toggle when the Select option is clicked', async () => {

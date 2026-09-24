@@ -3,7 +3,6 @@ import type { ProcessingStatus as PStatus } from '@/entities/job/types'
 import { ScoreBadge } from './ScoreBadge'
 import { ProcessingStatus } from './ProcessingStatus'
 import { JobActions } from './JobActions'
-import { PinButton } from '@/shared/components/PinButton'
 import { cn } from '@/shared/lib/utils'
 import { RecommendationBadge } from './RecommendationBadge'
 import { TrackingBadge } from './TrackingBadge'
@@ -19,19 +18,17 @@ interface JobRowProps {
   onViewDetails: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-  onTogglePinned: (id: string, pinned: boolean) => void
   onRetry?: (id: string) => void
   onCancel?: (id: string) => void
   onApplication?: (id: string) => void
-  showPinnedColumn?: boolean
   showRowNumberColumn?: boolean
   rowNumber?: number
   gridTemplate?: string
 }
 
 export function JobRow({
-  job, onProcessV2, onViewDetails, onEdit, onDelete, onTogglePinned, onRetry, onCancel, onApplication,
-  showPinnedColumn = true, showRowNumberColumn = false, rowNumber, gridTemplate,
+  job, onProcessV2, onViewDetails, onEdit, onDelete, onRetry, onCancel, onApplication,
+  showRowNumberColumn = false, rowNumber, gridTemplate,
 }: JobRowProps) {
   const processingStatus: PStatus | null = job.latest_processing_execution?.status ?? null
 
@@ -51,11 +48,6 @@ export function JobRow({
       {showRowNumberColumn && (
         <div className="py-2 px-3 flex items-center justify-center">
           <span className="text-2xs text-muted-foreground tabular-nums">{rowNumber ?? ''}</span>
-        </div>
-      )}
-      {showPinnedColumn && (
-        <div className="py-2 px-2 flex items-center justify-center" onClick={e => e.stopPropagation()}>
-          <PinButton pinned={job.pinned} onToggle={() => onTogglePinned(job.id, !job.pinned)} entityLabel="job" />
         </div>
       )}
       <div className="py-2 px-3 flex items-center">
