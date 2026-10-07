@@ -41,3 +41,20 @@ async def test_stream_starts_with_connected_comment_and_keepalive(monkeypatch):
     assert chunks[0] == ": connected\n\n"
     assert chunks[1].startswith("event: execution.created")
     assert any(c == ": ping\n\n" for c in chunks[2:])
+
+
+@pytest.mark.asyncio
+async def test_stream_disables_proxy_transforms(monkeypatch):
+    """The stream must forbid proxy compression (`no-transform`).
+
+    The Next.js standalone rewrite proxy compresses proxied responses for
+    gzip-accepting browsers, which buffers SSE frames and breaks live updates.
+    """
+    monkeypatch.setattr(router_module, "_validate_token", lambda token: "user-1")
+    monkeypatch.setattr(router_module, "stream_pattern_for_user", _one_chunk)
+
+    response = await router_module.processing_events(_Request(), token="tok")
+
+    assert response.media_type == "text/event-stream"
+    assert "no-transform" in response.headers["cache-control"]
+    assert response.headers["x-accel-buffering"] == "no"

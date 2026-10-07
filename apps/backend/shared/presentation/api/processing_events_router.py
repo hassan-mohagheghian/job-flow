@@ -64,5 +64,8 @@ async def processing_events(request: Request, token: str = Query(...)):
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        # `no-transform` forbids intermediaries (e.g. the Next.js standalone
+        # rewrite proxy) from compressing the stream: compression buffers SSE
+        # frames, so gzip-accepting browsers would receive nothing live.
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )

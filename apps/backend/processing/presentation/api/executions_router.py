@@ -136,5 +136,7 @@ async def execution_events(
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        # `no-transform` forbids intermediaries from compressing the stream
+        # (compression buffers SSE frames — see the global events router).
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )

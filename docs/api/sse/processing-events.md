@@ -457,16 +457,17 @@ status hook — share one connection regardless of how many executions are visib
 
 The EventSource connects **directly to the backend origin** when
 `NEXT_PUBLIC_API_URL` is baked in at build time (local dev, `npm run dev`),
-**not** through the Next.js rewrite proxy: the Next dev proxy compresses
-proxied responses (`Content-Encoding: gzip`), which buffers the SSE stream so
-the browser does not receive events in real time. When `NEXT_PUBLIC_API_URL`
+**not** through the Next.js rewrite proxy. When `NEXT_PUBLIC_API_URL`
 is empty (prebuilt docker image used by terraform, where `NEXT_PUBLIC_*`
 cannot be injected at container runtime), the client falls back to the
 same-origin relative URL `/events/processing`, which `next.config.ts`
 `rewrites()` proxies to `${BACKEND_URL}` (the backend container in docker).
-The production standalone proxy streams without compression, and the backend
-emits `: ping` keepalive comments so intermediaries never idle-close the
-stream. Set `NEXT_PUBLIC_API_URL` to the backend
+The proxied response carries `Cache-Control: no-cache, no-transform` so the
+proxy must not compress it: compression buffers SSE frames, and gzip-accepting
+browsers would otherwise receive nothing until the buffer flushes (which looks
+exactly like "processing works but the UI never updates live").
+The backend also emits `: ping` keepalive comments so intermediaries never
+idle-close the stream. Set `NEXT_PUBLIC_API_URL` to the backend
 origin (defaults to `http://localhost:5000`).
 
 Workflow step events are applied directly to the in-memory workflow tree via a
