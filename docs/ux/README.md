@@ -76,6 +76,9 @@ docs/ux/
 │       ├── delete-job.md      Delete Job
 │       ├── processing-queue.md
 │       └── workflow-progress.md
+│   ├── opportunities/
+│       ├── page.md            Opportunities page (inbound list, toolbar, drawers)
+│       └── opportunity-detail.md  Opportunity Detail drawer (message, extracted, score, path, history)
 │   ├── rules/
 │       ├── page.md            Rules page (scopes, columns, priority/badge, reorder)
 │       └── rule-form-drawer.md  Add / Edit Rule right drawer
@@ -111,6 +114,8 @@ docs/ux/
     │   ├── drag-drop-job.md   Import by dragging a link onto the page
     │   ├── paste-to-add-job.md  Import by pressing Ctrl/Cmd+V with a copied link
     │   └── ...
+    ├── opportunities/
+    │   └── process-inbound.md  Paste a message, process, follow the next action
     ├── rules/
         └── reorder-rules.md   Move up/down + drag reorder, priority math, clamping
     └── skills/

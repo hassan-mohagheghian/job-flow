@@ -16,6 +16,7 @@ from processing.presentation.api.process_router import router as process_router
 from processing.presentation.api.executions_router import router as executions_router
 from candidates.presentation.api.candidates_router import router as candidates_router
 from applications.presentation.api.applications_router import router as applications_router
+from opportunities.presentation.api.opportunities_router import router as opportunities_router
 from roadmaps.presentation.api.roadmaps_router import router as roadmaps_router
 from placeholders.presentation.api.placeholders_router import router as placeholders_router
 
@@ -55,6 +56,7 @@ api_router.include_router(executions_router, prefix="/processing", tags=["proces
 
 api_router.include_router(candidates_router, prefix="/candidates", tags=["candidates"])
 api_router.include_router(applications_router, prefix="/applications", tags=["applications"])
+api_router.include_router(opportunities_router, prefix="/opportunities", tags=["opportunities"])
 api_router.include_router(roadmaps_router, prefix="/roadmaps", tags=["roadmaps"])
 api_router.include_router(placeholders_router, prefix="/placeholders", tags=["placeholders"])
 

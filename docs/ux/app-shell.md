@@ -15,21 +15,22 @@ same content as a left Drawer (vaul, default `lg` width).
 ## Desktop rail (lg+)
 
 ```text
-┌──────────────┬──────────────────────────────────────────────────────────────┐
-│ ◪ Job Search │                                                              │
-│              │                         page content                         │
-│ ◉ Jobs       │                  (flex column beside the rail)               │
-│ ▣ Companies  │                                                              │
-│ ▧ Skills     │                                                              │
-│ ▤ Candidate  │                                                              │
-│ ⚙ Rules      │                                                              │
-│ 🧠 AI ▾      │                                                              │
-│   └ LLM Conf │                                                              │
-│              │                                                              │
-│ ─────────────│                                                              │
-│ [🌙] [☰]    │                                                              │
-│ [◱] Collapse │                                                              │
-└──────────────┴──────────────────────────────────────────────────────────────┘
+┌────────────────┬────────────────────────────────────────────────────────────┐
+│ ◪ Job Search   │                                                              │
+│                │                         page content                         │
+│ ◉ Jobs         │                  (flex column beside the rail)               │
+│ ◈ Opportunities│                                                              │
+│ ▣ Companies    │                                                              │
+│ ▧ Skills       │                                                              │
+│ ▤ Candidate    │                                                              │
+│ ⚙ Rules        │                                                              │
+│ 🧠 AI ▾        │                                                              │
+│   └ LLM Conf   │                                                              │
+│                │                                                              │
+│ ───────────────│                                                              │
+│ [🌙] [☰]      │                                                              │
+│ [◱] Collapse   │                                                              │
+└────────────────┴────────────────────────────────────────────────────────────┘
 
 Collapsed rail (w-[68px], icon-only, tooltips):
 ┌──────┬───────────────────────────────────────────────────────────────┐
@@ -69,6 +70,7 @@ Hamburger (☰) opens left Drawer (default `lg`):
 │ ◪ Job Search   │
 ├────────────────┤
 │ ◉ Jobs         │
+│ ◈ Opportunities│
 │ ▣ Companies    │
 │ ▧ Skills       │
 │ ▤ Candidate    │
@@ -90,6 +92,7 @@ flowchart TD
     C -->|hamburger| D[Left Drawer]
     B --> E[Brand → /jobs]
     B --> F[Jobs → /jobs]
+    B --> F2[Opportunities → /opportunities]
     B --> G[Companies → /companies]
     B --> H[Skills → /skills]
     B --> J[Rules → /rules]

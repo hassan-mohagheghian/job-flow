@@ -31,6 +31,7 @@ import rules.infrastructure.models.rule_model
 import processing.infrastructure.models.processing_execution_model
 import candidates.infrastructure.models.candidate_model  # noqa: F401
 import applications.infrastructure.models.application_model  # noqa: F401
+import opportunities.infrastructure.models.opportunity_model  # noqa: F401
 import roadmaps.infrastructure.models.roadmap_model  # noqa: F401
 import placeholders.infrastructure.models.placeholder_model  # noqa: F401
 import cities.infrastructure.models.city_model  # noqa: F401
@@ -119,6 +120,7 @@ def client(sa_session):
         get_processing_execution_repo,
         get_candidate_repo, get_candidate_profile_repo, get_candidate_source_repo,
         get_application_repo, get_follow_up_repo, get_document_repo,
+        get_opportunity_repo, get_opportunity_evaluation_repo, get_opportunity_service,
         get_roadmap_repo, get_roadmap_service, get_city_repo,
     )
     from exceptions import AppError
@@ -136,6 +138,10 @@ def client(sa_session):
     from applications.infrastructure.repositories.sa_application_repository import SQLAlchemyApplicationRepository
     from applications.infrastructure.repositories.sa_follow_up_repository import SQLAlchemyFollowUpRepository
     from applications.infrastructure.repositories.sa_document_repository import SQLAlchemyDocumentRepository
+    from opportunities.infrastructure.repositories.sa_opportunity_repository import (
+        SQLAlchemyOpportunityEvaluationRepository,
+        SQLAlchemyOpportunityRepository,
+    )
     from roadmaps.infrastructure.repositories.sa_roadmap_repository import SQLAlchemyRoadmapRepository
     from roadmaps.application.services.roadmap_service import RoadmapService
     from roadmaps.domain.event_publisher import InMemoryEventCollector as RoadmapInMemoryEventCollector
@@ -179,6 +185,17 @@ def client(sa_session):
     app.dependency_overrides[get_candidate_profile_repo] = lambda: SQLAlchemyCandidateProfileRepository(sa_session)
     app.dependency_overrides[get_candidate_source_repo] = lambda: SQLAlchemyCandidateSourceRepository(sa_session)
     app.dependency_overrides[get_application_repo] = lambda: SQLAlchemyApplicationRepository(sa_session, user_id="test-user")
+    app.dependency_overrides[get_opportunity_repo] = lambda: SQLAlchemyOpportunityRepository(sa_session, user_id="test-user")
+    app.dependency_overrides[get_opportunity_evaluation_repo] = lambda: SQLAlchemyOpportunityEvaluationRepository(sa_session)
+    app.dependency_overrides[get_opportunity_service] = lambda: get_opportunity_service(
+        opportunity_repo=SQLAlchemyOpportunityRepository(sa_session, user_id="test-user"),
+        evaluation_repo=SQLAlchemyOpportunityEvaluationRepository(sa_session),
+        job_repo=SQLAlchemyJobRepository(sa_session, user_id="test-user"),
+        company_repo=SQLAlchemyCompanyRepository(sa_session, user_id="test-user"),
+        skill_repo=SQLAlchemySkillRepository(sa_session, user_id="test-user"),
+        profile_repo=SQLAlchemyCandidateProfileRepository(sa_session),
+        rule_repo=SQLAlchemyRuleRepository(sa_session, user_id="test-user"),
+    )
     app.dependency_overrides[get_follow_up_repo] = lambda: SQLAlchemyFollowUpRepository(sa_session)
     app.dependency_overrides[get_document_repo] = lambda: SQLAlchemyDocumentRepository(sa_session)
     app.dependency_overrides[get_roadmap_repo] = lambda: SQLAlchemyRoadmapRepository(sa_session, user_id="test-user")

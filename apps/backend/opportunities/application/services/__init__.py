@@ -1,0 +1,1 @@
+"""Opportunities application services package."""

@@ -40,6 +40,7 @@ import ai.infrastructure.models.llm_configuration_model  # noqa: F401
 import processing.infrastructure.models.processing_execution_model  # noqa: F401
 import candidates.infrastructure.models.candidate_model  # noqa: F401
 import applications.infrastructure.models.application_model  # noqa: F401
+import opportunities.infrastructure.models.opportunity_model  # noqa: F401
 import roadmaps.infrastructure.models.roadmap_model  # noqa: F401
 import placeholders.infrastructure.models.placeholder_model  # noqa: F401
 import cities.infrastructure.models.city_model  # noqa: F401

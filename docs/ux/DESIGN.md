@@ -24,6 +24,7 @@ of a slim top bar) that opens a left sheet with the same items.
 SIDEBAR RAIL
   ├── Job Search (brand → /jobs)
   ├── Jobs           Job list (infinite scroll) + Processing Queue drawer
+  ├── Opportunities  Inbound messages → extract, resolve, evaluate, track
   ├── Companies      Company intelligence + processing queue
   ├── Cities         Normalized city catalog (read-only)
   ├── Skills         Skill management, aliases, insights
@@ -835,6 +836,29 @@ My Roadmaps (/roadmaps)                                    Detail (/roadmaps/{id
 │        [+ New Roadmap]                 │   │ ② Apply ▸ 0/3 · 0%             │
 └─────────────────────────────────────────┘   └────────────────────────────────┤
 ```
+
+---
+
+### Opportunities Page
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Opportunities                                                        ＋ New   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Search ..........................................................            │
+│ Status ▾              Source ▾                                  Refresh      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ # │ Opportunity              │ Source  │ Score │ Status         │ Updated     │
+│──────────────────────────────────────────────────────────────────────────────│
+│ 1 │ Senior Backend Engineer  │ Manual  │ 79    │ Ready to Apply │ 2m          │
+│ 2 │ Unknown role             │ Manual  │ —     │ Needs Info     │ 5m          │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+Rows open the Opportunity Detail drawer (original message, extracted info
+with uncertainty, linked job/company, scores + reasons, missing info,
+application path, next action, evaluation history). Incomplete opportunities
+show `Evaluation pending` instead of invented scores.
 
 ---
 

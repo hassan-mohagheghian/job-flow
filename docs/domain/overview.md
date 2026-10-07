@@ -72,6 +72,15 @@
 - **Progress**: computed, not stored — `completed (or skipped) tasks / total tasks`, per milestone and overall (0 when no tasks).
 - **Events (EDD)**: domain events (see `docs/domain/roadmaps/events.md`) are emitted through the `RoadmapEventPublisher` port during create/update/delete/milestone/task/note/resource/skill-link operations; the default implementation is an in-memory collector — pub/sub transport is deferred (AGENTS.md rule 16).
 
+### Opportunity
+- **What**: An inbound recruiting message (`opportunities` context, schema `opportunity`) progressively enriched into a scored, actionable record — the reverse of the JD-first job pipeline
+- **Storage**: `opportunity.opportunities` (message metadata, `raw_content`, `content_hash` dedupe, `extracted` JSON, logical `company_id` / `job_id`, lifecycle `status`, nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path`, `next_action`) + immutable `opportunity_evaluations` snapshots (reprocessing appends, never overwrites)
+- **Lifecycle**: `new` → `extracted` → `enriching` → `evaluated` / `needs_info` → `ready_to_apply` → `applied` → `replied` / `interview` / `rejected` / `closed`
+- **Extraction/Evaluation**: versioned `opportunity.extract` / `opportunity.evaluate` structured LLM calls via `LLMService`; every extracted field carries `known` / `unknown` / `inferred` / `needs_verification` — nothing is fabricated
+- **Resolution**: links existing jobs (URL duplicate rules) and companies (exact name/domain matches) only — never creates jobs, companies, or skills; duplicate content returns the existing row
+- **Scoring**: same deterministic rules as jobs (`overall = round(fit × 0.6 + success × 0.4)`; `apply ≥ 80`, `consider ≥ 60`, else `skip`); insufficient information yields `needs_info` with a missing-information list instead of scores
+- **Events (EDD)**: domain events (see `docs/domain/opportunities/events.md`) emitted through the `OpportunityEventPublisher` port; default is an in-memory collector — pub/sub transport is deferred (AGENTS.md rule 16)
+
 ## Business Rules
 
 ### Scoring System

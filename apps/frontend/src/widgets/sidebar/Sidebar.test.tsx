@@ -44,7 +44,7 @@ describe('Sidebar', () => {
   it('renders all main nav items', () => {
     renderSidebar()
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
-    for (const label of ['Jobs', 'Companies', 'Candidate', 'Skills', 'Rules', 'AI']) {
+    for (const label of ['Jobs', 'Opportunities', 'Companies', 'Candidate', 'Skills', 'Rules', 'AI']) {
       expect(screen.getByRole('button', { name: new RegExp(label, 'i') })).toBeInTheDocument()
     }
   })

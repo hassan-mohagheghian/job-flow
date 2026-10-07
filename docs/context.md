@@ -36,6 +36,6 @@ Job Search Intelligence is an AI-powered career platform that helps software eng
 
 ## System Boundaries
 
-- **In scope**: Job discovery, company analysis, skill management, candidate profile (resume/LinkedIn input), career insights, job application workspace (tracking + artifact generation)
+- **In scope**: Job discovery, company analysis, skill management, candidate profile (resume/LinkedIn input), career insights, job application workspace (tracking + artifact generation), inbound opportunities (message → extract → resolve → evaluate → track)
 - **Out of scope**: Job application submission, interview scheduling, salary negotiation
 - **External integrations**: AI Agent Layer (LLMService + provider abstraction), LinkedIn (scraping), job boards (URL fetching)

@@ -224,6 +224,41 @@ def get_note_service(
     return NoteService(note_repo, application_repo, InMemoryEventCollector())
 
 
+# ── Opportunities Context Dependencies ───────────────────────────
+
+def get_opportunity_repo(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    from opportunities.infrastructure import SQLAlchemyOpportunityRepository
+    return SQLAlchemyOpportunityRepository(session, user_id=current_user.id)
+
+
+def get_opportunity_evaluation_repo(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    from opportunities.infrastructure import SQLAlchemyOpportunityEvaluationRepository
+    return SQLAlchemyOpportunityEvaluationRepository(session)
+
+
+def get_opportunity_service(
+    opportunity_repo=Depends(get_opportunity_repo),
+    evaluation_repo=Depends(get_opportunity_evaluation_repo),
+    job_repo=Depends(get_job_repo),
+    company_repo=Depends(get_company_repo),
+    skill_repo=Depends(get_skill_repo),
+    profile_repo=Depends(get_candidate_profile_repo),
+    rule_repo=Depends(get_rule_repo),
+):
+    from opportunities.application.services.opportunity_service import OpportunityService
+    from opportunities.domain.event_publisher import InMemoryEventCollector
+    return OpportunityService(
+        opportunity_repo=opportunity_repo,
+        evaluation_repo=evaluation_repo,
+        job_repo=job_repo,
+        company_repo=company_repo,
+        skill_repo=skill_repo,
+        profile_repo=profile_repo,
+        rule_repo=rule_repo,
+        event_publisher=InMemoryEventCollector(),
+    )
+
+
 # ── Roadmaps Context Dependencies ────────────────────────────────
 
 def get_roadmap_repo(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):

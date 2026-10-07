@@ -23,6 +23,7 @@ REST API served by FastAPI on port 5000. All endpoints return JSON. Real-time pr
 | Insights            | `/api/insights`                             | Career intelligence sections          |
 | Candidate Profile   | `/api/candidates/sources`                   | Resume / LinkedIn profile upload as analysis input |
 | Applications        | `/api/applications`                        | Job application workspace: follow-ups, documents, generation |
+| Opportunities       | `/api/opportunities`                       | Inbound opportunities: extract, resolve, evaluate, track |
 | Rules               | `/api/rules`                                | Scoring rules configuration           |
 | SSE                | `/api/sse/processing-events`                | Real-time processing event stream     |
 | System              | `/api/generation-history`, `/api/health`    | History + health check                |
@@ -208,6 +209,20 @@ Endpoints:
 - `POST /api/applications/{application_id}/documents/{type}/generate` — queue resume / cover letter (202).
 - `PATCH` / `DELETE` `/api/applications/documents/{document_id}` — edit / delete a document.
 - `GET /api/applications/documents/{document_id}/pdf` — download a document as a PDF (placeholders filled).
+
+## Opportunities (Inbound)
+
+The Opportunities API (`/api/opportunities`) turns a pasted inbound message into a structured, scored opportunity reusing the candidate profile, scoring rules, and entity resolution (see `docs/api/opportunities/README.md` and `docs/domain/opportunities/opportunity.md`).
+
+Endpoints:
+
+- `POST /api/opportunities` — create from a manual message (`201`; duplicate content returns the existing row, `200` + `duplicate: true`).
+- `GET /api/opportunities` — list newest first (`status` / `source` / `query` filters).
+- `GET /api/opportunities/{id}` — detail with extracted info, evaluation, application path, and evaluation history.
+- `POST /api/opportunities/{id}/process` (or `/reprocess`) — synchronous extract → resolve → evaluate.
+- `PATCH /api/opportunities/{id}/links` — link/unlink an existing job or company.
+- `PATCH /api/opportunities/{id}/status` — move along the funnel.
+- `DELETE /api/opportunities/{id}` — hard-delete (204).
 
 ## Placeholders API (`/api/placeholders`)
 

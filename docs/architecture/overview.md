@@ -21,9 +21,10 @@ Job Search Intelligence is a **DDD modular monolith** with a hexagonal backend (
 │      ▼           ▼               ▼          │
 │        FastAPI (port 5000)                  │
 │  ┌───────────────────────────────────────┐  │
-│  │ Bounded Contexts                      │  │
-│  │ jobs · companies · skills · rules     │  │
-│  │ candidates · ai · processing · shared │  │
+ │  │ Bounded Contexts                      │  │
+ │  │ jobs · companies · skills · rules     │  │
+ │  │ candidates · ai · processing · shared │  │
+ │  │ applications · roadmaps · opportunities │  │
 │  └───────┬───────────────────────┬───────┘  │
 │          │                       │          │
 │   ┌──────▼──────┐         ┌──────▼──────┐   │
@@ -69,6 +70,7 @@ Job Search Intelligence is a **DDD modular monolith** with a hexagonal backend (
 | skills     | 5-category taxonomy, aliases, relationships, insights           |
 | candidates | Canonical Candidate Profile domain: profile, sources, skills/experience/projects, evidence, versions; source adapters (resume/linkedin) + one `candidate.extract` LLM call |
 | applications | Job Application Workspace: per-job application record, follow-ups, versioned documents (tailored resume / cover letter); generation via the processing pipeline |
+| opportunities | Inbound Opportunity pipeline: manual message → extract → resolve existing job/company → evaluate vs candidate profile + rules → score → application path → funnel tracking |
 | roadmaps    | Independent user goal broken into milestones/tasks with skill links; AI generation from an application via the processing pipeline |
 | rules      | Configurable scoring rules (SHARED, JOB, COMPANY_PRODUCT, ...) |
 | ai         | LLMService, providers, tools, LangGraph graphs                     |

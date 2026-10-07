@@ -52,6 +52,10 @@ SCHEMAS = {
         "application_documents",
         "application_status_timeline",
     ],
+    "opportunity": [
+        "opportunities",
+        "opportunity_evaluations",
+    ],
     "roadmap": [
         "roadmaps",
         "roadmap_goals",

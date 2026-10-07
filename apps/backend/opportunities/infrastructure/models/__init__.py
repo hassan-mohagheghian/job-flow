@@ -1,0 +1,1 @@
+"""Opportunities infrastructure models package."""

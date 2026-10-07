@@ -1,0 +1,1 @@
+"""Opportunities domain repositories package."""
