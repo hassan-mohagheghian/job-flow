@@ -60,6 +60,22 @@ flowchart LR
 - **Fires when**: the user moves the opportunity along the funnel.
 - **Consumers**: none yet.
 
+### `opportunity.note.added`
+
+- **Event**: `OpportunityNoteAdded`
+- **Trigger**: `OpportunityService.add_note`.
+- **Payload**: `opportunity_id`, `note_id`.
+- **Fires when**: the user saves a follow-up note on the opportunity.
+- **Consumers**: none yet.
+
+### `opportunity.note.deleted`
+
+- **Event**: `OpportunityNoteDeleted`
+- **Trigger**: `OpportunityService.delete_note`.
+- **Payload**: `opportunity_id`, `note_id`.
+- **Fires when**: the user removes a follow-up note.
+- **Consumers**: none yet.
+
 ## Emission Rules
 
 - Events are emitted by the service that performs the state change — never by callers (rule 16b).

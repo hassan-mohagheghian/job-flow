@@ -9,16 +9,19 @@ from sqlalchemy.orm import Session
 
 from opportunities.domain.repositories.opportunity_repository import (
     IOpportunityEvaluationRepository,
+    IOpportunityNoteRepository,
     IOpportunityRepository,
 )
 from opportunities.infrastructure.mappers import (
     dump_json_fields,
     evaluation_model_to_dict,
+    note_model_to_dict,
     opportunity_model_to_dict,
 )
 from opportunities.infrastructure.models.opportunity_model import (
     OpportunityEvaluationModel,
     OpportunityModel,
+    OpportunityNoteModel,
 )
 
 
@@ -117,6 +120,9 @@ class SQLAlchemyOpportunityRepository(IOpportunityRepository):
         self._session.query(OpportunityEvaluationModel).filter(
             OpportunityEvaluationModel.opportunity_id == opportunity_id
         ).delete()
+        self._session.query(OpportunityNoteModel).filter(
+            OpportunityNoteModel.opportunity_id == opportunity_id
+        ).delete()
         deleted = (
             self._session.query(OpportunityModel)
             .filter(OpportunityModel.id == opportunity_id)
@@ -155,3 +161,48 @@ class SQLAlchemyOpportunityEvaluationRepository(IOpportunityEvaluationRepository
             .all()
         )
         return [evaluation_model_to_dict(r) for r in rows]
+
+
+class SQLAlchemyOpportunityNoteRepository(IOpportunityNoteRepository):
+    """SQLAlchemy implementation of the follow-up note repository."""
+
+    def __init__(self, session: Session, user_id: str = ""):
+        self._session = session
+        self._user_id = user_id
+
+    def _scoped(self, query):
+        if self._user_id:
+            return query.filter(OpportunityNoteModel.user_id == self._user_id)
+        return query
+
+    def create(self, data: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(data)
+        if self._user_id and not payload.get("user_id"):
+            payload["user_id"] = self._user_id
+        model = OpportunityNoteModel(
+            **{k: v for k, v in payload.items() if hasattr(OpportunityNoteModel, k)}
+        )
+        self._session.add(model)
+        self._session.commit()
+        self._session.refresh(model)
+        return note_model_to_dict(model)
+
+    def get_by_id(self, note_id: str) -> dict[str, Any] | None:
+        q = self._session.query(OpportunityNoteModel).filter(OpportunityNoteModel.id == note_id)
+        model = self._scoped(q).first()
+        return note_model_to_dict(model) if model else None
+
+    def list_for_opportunity(self, opportunity_id: str) -> list[dict[str, Any]]:
+        q = self._session.query(OpportunityNoteModel).filter(
+            OpportunityNoteModel.opportunity_id == opportunity_id
+        )
+        rows = self._scoped(q).order_by(OpportunityNoteModel.created_at.desc()).all()
+        return [note_model_to_dict(r) for r in rows]
+
+    def delete(self, note_id: str) -> bool:
+        q = self._session.query(OpportunityNoteModel).filter(OpportunityNoteModel.id == note_id)
+        if self._user_id:
+            q = q.filter(OpportunityNoteModel.user_id == self._user_id)
+        deleted = q.delete()
+        self._session.commit()
+        return bool(deleted)

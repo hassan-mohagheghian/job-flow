@@ -75,3 +75,44 @@ class TestOpportunityAPI:
         resp = client.delete(f"/api/opportunities/{created['id']}")
         assert resp.status_code == 204
         assert client.get(f"/api/opportunities/{created['id']}").status_code == 404
+
+
+class TestOpportunityNotesAPI:
+    def test_add_and_list_note(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.post(
+            f"/api/opportunities/{created['id']}/notes",
+            json={"title": "Recruiter replied", "content": "They sent the JD."},
+        )
+        assert resp.status_code == 201
+        note = resp.json()
+        assert note["title"] == "Recruiter replied"
+        assert note["content"] == "They sent the JD."
+        assert note["author"] == "Test User"
+
+        detail = client.get(f"/api/opportunities/{created['id']}").json()
+        assert len(detail["notes"]) == 1
+        assert detail["notes"][0]["id"] == note["id"]
+
+    def test_add_note_requires_content(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.post(f"/api/opportunities/{created['id']}/notes", json={"content": "  "})
+        assert resp.status_code == 422
+
+    def test_add_note_missing_opportunity_404(self, client):
+        resp = client.post("/api/opportunities/opp-missing/notes", json={"content": "Hi"})
+        assert resp.status_code == 404
+
+    def test_delete_note(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        note = client.post(
+            f"/api/opportunities/{created['id']}/notes", json={"content": "Temp"}
+        ).json()
+        resp = client.delete(f"/api/opportunities/notes/{note['id']}")
+        assert resp.status_code == 204
+        detail = client.get(f"/api/opportunities/{created['id']}").json()
+        assert detail["notes"] == []
+
+    def test_delete_missing_note_404(self, client):
+        resp = client.delete("/api/opportunities/notes/note-missing")
+        assert resp.status_code == 404

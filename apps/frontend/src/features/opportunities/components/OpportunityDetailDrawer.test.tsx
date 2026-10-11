@@ -6,6 +6,8 @@ import { OpportunityDetailDrawer } from './OpportunityDetailDrawer'
 const processMock = vi.fn()
 const statusMock = vi.fn()
 const deleteMock = vi.fn()
+const addNoteMock = vi.fn()
+const deleteNoteMock = vi.fn()
 
 vi.mock('@/entities/opportunity/hooks', () => ({
   useOpportunityDetailQuery: () => ({
@@ -25,6 +27,17 @@ vi.mock('@/entities/opportunity/hooks', () => ({
       application_path: { kind: 'reply_sender', label: 'Reply to the sender' },
       next_action: 'Ask the recruiter for the location and JD',
       evaluations: [{ id: 'eval-1', status: 'evaluated', overall_score: 79 }],
+      notes: [
+        {
+          id: 'note-1',
+          opportunity_id: 'opp-1',
+          title: 'Recruiter replied',
+          content: 'They sent the JD.',
+          author: 'Hassan',
+          created_at: '2026-10-08T10:00:00+00:00',
+          updated_at: '2026-10-08T10:00:00+00:00',
+        },
+      ],
     },
     isLoading: false,
     isError: false,
@@ -32,6 +45,8 @@ vi.mock('@/entities/opportunity/hooks', () => ({
   useProcessOpportunity: () => ({ mutate: processMock, isPending: false }),
   useUpdateOpportunityStatus: () => ({ mutate: statusMock, isPending: false }),
   useDeleteOpportunity: () => ({ mutate: deleteMock, isPending: false }),
+  useAddOpportunityNote: () => ({ mutate: addNoteMock, isPending: false }),
+  useDeleteOpportunityNote: () => ({ mutate: deleteNoteMock, isPending: false }),
 }))
 
 describe('OpportunityDetailDrawer', () => {
@@ -39,6 +54,8 @@ describe('OpportunityDetailDrawer', () => {
     processMock.mockClear()
     statusMock.mockClear()
     deleteMock.mockClear()
+    addNoteMock.mockClear()
+    deleteNoteMock.mockClear()
   })
 
   it('shows the original message, evaluation, score reasons, path and history', () => {
@@ -65,5 +82,29 @@ describe('OpportunityDetailDrawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /delete opportunity/i }))
     expect(deleteMock).toHaveBeenCalledWith('opp-1', expect.anything())
+  })
+
+  it('shows follow-up notes and adds a new one', () => {
+    render(<OpportunityDetailDrawer opportunityId="opp-1" onClose={vi.fn()} />)
+
+    expect(screen.getByText('Recruiter replied')).toBeInTheDocument()
+    expect(screen.getByText('They sent the JD.')).toBeInTheDocument()
+    expect(screen.getByText(/Hassan ·/)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/note title/i), { target: { value: 'Second reply' } })
+    fireEvent.change(screen.getByLabelText(/new follow-up note/i), { target: { value: 'New salary info.' } })
+    fireEvent.click(screen.getByRole('button', { name: /add follow-up/i }))
+
+    expect(addNoteMock).toHaveBeenCalledWith(
+      { id: 'opp-1', data: { title: 'Second reply', content: 'New salary info.' } },
+      expect.anything(),
+    )
+  })
+
+  it('deletes a follow-up note', () => {
+    render(<OpportunityDetailDrawer opportunityId="opp-1" onClose={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /delete note recruiter replied/i }))
+    expect(deleteNoteMock).toHaveBeenCalledWith({ id: 'opp-1', noteId: 'note-1' })
   })
 })

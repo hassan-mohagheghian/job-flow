@@ -17,6 +17,8 @@ Processing is synchronous in phase one (no TaskIQ/SSE): `POST .../process` runs 
 | POST | `/api/opportunities/{id}/reprocess` | Same as process; appends a new evaluation snapshot. |
 | PATCH | `/api/opportunities/{id}/links` | Link/unlink existing `job_id` / `company_id` (404 when the target is unknown). |
 | PATCH | `/api/opportunities/{id}/status` | Move along the funnel (invalid transitions → 422). |
+| POST | `/api/opportunities/{id}/notes` | Add a follow-up note (201; body `{ "title"?, "content" }`, author stamped from auth). |
+| DELETE | `/api/opportunities/notes/{note_id}` | Delete a follow-up note (204). |
 | DELETE | `/api/opportunities/{id}` | Hard-delete the opportunity and its evaluations (204). |
 
 ## Create Opportunity

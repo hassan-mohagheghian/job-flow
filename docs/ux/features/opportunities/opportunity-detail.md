@@ -35,6 +35,13 @@ Shows everything known about one inbound opportunity: the original message, extr
 │ ┌─ Missing ──────────────────────────────────────────────┐ │
 │ │ Job location · Visa sponsorship                        │ │
 │ └────────────────────────────────────────────────────────┘ │
+│ ┌─ Follow-ups ───────────────────────────────────────────┐ │
+│ │ Recruiter replied · Hassan · 2h ago        [Delete]    │ │
+│ │ "They sent the full JD — Berlin, hybrid."             │ │
+│ │ Title [________________]                               │ │
+│ │ [Paste the follow-up message or new details…      ]    │ │
+│ │ [Add follow-up]                                        │ │
+│ └────────────────────────────────────────────────────────┘ │
 │ ┌─ History ──────────────────────────────────────────────┐ │
 │ │ eval-2 · ready_to_apply · 79 · 2h ago                  │ │
 │ │ eval-1 · needs_info · — · 1d ago                      │ │
@@ -55,6 +62,10 @@ Shows everything known about one inbound opportunity: the original message, extr
 ## Content
 
 Sections render only when they have content, except Score (shows `Evaluation pending` + reason) and Next (always shows the recommended action). Uncertainty is shown inline (`known` values plain; `inferred` / `needs_verification` flagged). History lists evaluation snapshots newest first.
+
+## Follow-ups
+
+The follow-up trail records later messages and new details for reassessment (e.g. a recruiter reply with the JD). Each note shows title (or `Note`), author display name, timestamp, content, and a delete button. The add form is a title input plus a message textarea and an `Add follow-up` button (disabled while empty). Notes are immutable — no edit. The author is stamped server-side from the signed-in user.
 
 ## Footer
 

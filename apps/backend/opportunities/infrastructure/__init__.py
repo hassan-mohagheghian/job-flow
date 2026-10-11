@@ -5,8 +5,10 @@ def __getattr__(name: str):
     _exports = {
         "OpportunityModel": ("opportunities.infrastructure.models.opportunity_model", "OpportunityModel"),
         "OpportunityEvaluationModel": ("opportunities.infrastructure.models.opportunity_model", "OpportunityEvaluationModel"),
+        "OpportunityNoteModel": ("opportunities.infrastructure.models.opportunity_model", "OpportunityNoteModel"),
         "SQLAlchemyOpportunityRepository": ("opportunities.infrastructure.repositories.sa_opportunity_repository", "SQLAlchemyOpportunityRepository"),
         "SQLAlchemyOpportunityEvaluationRepository": ("opportunities.infrastructure.repositories.sa_opportunity_repository", "SQLAlchemyOpportunityEvaluationRepository"),
+        "SQLAlchemyOpportunityNoteRepository": ("opportunities.infrastructure.repositories.sa_opportunity_repository", "SQLAlchemyOpportunityNoteRepository"),
     }
     if name in _exports:
         module_path, attr = _exports[name]
@@ -19,6 +21,8 @@ def __getattr__(name: str):
 __all__ = [
     "OpportunityModel",
     "OpportunityEvaluationModel",
+    "OpportunityNoteModel",
     "SQLAlchemyOpportunityRepository",
     "SQLAlchemyOpportunityEvaluationRepository",
+    "SQLAlchemyOpportunityNoteRepository",
 ]

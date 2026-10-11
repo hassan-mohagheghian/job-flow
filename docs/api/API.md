@@ -222,6 +222,7 @@ Endpoints:
 - `POST /api/opportunities/{id}/process` (or `/reprocess`) — synchronous extract → resolve → evaluate.
 - `PATCH /api/opportunities/{id}/links` — link/unlink an existing job or company.
 - `PATCH /api/opportunities/{id}/status` — move along the funnel.
+- `POST /api/opportunities/{id}/notes` / `DELETE /api/opportunities/notes/{note_id}` — follow-up trail.
 - `DELETE /api/opportunities/{id}` — hard-delete (204).
 
 ## Placeholders API (`/api/placeholders`)

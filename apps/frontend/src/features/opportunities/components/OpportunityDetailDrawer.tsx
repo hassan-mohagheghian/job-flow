@@ -1,9 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader } from '@/shared/components/Drawer'
 import {
+  useAddOpportunityNote,
   useDeleteOpportunity,
+  useDeleteOpportunityNote,
   useOpportunityDetailQuery,
   useProcessOpportunity,
   useUpdateOpportunityStatus,
@@ -46,8 +51,28 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
   const processMutation = useProcessOpportunity()
   const statusMutation = useUpdateOpportunityStatus()
   const deleteMutation = useDeleteOpportunity()
+  const addNoteMutation = useAddOpportunityNote()
+  const deleteNoteMutation = useDeleteOpportunityNote()
+  const [noteTitle, setNoteTitle] = useState('')
+  const [noteContent, setNoteContent] = useState('')
 
   const opportunity = detailQuery.data
+
+  const handleAddNote = () => {
+    if (!opportunityId || !noteContent.trim() || addNoteMutation.isPending) return
+    addNoteMutation.mutate(
+      {
+        id: opportunityId,
+        data: { title: noteTitle.trim() || null, content: noteContent.trim() },
+      },
+      {
+        onSuccess: () => {
+          setNoteTitle('')
+          setNoteContent('')
+        },
+      },
+    )
+  }
 
   return (
     <Drawer open={opportunityId !== null} onOpenChange={(open) => !open && onClose()}>
@@ -199,6 +224,66 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
                 </ul>
               </Section>
             ) : null}
+
+            <Section title="Follow-ups">
+              {opportunity.notes?.length ? (
+                <ul className="space-y-2">
+                  {opportunity.notes.map((note) => (
+                    <li key={note.id} className="rounded-md bg-muted/50 p-2">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate">
+                            {note.title || 'Note'}
+                          </p>
+                          <p className="text-2xs text-muted-foreground">
+                            {[note.author, note.created_at].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={`Delete note ${note.title || note.id}`}
+                          disabled={deleteNoteMutation.isPending}
+                          onClick={() =>
+                            opportunityId &&
+                            deleteNoteMutation.mutate({ id: opportunityId, noteId: note.id })
+                          }
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                      <p className="text-xs whitespace-pre-wrap break-words mt-1">{note.content}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  No follow-ups yet. Save recruiter replies and new details here for reassessment.
+                </p>
+              )}
+              <div className="space-y-2 mt-2">
+                <Input
+                  aria-label="Note title"
+                  placeholder="Title (e.g. Recruiter replied)"
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                />
+                <Textarea
+                  aria-label="New follow-up note"
+                  placeholder="Paste the follow-up message or new details…"
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  rows={3}
+                />
+                <Button
+                  size="sm"
+                  disabled={!noteContent.trim() || addNoteMutation.isPending}
+                  onClick={handleAddNote}
+                >
+                  {addNoteMutation.isPending ? 'Adding…' : 'Add follow-up'}
+                </Button>
+              </div>
+            </Section>
 
             {opportunity.evaluations?.length ? (
               <Section title="History">

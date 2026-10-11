@@ -68,6 +68,8 @@ from opportunities.domain.events import (
     OpportunityEvaluated,
     OpportunityExtracted,
     OpportunityLinked,
+    OpportunityNoteAdded,
+    OpportunityNoteDeleted,
     OpportunityStatusChanged,
 )
 from processing.application.services.job_analysis_inputs import (
@@ -149,6 +151,7 @@ class OpportunityService:
         skill_repo: Any = None,
         profile_repo: Any = None,
         rule_repo: Any = None,
+        note_repo: Any = None,
         llm: Any | None = None,
         event_publisher: OpportunityEventPublisher | None = None,
     ):
@@ -159,6 +162,7 @@ class OpportunityService:
         self._skills = skill_repo
         self._profiles = profile_repo
         self._rules = rule_repo
+        self._notes = note_repo
         self._llm = llm
         self.event_publisher = event_publisher or InMemoryEventCollector()
 
@@ -230,7 +234,10 @@ class OpportunityService:
     def get_detail(self, opportunity_id: str) -> dict[str, Any]:
         row = self._get_or_raise(opportunity_id)
         evaluations = self._evaluations.list_for_opportunity(opportunity_id)
-        return self._present(row, evaluations)
+        notes = self._notes.list_for_opportunity(opportunity_id) if self._notes else []
+        presented = self._present(row, evaluations)
+        presented["notes"] = notes
+        return presented
 
     def list(
         self,
@@ -329,6 +336,62 @@ class OpportunityService:
     def delete(self, opportunity_id: str) -> bool:
         self._get_or_raise(opportunity_id)
         return bool(self._opportunities.delete(opportunity_id))
+
+    # ── Follow-up notes ───────────────────────────────────────────
+
+    def add_note(
+        self,
+        opportunity_id: str,
+        title: str | None,
+        content: str,
+        author: str = "",
+    ) -> dict[str, Any]:
+        """Record a follow-up note (a later message, new detail, next step).
+
+        Notes are immutable: add/delete only, no edit. The ``author`` display
+        name is stamped by the caller (the API layer uses the authenticated
+        user) — clients cannot set it themselves.
+        """
+        if self._notes is None:
+            raise ValidationError("Notes are not available")
+        self._get_or_raise(opportunity_id)
+        text = str(content or "").strip()
+        if not text:
+            raise ValidationError("Note content must not be empty")
+        now = _now_iso()
+        stored = self._notes.create(
+            {
+                "opportunity_id": opportunity_id,
+                "title": (str(title or "").strip() or None),
+                "content": text,
+                "author": str(author or "").strip(),
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+        self._emit(
+            OpportunityNoteAdded(
+                aggregate_id=opportunity_id,
+                opportunity_id=opportunity_id,
+                note_id=stored["id"],
+            )
+        )
+        return stored
+
+    def delete_note(self, note_id: str) -> None:
+        if self._notes is None:
+            raise ValidationError("Notes are not available")
+        current = self._notes.get_by_id(note_id)
+        if not current:
+            raise NotFoundError(f"Note {note_id} not found")
+        self._notes.delete(note_id)
+        self._emit(
+            OpportunityNoteDeleted(
+                aggregate_id=current.get("opportunity_id"),
+                opportunity_id=current.get("opportunity_id") or "",
+                note_id=note_id,
+            )
+        )
 
     # ── Extract ───────────────────────────────────────────────────
 

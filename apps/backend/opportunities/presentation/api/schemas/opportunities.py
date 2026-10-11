@@ -54,6 +54,18 @@ class UpdateOpportunityStatusRequest(BaseModel):
         return str(v)
 
 
+class CreateNoteRequest(BaseModel):
+    title: str | None = None
+    content: str
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not str(v or "").strip():
+            raise ValueError("content must not be empty")
+        return str(v)
+
+
 class OpportunityListItemSchema(BaseModel):
     id: str
     title: str = "Unknown role"
@@ -91,6 +103,16 @@ class OpportunityEvaluationSchema(BaseModel):
     created_at: str | None = None
 
 
+class OpportunityNoteSchema(BaseModel):
+    id: str
+    opportunity_id: str
+    title: str | None = None
+    content: str = ""
+    author: str = ""
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
 class OpportunityDetailResponse(BaseModel):
     id: str
     title: str = "Unknown role"
@@ -121,6 +143,7 @@ class OpportunityDetailResponse(BaseModel):
     updated_at: str | None = None
     duplicate: bool = False
     evaluations: list[OpportunityEvaluationSchema] = Field(default_factory=list)
+    notes: list[OpportunityNoteSchema] = Field(default_factory=list)
 
 
 def build_list_item(row: dict[str, Any]) -> OpportunityListItemSchema:
@@ -148,6 +171,7 @@ def build_detail_response(
     row: dict[str, Any],
     evaluations: list[dict[str, Any]] | None = None,
     duplicate: bool = False,
+    notes: list[dict[str, Any]] | None = None,
 ) -> OpportunityDetailResponse:
     return OpportunityDetailResponse(
         id=row["id"],
@@ -179,6 +203,7 @@ def build_detail_response(
         updated_at=row.get("updated_at"),
         duplicate=duplicate,
         evaluations=[OpportunityEvaluationSchema(**e) for e in (evaluations or [])],
+        notes=[OpportunityNoteSchema(**n) for n in (notes or [])],
     )
 
 
@@ -186,9 +211,11 @@ __all__ = [
     "CreateOpportunityRequest",
     "UpdateOpportunityLinksRequest",
     "UpdateOpportunityStatusRequest",
+    "CreateNoteRequest",
     "OpportunityListItemSchema",
     "OpportunityListResponse",
     "OpportunityEvaluationSchema",
+    "OpportunityNoteSchema",
     "OpportunityDetailResponse",
     "build_list_item",
     "build_detail_response",

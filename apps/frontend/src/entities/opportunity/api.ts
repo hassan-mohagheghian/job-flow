@@ -1,9 +1,11 @@
 import { api } from '@/shared/api'
 import type {
+  CreateOpportunityNoteRequest,
   CreateOpportunityRequest,
   OpportunityDetail,
   OpportunityListQuery,
   OpportunityListResult,
+  OpportunityNote,
   OpportunityStatus,
   UpdateOpportunityLinksRequest,
 } from './types'
@@ -28,5 +30,8 @@ export const opportunityApi = {
     api.patch<OpportunityDetail>(`/opportunities/${id}/links`, data),
   setStatus: (id: string, status: OpportunityStatus) =>
     api.patch<OpportunityDetail>(`/opportunities/${id}/status`, { status }),
+  addNote: (id: string, data: CreateOpportunityNoteRequest) =>
+    api.post<OpportunityNote>(`/opportunities/${id}/notes`, data),
+  deleteNote: (noteId: string) => api.delete<void>(`/opportunities/notes/${noteId}`),
   remove: (id: string) => api.delete<void>(`/opportunities/${id}`),
 }

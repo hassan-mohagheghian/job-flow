@@ -22,6 +22,8 @@ from opportunities.domain.events import (
     OpportunityEvaluated,
     OpportunityExtracted,
     OpportunityLinked,
+    OpportunityNoteAdded,
+    OpportunityNoteDeleted,
 )
 from shared.application.exceptions import NotFoundError, ValidationError
 
@@ -141,6 +143,30 @@ class FakeRuleRepo:
         return []
 
 
+class FakeNoteRepo:
+    def __init__(self):
+        self._rows = {}
+        self._next = 1
+
+    def create(self, data):
+        row = dict(data)
+        row["id"] = f"note-{self._next}"
+        self._next += 1
+        self._rows[row["id"]] = row
+        return dict(row)
+
+    def get_by_id(self, note_id):
+        row = self._rows.get(note_id)
+        return dict(row) if row else None
+
+    def list_for_opportunity(self, opportunity_id):
+        rows = [dict(r) for r in self._rows.values() if r["opportunity_id"] == opportunity_id]
+        return list(reversed(rows))
+
+    def delete(self, note_id):
+        return self._rows.pop(note_id, None) is not None
+
+
 class RecordingCollector:
     def __init__(self):
         self._events = []
@@ -193,6 +219,7 @@ def _make_service(llm_payloads=None, **kwargs):
         if "profile_repo" in kwargs
         else FakeProfileRepo({"id": "profile-1", "name": "Hassan"}),
         rule_repo=kwargs.get("rule_repo") or FakeRuleRepo(),
+        note_repo=kwargs.get("note_repo") or FakeNoteRepo(),
         llm=FakeLLM(llm_payloads or []),
         event_publisher=collector,
     )
@@ -300,3 +327,46 @@ class TestStatusAndLinks:
         created, _ = service.create_manual(_create_input())
         with pytest.raises(NotFoundError):
             service.set_links(created["id"], job_id="job-missing")
+
+
+class TestNotes:
+    def test_add_note_with_title_and_author(self):
+        service, collector = _make_service()
+        created, _ = service.create_manual(_create_input())
+        note = service.add_note(created["id"], title="Recruiter replied", content="They sent the JD.", author="Hassan")
+        assert note["title"] == "Recruiter replied"
+        assert note["content"] == "They sent the JD."
+        assert note["author"] == "Hassan"
+        assert isinstance(collector.events[-1], OpportunityNoteAdded)
+
+    def test_add_note_requires_content(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        with pytest.raises(ValidationError):
+            service.add_note(created["id"], title="Empty", content="   ")
+
+    def test_add_note_missing_opportunity_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.add_note("opp-missing", title="T", content="C")
+
+    def test_notes_listed_in_detail_newest_first(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        service.add_note(created["id"], title="First", content="one")
+        service.add_note(created["id"], title="Second", content="two")
+        detail = service.get_detail(created["id"])
+        assert [n["title"] for n in detail["notes"]] == ["Second", "First"]
+
+    def test_delete_note(self):
+        service, collector = _make_service()
+        created, _ = service.create_manual(_create_input())
+        note = service.add_note(created["id"], title="T", content="C")
+        service.delete_note(note["id"])
+        assert service.get_detail(created["id"])["notes"] == []
+        assert isinstance(collector.events[-1], OpportunityNoteDeleted)
+
+    def test_delete_missing_note_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.delete_note("note-missing")

@@ -70,3 +70,27 @@ class IOpportunityEvaluationRepository(ABC):
     def list_for_opportunity(self, opportunity_id: str) -> list[dict[str, Any]]:
         """List evaluation snapshots for an opportunity, newest first."""
         ...
+
+
+class IOpportunityNoteRepository(ABC):
+    """Data access for follow-up notes (immutable: add/delete only)."""
+
+    @abstractmethod
+    def create(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Persist a note and return it."""
+        ...
+
+    @abstractmethod
+    def get_by_id(self, note_id: str) -> dict[str, Any] | None:
+        """Get a note by id, or None."""
+        ...
+
+    @abstractmethod
+    def list_for_opportunity(self, opportunity_id: str) -> list[dict[str, Any]]:
+        """List notes for an opportunity, newest first."""
+        ...
+
+    @abstractmethod
+    def delete(self, note_id: str) -> bool:
+        """Delete a note. Returns True when removed."""
+        ...

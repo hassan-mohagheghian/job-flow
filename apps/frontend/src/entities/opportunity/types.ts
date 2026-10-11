@@ -60,6 +60,16 @@ export interface OpportunityEvaluationSnapshot {
   created_at: string | null
 }
 
+export interface OpportunityNote {
+  id: string
+  opportunity_id: string
+  title: string | null
+  content: string
+  author: string
+  created_at: string | null
+  updated_at: string | null
+}
+
 export interface OpportunityDetail extends OpportunityListItem {
   source_message_id: string | null
   sender: string | null
@@ -74,6 +84,7 @@ export interface OpportunityDetail extends OpportunityListItem {
   application_path: Record<string, any>
   duplicate: boolean
   evaluations: OpportunityEvaluationSnapshot[]
+  notes: OpportunityNote[]
 }
 
 export interface CreateOpportunityRequest {
@@ -89,4 +100,9 @@ export interface CreateOpportunityRequest {
 export interface UpdateOpportunityLinksRequest {
   job_id?: string | null
   company_id?: string | null
+}
+
+export interface CreateOpportunityNoteRequest {
+  title?: string | null
+  content: string
 }

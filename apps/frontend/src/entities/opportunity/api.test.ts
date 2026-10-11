@@ -59,4 +59,16 @@ describe('opportunityApi', () => {
     await opportunityApi.remove('opp-1')
     expect(fetchMock.mock.calls[4][0]).toBe('/api/opportunities/opp-1')
   })
+
+  it('adds and deletes follow-up notes', async () => {
+    fetchMock.mockResolvedValue(ok({ id: 'note-1', content: 'JD arrived' }))
+    const note = await opportunityApi.addNote('opp-1', { title: 'Reply', content: 'JD arrived' })
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/opportunities/opp-1/notes')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+    expect(note.id).toBe('note-1')
+
+    fetchMock.mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve(undefined) })
+    await opportunityApi.deleteNote('note-1')
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/opportunities/notes/note-1')
+  })
 })

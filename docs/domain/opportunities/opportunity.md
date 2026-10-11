@@ -10,6 +10,7 @@ It never replaces the JD-first Job pipeline; it reuses it. An opportunity may li
 
 - `opportunity.opportunities` — source/message metadata (`source`, `source_message_id`, sender, `received_at`, subject, `raw_content`), extracted URLs, `content_hash` (dedupe), `extracted` JSON, logical `company_id` / `job_id` (plain columns, no FK — AGENTS.md rule 15), denormalized `company_name` / `job_title`, lifecycle `status`, `evaluation_status` (`pending` / `complete`), nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path` JSON, `next_action`.
 - `opportunity.opportunity_evaluations` — immutable per-evaluation snapshot (FK within the schema only), newest first; reprocessing appends, never overwrites.
+- `opportunity.opportunity_notes` — follow-up trail: titled, timestamped notes recording later messages and new details for reassessment. Notes are immutable (add/delete, no edit); `author` is the display name stamped server-side from the authenticated user so it cannot be spoofed; rows are `user_id`-scoped like every other table.
 
 ## Lifecycle
 

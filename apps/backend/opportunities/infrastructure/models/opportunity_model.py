@@ -77,3 +77,26 @@ class OpportunityEvaluationModel(Base):
     recommendation: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     snapshot: Mapped[str] = mapped_column(Text, default="{}")
     created_at: Mapped[str] = mapped_column(Text, default=_now_iso)
+
+
+class OpportunityNoteModel(Base):
+    """A follow-up note on an opportunity (later messages, new details).
+
+    Immutable: notes are added and deleted, never edited. ``author`` is the
+    display name stamped server-side from the authenticated user; ``user_id``
+    scopes the row like every other table.
+    """
+
+    __tablename__ = "opportunity_notes"
+    __table_args__ = {"schema": "opportunity"}
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_id)
+    opportunity_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("opportunity.opportunities.id"), nullable=False, index=True
+    )
+    title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    content: Mapped[str] = mapped_column(Text, default="")
+    author: Mapped[str] = mapped_column(String, default="")
+    created_at: Mapped[str] = mapped_column(Text, default=_now_iso)
+    updated_at: Mapped[str] = mapped_column(Text, default=_now_iso)
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True, default="")

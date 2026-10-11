@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { opportunityApi } from './api'
 import type {
+  CreateOpportunityNoteRequest,
   CreateOpportunityRequest,
   OpportunityListQuery,
   OpportunityStatus,
@@ -92,6 +93,32 @@ export function useDeleteOpportunity() {
     mutationFn: (id: string) => opportunityApi.remove(id),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY })
+    },
+  })
+}
+
+export function useAddOpportunityNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateOpportunityNoteRequest }) =>
+      opportunityApi.addNote(id, data),
+    onSettled: (_data, _error, variables) => {
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
+    },
+  })
+}
+
+export function useDeleteOpportunityNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, noteId }: { id: string; noteId: string }) =>
+      opportunityApi.deleteNote(noteId).then(() => noteId),
+    onSettled: (_data, _error, variables) => {
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
     },
   })
 }

@@ -11,14 +11,18 @@ from fastapi import APIRouter, Depends, Query, Response
 from fastapi import status as http_status
 
 from dependencies import get_opportunity_service
+from auth.presentation.api.auth_router import get_current_user
+from auth.domain.user import User
 from opportunities.application.services.opportunity_service import (
     OpportunityPipelineError,
     OpportunityService,
 )
 from opportunities.presentation.api.schemas.opportunities import (
+    CreateNoteRequest,
     CreateOpportunityRequest,
     OpportunityDetailResponse,
     OpportunityListResponse,
+    OpportunityNoteSchema,
     UpdateOpportunityLinksRequest,
     UpdateOpportunityStatusRequest,
     build_detail_response,
@@ -32,7 +36,7 @@ router = APIRouter()
 def _detail(service: OpportunityService, opportunity_id: str, duplicate: bool = False) -> OpportunityDetailResponse:
     detail = service.get_detail(opportunity_id)
     return build_detail_response(
-        detail, detail.get("evaluations"), duplicate=duplicate
+        detail, detail.get("evaluations"), duplicate=duplicate, notes=detail.get("notes")
     )
 
 
@@ -76,7 +80,7 @@ def _run_pipeline(service: OpportunityService, opportunity_id: str, reprocess: b
         detail = service.reprocess(opportunity_id) if reprocess else service.process(opportunity_id)
     except OpportunityPipelineError as exc:
         raise ExternalServiceError(str(exc)) from exc
-    return build_detail_response(detail, detail.get("evaluations"))
+    return build_detail_response(detail, detail.get("evaluations"), notes=detail.get("notes"))
 
 
 @router.post("/{opportunity_id}/process", response_model=OpportunityDetailResponse)
@@ -121,4 +125,28 @@ def delete_opportunity(
     service: OpportunityService = Depends(get_opportunity_service),
 ):
     service.delete(opportunity_id)
+    return Response(status_code=http_status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{opportunity_id}/notes", status_code=http_status.HTTP_201_CREATED, response_model=OpportunityNoteSchema)
+def add_note(
+    opportunity_id: str,
+    body: CreateNoteRequest,
+    service: OpportunityService = Depends(get_opportunity_service),
+    current_user: User = Depends(get_current_user),
+):
+    return service.add_note(
+        opportunity_id,
+        title=body.title,
+        content=body.content,
+        author=current_user.display_name,
+    )
+
+
+@router.delete("/notes/{note_id}", status_code=http_status.HTTP_204_NO_CONTENT)
+def delete_note(
+    note_id: str,
+    service: OpportunityService = Depends(get_opportunity_service),
+):
+    service.delete_note(note_id)
     return Response(status_code=http_status.HTTP_204_NO_CONTENT)

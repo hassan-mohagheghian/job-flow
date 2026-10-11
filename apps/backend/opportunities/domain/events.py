@@ -62,10 +62,30 @@ class OpportunityStatusChanged(DomainEvent):
     event_type: str = "opportunity.status.changed"
 
 
+@dataclass(frozen=True)
+class OpportunityNoteAdded(DomainEvent):
+    """A follow-up note was added to an opportunity."""
+
+    opportunity_id: str = ""
+    note_id: str = ""
+    event_type: str = "opportunity.note.added"
+
+
+@dataclass(frozen=True)
+class OpportunityNoteDeleted(DomainEvent):
+    """A follow-up note was removed."""
+
+    opportunity_id: str = ""
+    note_id: str = ""
+    event_type: str = "opportunity.note.deleted"
+
+
 __all__ = [
     "OpportunityCreated",
     "OpportunityExtracted",
     "OpportunityLinked",
     "OpportunityEvaluated",
     "OpportunityStatusChanged",
+    "OpportunityNoteAdded",
+    "OpportunityNoteDeleted",
 ]

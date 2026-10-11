@@ -120,7 +120,8 @@ def client(sa_session):
         get_processing_execution_repo,
         get_candidate_repo, get_candidate_profile_repo, get_candidate_source_repo,
         get_application_repo, get_follow_up_repo, get_document_repo,
-        get_opportunity_repo, get_opportunity_evaluation_repo, get_opportunity_service,
+        get_opportunity_repo, get_opportunity_evaluation_repo, get_opportunity_note_repo,
+        get_opportunity_service,
         get_roadmap_repo, get_roadmap_service, get_city_repo,
     )
     from exceptions import AppError
@@ -140,6 +141,7 @@ def client(sa_session):
     from applications.infrastructure.repositories.sa_document_repository import SQLAlchemyDocumentRepository
     from opportunities.infrastructure.repositories.sa_opportunity_repository import (
         SQLAlchemyOpportunityEvaluationRepository,
+        SQLAlchemyOpportunityNoteRepository,
         SQLAlchemyOpportunityRepository,
     )
     from roadmaps.infrastructure.repositories.sa_roadmap_repository import SQLAlchemyRoadmapRepository
@@ -187,6 +189,7 @@ def client(sa_session):
     app.dependency_overrides[get_application_repo] = lambda: SQLAlchemyApplicationRepository(sa_session, user_id="test-user")
     app.dependency_overrides[get_opportunity_repo] = lambda: SQLAlchemyOpportunityRepository(sa_session, user_id="test-user")
     app.dependency_overrides[get_opportunity_evaluation_repo] = lambda: SQLAlchemyOpportunityEvaluationRepository(sa_session)
+    app.dependency_overrides[get_opportunity_note_repo] = lambda: SQLAlchemyOpportunityNoteRepository(sa_session, user_id="test-user")
     app.dependency_overrides[get_opportunity_service] = lambda: get_opportunity_service(
         opportunity_repo=SQLAlchemyOpportunityRepository(sa_session, user_id="test-user"),
         evaluation_repo=SQLAlchemyOpportunityEvaluationRepository(sa_session),
@@ -195,6 +198,7 @@ def client(sa_session):
         skill_repo=SQLAlchemySkillRepository(sa_session, user_id="test-user"),
         profile_repo=SQLAlchemyCandidateProfileRepository(sa_session),
         rule_repo=SQLAlchemyRuleRepository(sa_session, user_id="test-user"),
+        note_repo=SQLAlchemyOpportunityNoteRepository(sa_session, user_id="test-user"),
     )
     app.dependency_overrides[get_follow_up_repo] = lambda: SQLAlchemyFollowUpRepository(sa_session)
     app.dependency_overrides[get_document_repo] = lambda: SQLAlchemyDocumentRepository(sa_session)

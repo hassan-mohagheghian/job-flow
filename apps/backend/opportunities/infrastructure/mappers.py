@@ -86,6 +86,18 @@ def evaluation_model_to_dict(model: Any) -> dict[str, Any]:
     }
 
 
+def note_model_to_dict(model: Any) -> dict[str, Any]:
+    return {
+        "id": model.id,
+        "opportunity_id": model.opportunity_id,
+        "title": model.title,
+        "content": model.content,
+        "author": model.author,
+        "created_at": model.created_at,
+        "updated_at": model.updated_at,
+    }
+
+
 def dump_json_fields(data: dict[str, Any]) -> dict[str, Any]:
     """Dump JSON-text fields of an opportunity payload for persistence."""
     dumped = dict(data)
@@ -100,5 +112,6 @@ def dump_json_fields(data: dict[str, Any]) -> dict[str, Any]:
 __all__ = [
     "opportunity_model_to_dict",
     "evaluation_model_to_dict",
+    "note_model_to_dict",
     "dump_json_fields",
 ]
