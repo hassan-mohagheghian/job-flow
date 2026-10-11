@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader } from '@/shared/components/Drawer'
+import { DatePicker } from '@/shared/components/DatePicker'
 import type { CreateOpportunityRequest, OpportunitySource } from '@/entities/opportunity/types'
 
 interface OpportunityCreateDrawerProps {
@@ -74,16 +75,11 @@ export function OpportunityCreateDrawer({
                 ))}
               </select>
             </label>
-            <label className="block text-xs font-medium">
-              Received
-              <Input
-                aria-label="Received"
-                type="date"
-                value={receivedAt}
-                onChange={(e) => setReceivedAt(e.target.value)}
-                className="mt-1"
-              />
-            </label>
+            <DatePicker
+              label="Received"
+              value={receivedAt}
+              onChange={setReceivedAt}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-xs font-medium">

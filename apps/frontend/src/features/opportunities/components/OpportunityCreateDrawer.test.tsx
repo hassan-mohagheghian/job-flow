@@ -19,8 +19,11 @@ describe('OpportunityCreateDrawer', () => {
     fireEvent.change(screen.getByLabelText(/message/i), { target: { value: 'Hi Hassan, hiring?' } })
     fireEvent.change(screen.getByLabelText(/sender$/i), { target: { value: 'Jane' } })
     fireEvent.change(screen.getByLabelText(/subject/i), { target: { value: 'Backend role' } })
-    expect(screen.getByLabelText(/received/i)).toHaveAttribute('type', 'date')
-    fireEvent.change(screen.getByLabelText(/received/i), { target: { value: '2026-09-01' } })
+    fireEvent.click(screen.getByRole('button', { name: /received picker/i }))
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const expected = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-15`
+    fireEvent.click(screen.getByRole('button', { name: expected }))
     fireEvent.click(screen.getByRole('button', { name: /save opportunity/i }))
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -28,7 +31,7 @@ describe('OpportunityCreateDrawer', () => {
         source: 'manual',
         sender: 'Jane',
         subject: 'Backend role',
-        received_at: '2026-09-01',
+        received_at: expected,
         raw_content: 'Hi Hassan, hiring?',
       }),
     )
