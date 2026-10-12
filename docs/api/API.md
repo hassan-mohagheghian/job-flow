@@ -223,6 +223,7 @@ Endpoints:
 - `PATCH /api/opportunities/{id}/links` — link/unlink an existing job or company.
 - `PATCH /api/opportunities/{id}/status` — move along the funnel.
 - `POST /api/opportunities/{id}/notes` / `DELETE /api/opportunities/notes/{note_id}` — follow-up trail.
+- `PUT /api/opportunities/{id}/dismissed` — dismiss / undismiss (optional reason saved as a `Dismissed` follow-up note).
 - `DELETE /api/opportunities/{id}` — hard-delete (204).
 
 ## Placeholders API (`/api/placeholders`)

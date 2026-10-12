@@ -13,7 +13,7 @@ import type {
 export const OPPORTUNITIES_KEY = ['opportunities'] as const
 
 export function opportunitiesListKey(query: OpportunityListQuery) {
-  return [...OPPORTUNITIES_KEY, 'list', query.status ?? '', query.source ?? '', query.query ?? ''] as const
+  return [...OPPORTUNITIES_KEY, 'list', query.status ?? '', query.source ?? '', query.query ?? '', query.dismissed ?? ''] as const
 }
 
 export function opportunityDetailKey(id: string) {
@@ -93,6 +93,20 @@ export function useDeleteOpportunity() {
     mutationFn: (id: string) => opportunityApi.remove(id),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY })
+    },
+  })
+}
+
+export function useDismissOpportunity() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, dismissed, note }: { id: string; dismissed: boolean; note?: string }) =>
+      opportunityApi.setDismissed(id, dismissed, note),
+    onSettled: (_data, _error, variables) => {
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY })
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
     },
   })
 }

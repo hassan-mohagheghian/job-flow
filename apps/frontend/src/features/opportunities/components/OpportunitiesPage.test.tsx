@@ -13,6 +13,7 @@ const items: OpportunityListItem[] = [
     source: 'manual',
     status: 'ready_to_apply',
     evaluation_status: 'complete',
+    dismissed: false,
     overall_score: 79,
     fit_score: 85,
     success_score: 70,
@@ -31,6 +32,7 @@ const items: OpportunityListItem[] = [
     source: 'manual',
     status: 'needs_info',
     evaluation_status: 'pending',
+    dismissed: false,
     overall_score: null,
     fit_score: null,
     success_score: null,
@@ -54,6 +56,8 @@ function renderPage(overrides: Record<string, unknown> = {}) {
     onQueryChange: vi.fn(),
     filterStatus: '',
     onFilterStatusChange: vi.fn(),
+    showDismissed: false,
+    onShowDismissedChange: vi.fn(),
     onOpenCreate: vi.fn(),
     onOpenDetail: vi.fn(),
     onDelete: vi.fn(),
@@ -91,5 +95,12 @@ describe('OpportunitiesPage', () => {
 
     fireEvent.change(screen.getByLabelText(/filter by status/i), { target: { value: 'needs_info' } })
     expect(onFilterStatusChange).toHaveBeenCalledWith('needs_info')
+  })
+
+  it('toggles showing dismissed opportunities', () => {
+    const onShowDismissedChange = vi.fn()
+    renderPage({ onShowDismissedChange })
+    fireEvent.click(screen.getByRole('button', { name: /show dismissed/i }))
+    expect(onShowDismissedChange).toHaveBeenCalledWith(true)
   })
 })

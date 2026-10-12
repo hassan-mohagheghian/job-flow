@@ -76,6 +76,7 @@ class SQLAlchemyOpportunityRepository(IOpportunityRepository):
         query: str | None = None,
         limit: int = 50,
         offset: int = 0,
+        dismissed: bool | None = None,
     ) -> tuple[list[dict[str, Any]], int]:
         q = self._session.query(OpportunityModel)
         q = self._scoped(q)
@@ -83,6 +84,8 @@ class SQLAlchemyOpportunityRepository(IOpportunityRepository):
             q = q.filter(OpportunityModel.status == status)
         if source:
             q = q.filter(OpportunityModel.source == source)
+        if dismissed is not None:
+            q = q.filter(OpportunityModel.dismissed == (1 if dismissed else 0))
         if query:
             like = f"%{query}%"
             q = q.filter(
@@ -110,6 +113,8 @@ class SQLAlchemyOpportunityRepository(IOpportunityRepository):
         payload = dump_json_fields(data)
         for key, value in payload.items():
             if hasattr(OpportunityModel, key) and key != "id":
+                if key == "dismissed":
+                    value = 1 if value else 0
                 setattr(model, key, value)
         model.updated_at = datetime.now(UTC).isoformat()
         self._session.commit()

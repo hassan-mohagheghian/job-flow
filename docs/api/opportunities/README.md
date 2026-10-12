@@ -11,7 +11,7 @@ Processing is synchronous in phase one (no TaskIQ/SSE): `POST .../process` runs 
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | POST | `/api/opportunities` | Create from a manual message (201; duplicate content returns the existing row with `duplicate: true`, 200). |
-| GET | `/api/opportunities` | List newest first; filters `status`, `source`, `query`; `limit`/`offset`. |
+| GET | `/api/opportunities` | List newest first; filters `status`, `source`, `query`, `dismissed`; `limit`/`offset`. |
 | GET | `/api/opportunities/{id}` | Full detail incl. extracted, evaluation, application path, evaluations history (404 when missing). |
 | POST | `/api/opportunities/{id}/process` | Run extract → resolve → evaluate (404 when missing; 502 when the AI call fails). |
 | POST | `/api/opportunities/{id}/reprocess` | Same as process; appends a new evaluation snapshot. |
@@ -19,6 +19,7 @@ Processing is synchronous in phase one (no TaskIQ/SSE): `POST .../process` runs 
 | PATCH | `/api/opportunities/{id}/status` | Move along the funnel (invalid transitions → 422). |
 | POST | `/api/opportunities/{id}/notes` | Add a follow-up note (201; body `{ "title"?, "content" }`, author stamped from auth). |
 | DELETE | `/api/opportunities/notes/{note_id}` | Delete a follow-up note (204). |
+| PUT | `/api/opportunities/{id}/dismissed` | Dismiss / undismiss (`{ "dismissed", "note"? }`; a dismiss note is saved to the follow-up trail as `Dismissed`). |
 | DELETE | `/api/opportunities/{id}` | Hard-delete the opportunity and its evaluations (204). |
 
 ## Create Opportunity

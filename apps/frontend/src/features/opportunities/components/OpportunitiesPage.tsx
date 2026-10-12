@@ -18,6 +18,8 @@ interface OpportunitiesPageProps {
   onQueryChange: (query: string) => void
   filterStatus: OpportunityStatus | ''
   onFilterStatusChange: (status: OpportunityStatus | '') => void
+  showDismissed: boolean
+  onShowDismissedChange: (show: boolean) => void
   onOpenCreate: () => void
   onOpenDetail: (id: string) => void
   onDelete: (id: string) => void
@@ -49,6 +51,8 @@ export function OpportunitiesPage({
   onQueryChange,
   filterStatus,
   onFilterStatusChange,
+  showDismissed,
+  onShowDismissedChange,
   onOpenCreate,
   onOpenDetail,
   onDelete,
@@ -90,6 +94,14 @@ export function OpportunitiesPage({
         </select>
         <Button variant="ghost" size="sm" onClick={onRefetch}>
           Refresh
+        </Button>
+        <Button
+          variant={showDismissed ? 'secondary' : 'ghost'}
+          size="sm"
+          aria-pressed={showDismissed}
+          onClick={() => onShowDismissedChange(!showDismissed)}
+        >
+          Show dismissed
         </Button>
       </div>
 

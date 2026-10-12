@@ -19,6 +19,10 @@ It never replaces the JD-first Job pipeline; it reuses it. An opportunity may li
 - Pipeline transitions: create sets `new`; extract sets `extracted`; resolution sets `enriching`; evaluation sets `evaluated` (scored but no actionable path), `ready_to_apply` (scored + actionable path), or `needs_info` (insufficient information, scores stay `null`).
 - User transitions follow the funnel above; terminal states are `rejected` / `closed`. Invalid transitions are rejected with 422.
 
+## Dismiss
+
+A `dismissed` flag (0/1) hides an opportunity from the default list without deleting it; `Show dismissed` reveals dismissed rows. Dismissing with a reason records it as a follow-up note titled `Dismissed`. Undismissing only clears the flag. Managed via `PUT /api/opportunities/{id}/dismissed`, mirroring the jobs dismiss pattern. Like jobs pin/dismiss flags, it emits no domain event.
+
 ## Extraction
 
 `opportunity.extract` (one structured LLM call, versioned prompt/schema) returns partial fields only. Every field carries a state: `known` / `unknown` / `inferred` / `needs_verification`. Missing information is never fabricated.

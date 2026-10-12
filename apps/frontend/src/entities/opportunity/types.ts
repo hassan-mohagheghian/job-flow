@@ -23,6 +23,7 @@ export interface OpportunityListItem {
   source: OpportunitySource
   status: OpportunityStatus
   evaluation_status: EvaluationStatus
+  dismissed: boolean
   overall_score: number | null
   fit_score: number | null
   success_score: number | null
@@ -37,6 +38,7 @@ export interface OpportunityListItem {
 export interface OpportunityListQuery {
   status?: OpportunityStatus | ''
   source?: OpportunitySource | ''
+  dismissed?: boolean
   query?: string
   limit?: number
   offset?: number

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { OpportunityDetailDrawer } from './OpportunityDetailDrawer'
 
@@ -8,6 +8,7 @@ const statusMock = vi.fn()
 const deleteMock = vi.fn()
 const addNoteMock = vi.fn()
 const deleteNoteMock = vi.fn()
+const dismissMock = vi.fn()
 
 vi.mock('@/entities/opportunity/hooks', () => ({
   useOpportunityDetailQuery: () => ({
@@ -18,6 +19,7 @@ vi.mock('@/entities/opportunity/hooks', () => ({
       source: 'manual',
       status: 'evaluated',
       evaluation_status: 'complete',
+      dismissed: false,
       overall_score: 79,
       recommendation: 'consider',
       sender: 'Jane',
@@ -47,6 +49,7 @@ vi.mock('@/entities/opportunity/hooks', () => ({
   useDeleteOpportunity: () => ({ mutate: deleteMock, isPending: false }),
   useAddOpportunityNote: () => ({ mutate: addNoteMock, isPending: false }),
   useDeleteOpportunityNote: () => ({ mutate: deleteNoteMock, isPending: false }),
+  useDismissOpportunity: () => ({ mutate: dismissMock, isPending: false }),
 }))
 
 describe('OpportunityDetailDrawer', () => {
@@ -56,6 +59,7 @@ describe('OpportunityDetailDrawer', () => {
     deleteMock.mockClear()
     addNoteMock.mockClear()
     deleteNoteMock.mockClear()
+    dismissMock.mockClear()
   })
 
   it('shows the original message, evaluation, score reasons, path and history', () => {
@@ -106,5 +110,21 @@ describe('OpportunityDetailDrawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /delete note recruiter replied/i }))
     expect(deleteNoteMock).toHaveBeenCalledWith({ id: 'opp-1', noteId: 'note-1' })
+  })
+
+  it('dismisses with a reason through the dialog', () => {
+    render(<OpportunityDetailDrawer opportunityId="opp-1" onClose={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /^dismiss$/i }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Dismiss opportunity')).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByPlaceholderText(/why are you dismissing/i), {
+      target: { value: 'Wrong seniority' },
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: /^dismiss$/i }))
+    expect(dismissMock).toHaveBeenCalledWith(
+      { id: 'opp-1', dismissed: true, note: 'Wrong seniority' },
+      expect.anything(),
+    )
   })
 })

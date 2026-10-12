@@ -26,6 +26,7 @@ function extractErrorMessage(error: unknown, fallback: string): string {
 function OpportunitiesPageAdapter() {
   const [query, setQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<OpportunityStatus | ''>('')
+  const [showDismissed, setShowDismissed] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -34,6 +35,7 @@ function OpportunitiesPageAdapter() {
   const listQuery = useOpportunitiesQuery({
     query: query.trim() || undefined,
     status: filterStatus || undefined,
+    dismissed: showDismissed ? undefined : false,
     limit: 100,
   })
   const createMutation = useCreateOpportunity()
@@ -88,6 +90,8 @@ function OpportunitiesPageAdapter() {
         onQueryChange={setQuery}
         filterStatus={filterStatus}
         onFilterStatusChange={setFilterStatus}
+        showDismissed={showDismissed}
+        onShowDismissedChange={setShowDismissed}
         onOpenCreate={() => {
           setCreateError(null)
           setCreateOpen(true)

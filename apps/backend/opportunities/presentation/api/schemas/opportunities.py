@@ -66,6 +66,13 @@ class CreateNoteRequest(BaseModel):
         return str(v)
 
 
+class DismissOpportunityRequest(BaseModel):
+    """Schema for dismissing or undismissing an opportunity."""
+
+    dismissed: bool
+    note: str | None = None
+
+
 class OpportunityListItemSchema(BaseModel):
     id: str
     title: str = "Unknown role"
@@ -74,6 +81,7 @@ class OpportunityListItemSchema(BaseModel):
     source: str = OpportunitySource.MANUAL
     status: str = OpportunityStatus.NEW
     evaluation_status: str = EvaluationStatus.PENDING
+    dismissed: bool = False
     overall_score: int | None = None
     fit_score: int | None = None
     success_score: int | None = None
@@ -131,6 +139,7 @@ class OpportunityDetailResponse(BaseModel):
     job_title: str | None = None
     status: str = OpportunityStatus.NEW
     evaluation_status: str = EvaluationStatus.PENDING
+    dismissed: bool = False
     fit_score: int | None = None
     success_score: int | None = None
     overall_score: int | None = None
@@ -155,6 +164,7 @@ def build_list_item(row: dict[str, Any]) -> OpportunityListItemSchema:
         source=row.get("source") or OpportunitySource.MANUAL,
         status=row.get("status") or OpportunityStatus.NEW,
         evaluation_status=row.get("evaluation_status") or EvaluationStatus.PENDING,
+        dismissed=bool(row.get("dismissed")),
         overall_score=row.get("overall_score"),
         fit_score=row.get("fit_score"),
         success_score=row.get("success_score"),
@@ -191,6 +201,7 @@ def build_detail_response(
         job_title=row.get("job_title"),
         status=row.get("status") or OpportunityStatus.NEW,
         evaluation_status=row.get("evaluation_status") or EvaluationStatus.PENDING,
+        dismissed=bool(row.get("dismissed")),
         fit_score=row.get("fit_score"),
         success_score=row.get("success_score"),
         overall_score=row.get("overall_score"),
@@ -212,6 +223,7 @@ __all__ = [
     "UpdateOpportunityLinksRequest",
     "UpdateOpportunityStatusRequest",
     "CreateNoteRequest",
+    "DismissOpportunityRequest",
     "OpportunityListItemSchema",
     "OpportunityListResponse",
     "OpportunityEvaluationSchema",

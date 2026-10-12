@@ -47,7 +47,7 @@ Shows everything known about one inbound opportunity: the original message, extr
 │ │ eval-1 · needs_info · — · 1d ago                      │ │
 │ └────────────────────────────────────────────────────────┘ │
 ├────────────────────────────────────────────────────────────┤
-│ Status: [Needs Info ▾]              [Delete opportunity]   │
+│ Status: [Needs Info ▾]     [Dismiss]  [Delete opportunity]   │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -67,6 +67,25 @@ Sections render only when they have content, except Score (shows `Evaluation pen
 
 The follow-up trail records later messages and new details for reassessment (e.g. a recruiter reply with the JD). Each note shows title (or `Note`), author display name, timestamp, content, and a delete button. The add form is a title input plus a message textarea and an `Add follow-up` button (disabled while empty). Notes are immutable — no edit. The author is stamped server-side from the signed-in user.
 
+## Dismiss
+
+The footer has a `Dismiss` button (or `Undismiss` when dismissed, with a
+`Dismissed` badge in the header). Dismissing opens a dialog:
+
+```text
+┌─ Dismiss opportunity ────────────────┐
+│ Dismiss "Senior Backend Engineer"?   │
+│ Hidden from the default list; the    │
+│ reason is saved to Follow-ups.       │
+│ [Why are you dismissing this?    ]   │
+│ [Cancel]  [Dismiss]                  │
+└──────────────────────────────────────┘
+```
+
+The optional reason is saved to the follow-up trail as a `Dismissed` note.
+Dismissed rows are hidden from the default list; `Show dismissed` on the page
+reveals them.
+
 ## Footer
 
-Status select (funnel transitions; invalid ones rejected) and a delete button with confirmation.
+Status select (funnel transitions; invalid ones rejected), dismiss/undismiss, and a delete button with confirmation.

@@ -214,6 +214,7 @@ class OpportunityService:
                 "job_title": None,
                 "status": OpportunityStatus.NEW,
                 "evaluation_status": EvaluationStatus.PENDING,
+                "dismissed": False,
                 "fit_score": None,
                 "success_score": None,
                 "overall_score": None,
@@ -246,13 +247,15 @@ class OpportunityService:
         query: str | None = None,
         limit: int = 50,
         offset: int = 0,
+        dismissed: bool | None = None,
     ) -> tuple[list[dict[str, Any]], int]:
         if status is not None and status not in OpportunityStatus.ALL:
             raise ValidationError(f"Invalid status '{status}'")
         if source is not None and source not in OpportunitySource.ALL:
             raise ValidationError(f"Invalid source '{source}'")
         items, total = self._opportunities.list(
-            status=status, source=source, query=query, limit=limit, offset=offset
+            status=status, source=source, query=query, limit=limit, offset=offset,
+            dismissed=dismissed,
         )
         return [self._present(item) for item in items], total
 
@@ -392,6 +395,29 @@ class OpportunityService:
                 note_id=note_id,
             )
         )
+
+    # ── Dismiss ───────────────────────────────────────────────────
+
+    def set_dismissed(
+        self,
+        opportunity_id: str,
+        dismissed: bool,
+        note: str | None = None,
+        author: str = "",
+    ) -> dict[str, Any]:
+        """Dismiss or undismiss an opportunity.
+
+        Dismissing with a note records it as a follow-up note titled
+        ``Dismissed`` so the reason stays in the trail. Undismissing only
+        clears the flag.
+        """
+        row = self._get_or_raise(opportunity_id)
+        stored = self._opportunities.update(
+            opportunity_id, {"dismissed": bool(dismissed), "updated_at": _now_iso()}
+        ) or row
+        if dismissed and note and note.strip() and self._notes is not None:
+            self.add_note(opportunity_id, title="Dismissed", content=note.strip(), author=author)
+        return self._present(stored)
 
     # ── Extract ───────────────────────────────────────────────────
 

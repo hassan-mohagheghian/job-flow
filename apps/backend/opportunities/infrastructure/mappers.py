@@ -58,6 +58,7 @@ def opportunity_model_to_dict(model: Any) -> dict[str, Any]:
         "job_title": model.job_title,
         "status": model.status,
         "evaluation_status": model.evaluation_status,
+        "dismissed": bool(model.dismissed),
         "fit_score": model.fit_score,
         "success_score": model.success_score,
         "overall_score": model.overall_score,

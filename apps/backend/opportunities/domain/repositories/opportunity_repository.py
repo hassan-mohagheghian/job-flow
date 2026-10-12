@@ -40,6 +40,7 @@ class IOpportunityRepository(ABC):
         query: str | None = None,
         limit: int = 50,
         offset: int = 0,
+        dismissed: bool | None = None,
     ) -> tuple[list[dict[str, Any]], int]:
         """List opportunities newest first with optional filters.
 

@@ -9,12 +9,14 @@ import {
   useAddOpportunityNote,
   useDeleteOpportunity,
   useDeleteOpportunityNote,
+  useDismissOpportunity,
   useOpportunityDetailQuery,
   useProcessOpportunity,
   useUpdateOpportunityStatus,
 } from '@/entities/opportunity/hooks'
 import type { OpportunityStatus } from '@/entities/opportunity/types'
 import { OpportunityStatusBadge } from './OpportunityStatusBadge'
+import { DismissOpportunityDialog } from './DismissOpportunityDialog'
 
 interface OpportunityDetailDrawerProps {
   opportunityId: string | null
@@ -51,10 +53,12 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
   const processMutation = useProcessOpportunity()
   const statusMutation = useUpdateOpportunityStatus()
   const deleteMutation = useDeleteOpportunity()
+  const dismissMutation = useDismissOpportunity()
   const addNoteMutation = useAddOpportunityNote()
   const deleteNoteMutation = useDeleteOpportunityNote()
   const [noteTitle, setNoteTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
+  const [dismissOpen, setDismissOpen] = useState(false)
 
   const opportunity = detailQuery.data
 
@@ -90,6 +94,11 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <OpportunityStatusBadge status={opportunity.status} />
+              {opportunity.dismissed && (
+                <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+                  Dismissed
+                </span>
+              )}
               <span className="text-xs text-muted-foreground capitalize">{opportunity.source}</span>
               {opportunity.company_name && (
                 <span className="text-xs text-muted-foreground">{opportunity.company_name}</span>
@@ -320,6 +329,25 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
           </select>
         </label>
         <span className="flex-1" />
+        {opportunity?.dismissed ? (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!opportunityId || dismissMutation.isPending}
+            onClick={() => opportunityId && dismissMutation.mutate({ id: opportunityId, dismissed: false })}
+          >
+            {dismissMutation.isPending ? 'Restoring…' : 'Undismiss'}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!opportunity}
+            onClick={() => setDismissOpen(true)}
+          >
+            Dismiss
+          </Button>
+        )}
         <Button
           variant="destructive"
           size="sm"
@@ -334,6 +362,19 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
           Delete opportunity
         </Button>
       </DrawerFooter>
+      <DismissOpportunityDialog
+        open={dismissOpen}
+        onOpenChange={setDismissOpen}
+        opportunityTitle={opportunity?.title}
+        isPending={dismissMutation.isPending}
+        onDismiss={(note) => {
+          if (!opportunityId) return
+          dismissMutation.mutate(
+            { id: opportunityId, dismissed: true, note },
+            { onSuccess: () => setDismissOpen(false) },
+          )
+        }}
+      />
     </Drawer>
   )
 }

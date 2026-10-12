@@ -20,6 +20,7 @@ from opportunities.application.services.opportunity_service import (
 from opportunities.presentation.api.schemas.opportunities import (
     CreateNoteRequest,
     CreateOpportunityRequest,
+    DismissOpportunityRequest,
     OpportunityDetailResponse,
     OpportunityListResponse,
     OpportunityNoteSchema,
@@ -59,11 +60,15 @@ def list_opportunities(
     status: str | None = Query(default=None),
     source: str | None = Query(default=None),
     query: str | None = Query(default=None),
+    dismissed: bool | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     service: OpportunityService = Depends(get_opportunity_service),
 ):
-    items, total = service.list(status=status, source=source, query=query, limit=limit, offset=offset)
+    items, total = service.list(
+        status=status, source=source, query=query, limit=limit, offset=offset,
+        dismissed=dismissed,
+    )
     return OpportunityListResponse(items=[build_list_item(i) for i in items], total=total)
 
 
@@ -150,3 +155,21 @@ def delete_note(
 ):
     service.delete_note(note_id)
     return Response(status_code=http_status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/{opportunity_id}/dismissed", response_model=OpportunityDetailResponse)
+def set_opportunity_dismissed(
+    opportunity_id: str,
+    body: DismissOpportunityRequest,
+    service: OpportunityService = Depends(get_opportunity_service),
+    current_user: User = Depends(get_current_user),
+):
+    """Dismiss or undismiss an opportunity. When a note is provided while
+    dismissing, it is recorded as a follow-up note titled ``Dismissed``."""
+    stored = service.set_dismissed(
+        opportunity_id,
+        body.dismissed,
+        note=body.note,
+        author=current_user.display_name,
+    )
+    return _detail(service, stored["id"])

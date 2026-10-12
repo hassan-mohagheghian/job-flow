@@ -74,7 +74,7 @@
 
 ### Opportunity
 - **What**: An inbound recruiting message (`opportunities` context, schema `opportunity`) progressively enriched into a scored, actionable record — the reverse of the JD-first job pipeline
-- **Storage**: `opportunity.opportunities` (message metadata, `raw_content`, `content_hash` dedupe, `extracted` JSON, logical `company_id` / `job_id`, lifecycle `status`, nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path`, `next_action`) + immutable `opportunity_evaluations` snapshots (reprocessing appends, never overwrites) + `opportunity_notes` follow-up trail (titled, author-stamped, add/delete only)
+- **Storage**: `opportunity.opportunities` (message metadata, `raw_content`, `content_hash` dedupe, `extracted` JSON, logical `company_id` / `job_id`, lifecycle `status`, `dismissed` flag, nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path`, `next_action`) + immutable `opportunity_evaluations` snapshots (reprocessing appends, never overwrites) + `opportunity_notes` follow-up trail (titled, author-stamped, add/delete only)
 - **Lifecycle**: `new` → `extracted` → `enriching` → `evaluated` / `needs_info` → `ready_to_apply` → `applied` → `replied` / `interview` / `rejected` / `closed`
 - **Extraction/Evaluation**: versioned `opportunity.extract` / `opportunity.evaluate` structured LLM calls via `LLMService`; every extracted field carries `known` / `unknown` / `inferred` / `needs_verification` — nothing is fabricated
 - **Resolution**: links existing jobs (URL duplicate rules) and companies (exact name/domain matches) only — never creates jobs, companies, or skills; duplicate content returns the existing row

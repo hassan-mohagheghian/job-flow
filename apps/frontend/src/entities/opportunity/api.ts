@@ -17,6 +17,7 @@ export const opportunityApi = {
     const params = new URLSearchParams()
     if (query.status) params.set('status', query.status)
     if (query.source) params.set('source', query.source)
+    if (query.dismissed !== undefined) params.set('dismissed', String(query.dismissed))
     if (query.query) params.set('query', query.query)
     if (query.limit !== undefined) params.set('limit', String(query.limit))
     if (query.offset !== undefined) params.set('offset', String(query.offset))
@@ -30,6 +31,8 @@ export const opportunityApi = {
     api.patch<OpportunityDetail>(`/opportunities/${id}/links`, data),
   setStatus: (id: string, status: OpportunityStatus) =>
     api.patch<OpportunityDetail>(`/opportunities/${id}/status`, { status }),
+  setDismissed: (id: string, dismissed: boolean, note?: string) =>
+    api.put<OpportunityDetail>(`/opportunities/${id}/dismissed`, { dismissed, note: note || null }),
   addNote: (id: string, data: CreateOpportunityNoteRequest) =>
     api.post<OpportunityNote>(`/opportunities/${id}/notes`, data),
   deleteNote: (noteId: string) => api.delete<void>(`/opportunities/notes/${noteId}`),

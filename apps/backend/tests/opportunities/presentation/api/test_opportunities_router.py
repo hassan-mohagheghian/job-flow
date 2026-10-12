@@ -116,3 +116,38 @@ class TestOpportunityNotesAPI:
     def test_delete_missing_note_404(self, client):
         resp = client.delete("/api/opportunities/notes/note-missing")
         assert resp.status_code == 404
+
+
+class TestOpportunityDismissAPI:
+    def test_dismiss_and_undismiss(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        assert created["dismissed"] is False
+        resp = client.put(
+            f"/api/opportunities/{created['id']}/dismissed",
+            json={"dismissed": True, "note": "Wrong seniority."},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["dismissed"] is True
+        assert body["notes"][0]["title"] == "Dismissed"
+        assert body["notes"][0]["content"] == "Wrong seniority."
+
+        undismissed = client.put(
+            f"/api/opportunities/{created['id']}/dismissed", json={"dismissed": False}
+        ).json()
+        assert undismissed["dismissed"] is False
+
+    def test_dismiss_missing_404(self, client):
+        resp = client.put("/api/opportunities/opp-missing/dismissed", json={"dismissed": True})
+        assert resp.status_code == 404
+
+    def test_list_dismissed_filter(self, client):
+        first = client.post("/api/opportunities", json=_payload()).json()
+        second = client.post(
+            "/api/opportunities", json=_payload(raw_content="A different DevOps message.")
+        ).json()
+        client.put(f"/api/opportunities/{first['id']}/dismissed", json={"dismissed": True})
+        only_dismissed = client.get("/api/opportunities", params={"dismissed": "true"}).json()
+        assert [i["id"] for i in only_dismissed["items"]] == [first["id"]]
+        only_active = client.get("/api/opportunities", params={"dismissed": "false"}).json()
+        assert [i["id"] for i in only_active["items"]] == [second["id"]]

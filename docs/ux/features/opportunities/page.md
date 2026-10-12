@@ -60,6 +60,7 @@ flowchart LR
 | Status   | Filter by lifecycle status.                              |
 | Source   | Filter by source (`manual` / `gmail` / `linkedin`).      |
 | Refresh  | Reload the current query.                                |
+| Show dismissed | Reveal dismissed opportunities (hidden by default). |
 | Clear    | Clears all active filters.                               |
 
 ### Opportunity List

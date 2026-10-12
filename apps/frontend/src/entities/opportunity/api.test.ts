@@ -71,4 +71,18 @@ describe('opportunityApi', () => {
     await opportunityApi.deleteNote('note-1')
     expect(fetchMock.mock.calls[1][0]).toBe('/api/opportunities/notes/note-1')
   })
+
+  it('dismisses with an optional note', async () => {
+    fetchMock.mockResolvedValue(ok({ id: 'opp-1', dismissed: true }))
+    const result = await opportunityApi.setDismissed('opp-1', true, 'Wrong seniority')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/opportunities/opp-1/dismissed')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('PUT')
+    expect(result.dismissed).toBe(true)
+  })
+
+  it('passes the dismissed filter on list', async () => {
+    fetchMock.mockResolvedValue(ok({ items: [], total: 0 }))
+    await opportunityApi.list({ dismissed: false })
+    expect(String(fetchMock.mock.calls[0][0])).toContain('dismissed=false')
+  })
 })

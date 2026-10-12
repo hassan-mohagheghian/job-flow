@@ -49,6 +49,7 @@ class OpportunityModel(Base):
     job_title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="new", index=True)
     evaluation_status: Mapped[str] = mapped_column(String, default="pending")
+    dismissed: Mapped[int] = mapped_column(Integer, default=0)
     fit_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     success_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     overall_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

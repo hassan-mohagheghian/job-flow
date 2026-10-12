@@ -370,3 +370,34 @@ class TestNotes:
         service, _ = _make_service()
         with pytest.raises(NotFoundError):
             service.delete_note("note-missing")
+
+
+class TestDismiss:
+    def test_dismiss_sets_flag(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        assert created["dismissed"] is False
+        result = service.set_dismissed(created["id"], True)
+        assert result["dismissed"] is True
+
+    def test_dismiss_with_note_records_followup(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        result = service.set_dismissed(created["id"], True, note="Not relevant.", author="Hassan")
+        assert result["dismissed"] is True
+        detail = service.get_detail(created["id"])
+        assert detail["notes"][0]["title"] == "Dismissed"
+        assert detail["notes"][0]["content"] == "Not relevant."
+        assert detail["notes"][0]["author"] == "Hassan"
+
+    def test_undismiss_clears_flag(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        service.set_dismissed(created["id"], True)
+        result = service.set_dismissed(created["id"], False)
+        assert result["dismissed"] is False
+
+    def test_dismiss_missing_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.set_dismissed("opp-missing", True)
