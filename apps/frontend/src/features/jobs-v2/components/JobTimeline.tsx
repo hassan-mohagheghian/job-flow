@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import type { JobTimelineDay } from '@/entities/job/types'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 
 interface JobTimelineProps {
   days: JobTimelineDay[]
@@ -62,17 +63,33 @@ export function JobTimeline({ days, isLoading = false }: JobTimelineProps) {
                 </span>
                 <span className="h-px flex-1 bg-border/60" />
               </div>
-              {group.items.map((day) => (
-                <div
-                  key={day.date}
-                  className="flex items-center justify-between gap-1 px-2 py-1"
-                >
-                  <span className="text-xs text-foreground">{formatDay(day.date)}</span>
-                  <span className="text-xs font-semibold tabular-nums text-primary">
-                    {day.count}
-                  </span>
-                </div>
-              ))}
+              {group.items.map((day) => {
+                const apply = day.apply_count ?? 0
+                return (
+                  <Tooltip key={day.date}>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-between gap-1 px-2 py-1 cursor-default">
+                        <span className="text-xs text-foreground">{formatDay(day.date)}</span>
+                        <span className="flex flex-col items-end leading-tight">
+                          <span className="text-xs font-semibold tabular-nums text-primary">
+                            {day.count}
+                          </span>
+                          {apply > 0 && (
+                            <span className="text-2xs tabular-nums text-muted-foreground">
+                              ({apply} apply)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-56">
+                      {apply > 0
+                        ? `${apply} of ${day.count} jobs added ${formatDay(day.date)} have been applied to.`
+                        : `Nothing applied from ${formatDay(day.date)} yet.`}
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
             </div>
           ))
         )}

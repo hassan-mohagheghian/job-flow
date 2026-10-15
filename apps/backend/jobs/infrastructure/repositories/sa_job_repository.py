@@ -205,20 +205,42 @@ class SQLAlchemyJobRepository(IJobRepository):
         }
 
     def count_created_by_day(self) -> list[dict[str, Any]]:
-        """Return ``{date: "YYYY-MM-DD", count}`` for non-deleted jobs, newest first.
+        """Return ``{date, count, apply_count}`` for non-deleted jobs, newest first.
 
         ``created_at`` is a Text ISO column, so the day key is the first 10
-        characters (``substr``) grouped directly.
+        characters (``substr``) grouped directly. ``apply_count`` counts the
+        day's jobs the user has actually applied to — i.e. having an
+        application at or past ``applied`` in the funnel (applied, interview,
+        offer, accepted). The application join matches on job and user so
+        counts stay user-scoped (at most one application per job, so the
+        day ``count`` is unaffected).
         """
+        from applications.infrastructure.models.application_model import ApplicationModel
+
+        applied_statuses = ("applied", "interview", "offer", "accepted")
         day = func.substr(JobModel.created_at, 1, 10)
-        q = self._base_query().filter(JobModel.created_at.isnot(None))
+        apply_count = func.sum(
+            case((ApplicationModel.status.in_(applied_statuses), 1), else_=0)
+        ).label("apply_count")
+        q = (
+            self._base_query()
+            .filter(JobModel.created_at.isnot(None))
+            .outerjoin(
+                ApplicationModel,
+                (ApplicationModel.job_id == JobModel.id)
+                & (ApplicationModel.user_id == JobModel.user_id),
+            )
+        )
         rows = (
-            q.with_entities(day.label("date"), func.count(JobModel.id).label("count"))
+            q.with_entities(day.label("date"), func.count(JobModel.id).label("count"), apply_count)
             .group_by(day)
             .order_by(day.desc())
             .all()
         )
-        return [{"date": r.date, "count": r.count} for r in rows]
+        return [
+            {"date": r.date, "count": r.count, "apply_count": int(r.apply_count or 0)}
+            for r in rows
+        ]
 
     def delete_by_id(self, uuid: str) -> bool:
         """Hard-delete a job by UUID and its related tables.

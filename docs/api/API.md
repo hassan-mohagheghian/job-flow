@@ -137,18 +137,20 @@ creation date preset.
 ### `GET /api/jobs/timeline`
 
 Returns the number of non-deleted jobs created per calendar day, newest first,
-grouped by the day portion of `created_at`. Display-only; independent of list
+grouped by the day portion of `created_at`, plus each day's applied-to jobs. Display-only; independent of list
 filters.
 
 ```json
 {
-  "days": [ { "date": "2026-08-19", "count": 3 }, { "date": "2026-08-18", "count": 5 } ],
-  "total": 8
+  "days": [ { "date": "2026-08-19", "count": 3, "apply_count": 2 } ],
+  "total": 8,
+  "apply_total": 5
 }
 ```
 
-`total` is the sum of all day counts. The frontend renders this in the narrow
-"Jobs added" side panel on the Jobs page.
+`total` is the sum of all day counts, `apply_total` the sum of all
+`apply_count`s. The frontend renders this in the narrow
+"Jobs added" side panel on the Jobs page, with `(N apply)` per qualifying day.
 
 ### `PUT /api/jobs/{job_id}/pinned`
 

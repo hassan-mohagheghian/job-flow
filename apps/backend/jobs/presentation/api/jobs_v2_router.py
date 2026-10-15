@@ -597,9 +597,13 @@ def _related_companies_schema(
 def get_job_timeline(
     repo: SQLAlchemyJobRepository = Depends(get_job_repo),
 ):
-    """Per-day created-job counts, newest first (independent of list filters)."""
+    """Per-day created-job counts plus per-day `apply`-recommendation counts, newest first (independent of list filters)."""
     days = repo.count_created_by_day()
-    return JobTimelineResponseSchema(days=days, total=sum(d["count"] for d in days))
+    return JobTimelineResponseSchema(
+        days=days,
+        total=sum(d["count"] for d in days),
+        apply_total=sum(d.get("apply_count", 0) for d in days),
+    )
 
 
 @router.get("/{job_id}", response_model=JobDetailResponseSchema)

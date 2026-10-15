@@ -946,10 +946,38 @@ class TestJobTimeline:
         assert resp.status_code == 200
         body = resp.json()
         assert body["days"] == [
-            {"date": "2026-08-19", "count": 2},
-            {"date": "2026-08-18", "count": 1},
+            {"date": "2026-08-19", "count": 2, "apply_count": 0},
+            {"date": "2026-08-18", "count": 1, "apply_count": 0},
         ]
         assert body["total"] == 3
+        assert body["apply_total"] == 0
+
+    def test_counts_applied_jobs_per_day(self, client, test_db):
+        job1 = _create_job(test_db, url="https://a.com/1", created_at="2026-08-19T09:00:00.000Z")
+        job2 = _create_job(test_db, url="https://a.com/2", created_at="2026-08-19T10:00:00.000Z")
+        _create_job(test_db, url="https://a.com/3", created_at="2026-08-18T11:00:00.000Z")
+        _create_application(test_db, job1.id, "applied")
+        _create_application(test_db, job2.id, "preparing")
+
+        body = client.get("/api/jobs/timeline").json()
+        assert body["days"] == [
+            {"date": "2026-08-19", "count": 2, "apply_count": 1},
+            {"date": "2026-08-18", "count": 1, "apply_count": 0},
+        ]
+        assert body["total"] == 3
+        assert body["apply_total"] == 1
+
+    def test_counts_post_applied_funnel_statuses(self, client, test_db):
+        job1 = _create_job(test_db, url="https://a.com/1", created_at="2026-08-19T09:00:00.000Z")
+        job2 = _create_job(test_db, url="https://a.com/2", created_at="2026-08-19T10:00:00.000Z")
+        _create_application(test_db, job1.id, "interview")
+        _create_application(test_db, job2.id, "rejected")
+
+        body = client.get("/api/jobs/timeline").json()
+        assert body["days"] == [
+            {"date": "2026-08-19", "count": 2, "apply_count": 1},
+        ]
+        assert body["apply_total"] == 1
 
     def test_excludes_deleted_jobs(self, client, test_db):
         _create_job(test_db, url="https://a.com/1", created_at="2026-08-19T09:00:00.000Z")
@@ -957,10 +985,11 @@ class TestJobTimeline:
 
         resp = client.get("/api/jobs/timeline").json()
         assert resp["total"] == 1
-        assert resp["days"] == [{"date": "2026-08-19", "count": 1}]
+        assert resp["days"] == [{"date": "2026-08-19", "count": 1, "apply_count": 0}]
 
     def test_empty_timeline(self, client):
         resp = client.get("/api/jobs/timeline")
         assert resp.status_code == 200
         assert resp.json()["days"] == []
         assert resp.json()["total"] == 0
+        assert resp.json()["apply_total"] == 0

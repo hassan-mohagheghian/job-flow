@@ -34,11 +34,13 @@ export interface JobAgg {
 export interface JobTimelineDay {
   date: string
   count: number
+  apply_count?: number | null
 }
 
 export interface JobTimeline {
   days: JobTimelineDay[]
   total: number
+  apply_total?: number | null
 }
 
 export interface JobWithLocations extends Job {

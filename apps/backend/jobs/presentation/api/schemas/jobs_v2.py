@@ -168,11 +168,13 @@ class JobListResponseSchema(BaseModel):
 class JobTimelineDaySchema(BaseModel):
     date: str
     count: int
+    apply_count: int = 0
 
 
 class JobTimelineResponseSchema(BaseModel):
     days: list[JobTimelineDaySchema] = Field(default_factory=list)
     total: int = 0
+    apply_total: int = 0
 
 
 class JobDetailWorkflowStepSchema(BaseModel):

@@ -21,8 +21,8 @@ JOBS PAGE
 │ ┌─────────────────────────────────────────────────────────────┐ │ │── Aug 2026 ││
 │ │ Jobs list (infinite scroll, own scroll)                     │ │ │──────────────││
 │ │ # Title  Company  Location  …                              │ │ │ Aug 19     3 ││
-│ │ # Title  Company  Location  …                              │ │ │ Aug 18     5 ││
-│ │ …                                                          │ │ │ Aug 15     2 ││
+│ │ # Title  Company  Location  …                              │ │ │       (2 apply)│
+│ │ …                                                          │ │ │ Aug 18     5 ││
 │ └─────────────────────────────────────────────────────────────┘ │ │──────────────││
 │                                                                 │ │── July 2026  ││
 │                                                                 │ │──────────────││
@@ -41,7 +41,8 @@ separated by a vertical border. It has its own vertical scrollbar
 | ------- | -------- |
 | Header | "JOBS ADDED" label pinned at the top of the panel. |
 | Month divider | A horizontal line with the month name ("Aug 2026") centered; rendered whenever the month changes (once per month). |
-| Day row | `Day` (e.g. `Aug 19`) on the left, `count` on the right (tabular numerals, primary color). |
+| Day row | `Day` (e.g. `Aug 19`) on the left, `count` on the right (tabular numerals, primary color). When the day has applied-to jobs, a muted `(N apply)` line renders under the count; days with none show the count only. |
+| Day tooltip | Hovering a row shows `{apply} of {count} jobs added {day} have been applied to.`, or `Nothing applied from {day} yet.` when zero. |
 | Empty state | "No jobs yet" when there are no records. |
 | Loading state | "Loading…" while the timeline query resolves. |
 
@@ -57,8 +58,8 @@ stateDiagram-v2
 
 ## Data Source
 
-- `GET /api/jobs/timeline` → `{ days: [{ date: "YYYY-MM-DD", count }], total }`,
-  ordered **newest first**. `total` is the sum of all day counts.
+- `GET /api/jobs/timeline` → `{ days: [{ date: "YYYY-MM-DD", count, apply_count }], total, apply_total }`,
+  ordered **newest first**. `total` is the sum of all day counts, `apply_total` the sum of all `apply_count`s.
 - Counts are grouped by the day portion of `jobs.created_at` (a Text ISO column)
   over non-deleted jobs only — independent of the active list filters.
 - The timeline refetches on a 30s stale-time window; it is **not** tied to the
