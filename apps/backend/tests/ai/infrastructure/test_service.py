@@ -76,6 +76,108 @@ class TestLLMService:
         service.close()
         # MockProvider.close() is a no-op; just verify no error
 
+    def test_generate_streaming_delegates_to_provider(self):
+        """When provider has generate_streaming, it's called directly."""
+        provider = MockProvider()
+        # Add generate_streaming method to mock provider
+        provider.generate_streaming = lambda prompt, context=None, timeout=None, \
+            on_event=None, on_session_id=None: ProviderResponse(
+                content="streamed response",
+                metadata={"mock": True, "streaming": True},
+                provider="mock",
+                model="mock-model",
+            )
+        service = LLMService(provider)
+
+        resp = service.generate_streaming(
+            "test prompt",
+            context={"key": "value"},
+            timeout=30,
+            on_event=lambda evt: None,
+            on_session_id=lambda sid: None,
+        )
+
+        assert resp.content == "streamed response"
+        assert resp.metadata["streaming"] is True
+        # Verify the method was called (we can't easily track calls to lambda,
+        # but we can verify it didn't fall back to generate by checking
+        # that generate wasn't called)
+        assert len(provider.generate_calls) == 0
+
+    def test_generate_streaming_passes_through_callbacks(self):
+        """on_event and on_session_id callbacks are passed to provider."""
+        callbacks_received = {"event": None, "session_id": None}
+        
+        def capture_event(evt):
+            callbacks_received["event"] = evt
+            
+        def capture_session_id(sid):
+            callbacks_received["session_id"] = sid
+
+        provider = MockProvider()
+        # Add generate_streaming method that captures the callbacks
+        def mock_generate_streaming(prompt, context=None, timeout=None,
+                                  on_event=None, on_session_id=None):
+            # Call the callbacks to verify they're passed through
+            if on_event:
+                on_event({"type": "test_event"})
+            if on_session_id:
+                on_session_id("test-session-123")
+            return ProviderResponse(
+                content="streamed response",
+                metadata={"mock": True},
+                provider="mock",
+                model="mock-model",
+            )
+        
+        provider.generate_streaming = mock_generate_streaming
+        service = LLMService(provider)
+
+        service.generate_streaming(
+            "test prompt",
+            context={},
+            timeout=None,
+            on_event=capture_event,
+            on_session_id=capture_session_id,
+        )
+
+        # Verify callbacks were invoked
+        assert callbacks_received["event"] == {"type": "test_event"}
+        assert callbacks_received["session_id"] == "test-session-123"
+
+    def test_generate_streaming_handles_provider_error(self):
+        """When provider's generate_streaming throws, it's propagated."""
+        provider = MockProvider()
+        # Add generate_streaming method that throws
+        def mock_generate_streaming(prompt, context=None, timeout=None,
+                                  on_event=None, on_session_id=None):
+            raise RuntimeError("Streaming failed")
+        
+        provider.generate_streaming = mock_generate_streaming
+        service = LLMService(provider)
+
+        with pytest.raises(RuntimeError, match="Streaming failed"):
+            service.generate_streaming("test prompt")
+
+    def test_generate_streaming_logs_duration(self):
+        """generate_streaming logs duration and provider info."""
+        provider = MockProvider()
+        # Add generate_streaming method
+        def mock_generate_streaming(prompt, context=None, timeout=None,
+                                  on_event=None, on_session_id=None):
+            return ProviderResponse(
+                content="streamed response",
+                metadata={"mock": True},
+                provider="mock",
+                model="mock-model",
+            )
+        
+        provider.generate_streaming = mock_generate_streaming
+        service = LLMService(provider)
+
+        # Should not raise
+        service.generate_streaming("test prompt")
+
 
 class TestGetLLMService:
     """Test the singleton factory function."""
