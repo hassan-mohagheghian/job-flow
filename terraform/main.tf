@@ -261,6 +261,40 @@ resource "docker_container" "background" {
 }
 
 # =============================================================================
+# Reconcile scheduler (TaskIQ periodic tasks)
+# Runs reconcile_stuck_executions every 30s so executions whose worker died
+# mid-run (e.g. Redis reader timeout) fail cleanly instead of staying RUNNING.
+# =============================================================================
+
+resource "docker_container" "scheduler" {
+  name  = "${var.project_name}-scheduler"
+  image = docker_image.background.name
+
+  command = [
+    "sh", "-c",
+    "until python -c \"import socket; s=socket.socket(); s.settimeout(2); s.connect(('${var.project_name}-redis', 6379)); s.close()\" 2>/dev/null; do echo 'Waiting for Redis...'; sleep 2; done && uv run taskiq scheduler apps.backend.entrypoints.scheduler:create_scheduler shared.infrastructure.taskiq.tasks"
+  ]
+
+  env = [
+    "DATABASE_URL=postgresql+psycopg://${var.postgres_user}:${var.postgres_password}@${var.project_name}-postgres:5432/${var.postgres_db}",
+    "REDIS_HOST=${var.project_name}-redis",
+    "REDIS_PORT=6379",
+    "AI_PROVIDER=${var.ai_provider}",
+  ]
+
+  networks_advanced {
+    name = docker_network.app_network.name
+  }
+
+  depends_on = [
+    docker_container.alembic,
+    docker_container.redis,
+  ]
+
+  restart = "unless-stopped"
+}
+
+# =============================================================================
 # Frontend (Next.js)
 # =============================================================================
 

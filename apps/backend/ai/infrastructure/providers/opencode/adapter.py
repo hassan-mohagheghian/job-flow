@@ -16,6 +16,9 @@ from typing import Any, Callable, Optional
 
 from ..base import LLMProvider, ProviderConfig, ProviderResponse
 from shared.infrastructure.config.app_config import LLM_DEFAULT_TIMEOUT, SUBPROCESS_STDIN_JOIN_TIMEOUT
+from shared.infrastructure.process.logging_config import get_logger
+
+log = get_logger("opencode.provider")
 
 _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '..', '..'))
 OPENCODE_BIN = os.path.expanduser('~/.opencode/bin/opencode')
@@ -71,14 +74,25 @@ class OpencodeProvider(LLMProvider):
         content = '\n'.join(text_parts)
 
         if returncode != 0:
-            if not content:
+            if content:
+                # The CLI sometimes exits nonzero on trailing errors even
+                # though the model's full answer streamed — surfacing it
+                # lets callers validate/parse instead of fail-fast.
+                log.warning(
+                    "opencode.provider.nonzero_exit_with_content",
+                    returncode=returncode,
+                    content_chars=len(content),
+                )
+            else:
                 non_json = [
                     _ANSI_RE.sub('', l).strip()
                     for l in output_lines
                     if not l.startswith('{')
                 ]
                 content = '\n'.join(non_json[:5])
-            raise RuntimeError(f"opencode failed (exit code {returncode}): {content[:300]}")
+                raise RuntimeError(
+                    f"opencode failed (exit code {returncode}): {content[:300]}"
+                )
 
         return ProviderResponse(
             content=content,

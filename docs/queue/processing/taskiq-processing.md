@@ -320,12 +320,32 @@ are gitignored. The task is registered in `shared.infrastructure.taskiq.tasks`
 (the worker's `TASK_MODULES`), so the worker can execute it — the "task not
 found" warning does not occur.
 
+## Scheduler in Docker Stacks
+
+The scheduled tasks (`reconcile_stuck_executions`, `periodic_db_backup`) need
+a running TaskIQ scheduler process alongside the worker — the worker alone
+does not fire scheduled tasks. Both Docker stacks run it via a dedicated
+`scheduler` service/container that reuses the background image and runs:
+
+    taskiq scheduler apps.backend.entrypoints.scheduler:create_scheduler \
+        shared.infrastructure.taskiq.tasks
+
+- Dev: `scheduler` service in `docker-compose.yml` (waits for Redis healthy).
+- Production: `docker_container.scheduler` in `terraform/main.tf`.
+
+This is essential for crash recovery: when a worker process dies mid-execution
+(e.g. a Redis reader timeout), the sweep fails the RUNNING execution with the
+timeout message after `WORKER_JOB_TIMEOUT` so Retry becomes available again.
+Regression tests pin this wiring:
+`apps/backend/tests/shared/infrastructure/taskiq/test_scheduler_stack_wiring.py`.
+
 # Deployment Model
 
 Production services:
 
 - FastAPI API service
 - TaskIQ Worker service
+- TaskIQ Scheduler service
 - Redis broker
 - PostgreSQL database
 
@@ -357,6 +377,7 @@ Required services:
 - PostgreSQL
 - FastAPI
 - TaskIQ Worker
+- TaskIQ Scheduler (fires scheduled tasks, e.g. reconcile sweep)
 
 Local environment:
 
@@ -369,6 +390,10 @@ FastAPI
 ↓
 
 TaskIQ Worker
+
+↓
+
+TaskIQ Scheduler (periodic maintenance)
 
 ↓
 

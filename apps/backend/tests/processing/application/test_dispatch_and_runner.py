@@ -98,6 +98,24 @@ class TestProcessingExecutionRunner:
         assert "execution.started" in names
         assert "execution.completed" in names
 
+    def test_run_completion_clears_stale_timeout_error(self):
+        """Regression (prompt 222): a workflow that finishes after the
+        reconcile sweep already recorded a timeout message must not keep
+        that error on a COMPLETED execution."""
+        repo = FakeExecutionRepo()
+        execution = _execution(status=ExecutionStatus.QUEUED)
+        execution.error_message = "Execution timed out after 620s. Check status or retry."
+        repo.save(execution)
+
+        with (
+            patch.object(ProcessingExecutionRunner, "_run_workflow", return_value={"done": True}),
+            patch("shared.infrastructure.events.processing_events.publish_sync"),
+        ):
+            ProcessingExecutionRunner(repo).run(execution.id)
+
+        assert execution.status == ExecutionStatus.COMPLETED
+        assert execution.error_message is None
+
     def test_run_marks_failed_and_publishes_on_error(self):
         repo = FakeExecutionRepo()
         execution = _execution(status=ExecutionStatus.QUEUED)

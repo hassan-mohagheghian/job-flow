@@ -195,6 +195,7 @@ class ProcessingExecutionRunner:
                 session.rollback()
             execution.status = ExecutionStatus.COMPLETED
             execution.finished_at = finished_at
+            execution.error_message = None
             if execution.workflow_progress:
                 execution.workflow_progress["status"] = "completed"
             repo.save(execution)

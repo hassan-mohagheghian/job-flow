@@ -142,6 +142,64 @@ class TestRunSubprocess:
         assert captured_kwargs.get('start_new_session') is True
 
 
+class TestNonzeroExitWithContent:
+    """Regression (prompt 222): opencode sometimes exits 1 after streaming a
+    complete answer; the content must surface for validation/retry instead of
+    being discarded in a RuntimeError (which fail-fasted job analysis)."""
+
+    @staticmethod
+    def _run_generate(events, returncode):
+        import json as _json
+        from ai.infrastructure.providers.opencode.adapter import OpencodeProvider
+
+        proc_mock = MagicMock()
+        proc_mock.stdout = iter(events)
+        proc_mock.returncode = returncode
+        proc_mock.wait.return_value = returncode
+        proc_mock.stdin = MagicMock()
+
+        with patch('subprocess.Popen', return_value=proc_mock):
+            provider = OpencodeProvider()
+            return provider.generate('test prompt', timeout=5)
+
+    @staticmethod
+    def _event(text):
+        import json as _json
+        return _json.dumps({"type": "text", "part": {"text": text}})
+
+    def test_nonzero_exit_with_content_returns_content(self):
+        import json as _json
+
+        events = [self._event(_json.dumps({"scores": {"fit": 8}}))]
+        resp = self._run_generate(events, returncode=1)
+        assert _json.loads(resp.content) == {"scores": {"fit": 8}}
+        assert resp.metadata["returncode"] == 1
+
+    def test_nonzero_exit_without_content_raises(self):
+        events = ['not-a-json-event']
+        with pytest.raises(RuntimeError, match="exit code 1"):
+            self._run_generate(events, returncode=1)
+
+    def test_generate_structured_parses_json_after_nonzero_exit(self):
+        import json as _json
+        from ai.infrastructure.providers.opencode.adapter import OpencodeProvider
+
+        events = [
+            self._event('```json\n{"scores": {"fit": 8}}\n```'),
+        ]
+        proc_mock = MagicMock()
+        proc_mock.stdout = iter(events)
+        proc_mock.returncode = 1
+        proc_mock.wait.return_value = 1
+        proc_mock.stdin = MagicMock()
+
+        with patch('subprocess.Popen', return_value=proc_mock):
+            provider = OpencodeProvider()
+            resp = provider.generate_structured('prompt', timeout=5)
+
+        assert _json.loads(resp.content) == {"scores": {"fit": 8}}
+
+
 class TestSessionIdFlow:
     """Test session_id is passed through context and saved."""
 
