@@ -4,13 +4,16 @@ import json
 from typing import Any
 from datetime import datetime, UTC, timedelta
 
-from sqlalchemy import func, or_, and_, case, cast, select, DateTime
+from sqlalchemy import func, or_, and_, case, cast, select, DateTime, asc as sa_asc, desc as sa_desc, true as sa_true, exc as sa_exc
 from sqlalchemy.orm import Session
 
 from jobs.domain.repositories.job_repository import IJobRepository
-from jobs.infrastructure.models.job_model import JobModel
+from jobs.domain.services.job_source_rules import display_name_for_domain, resolve_source
+from jobs.infrastructure.models.job_model import JobModel, JobSourceModel
 from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
 from jobs.infrastructure.mappers import job_model_to_dict
+
+IntegrityError = sa_exc.IntegrityError
 
 # Keyset-cursor sentinel encoding a NULL sort value. NULLs always sort last,
 # so the cursor must distinguish a NULL boundary row from a non-NULL one.
@@ -242,6 +245,153 @@ class SQLAlchemyJobRepository(IJobRepository):
             for r in rows
         ]
 
+    def source_stats(self) -> dict[str, Any]:
+        """Dashboard summary: totals + unknown bucket, in two lightweight queries.
+
+        ``count_created_by_source`` is the single counting definition shared
+        by stats/distribution/table (non-deleted, user-scoped jobs grouped by
+        their joined source site).
+        """
+        by_source = self.count_created_by_source()
+        unknown_jobs = int(self._base_query().filter(JobModel.source_site_id.is_(None)).count())
+        total_jobs = int(self._base_query().count())
+        return {
+            "total_jobs": total_jobs,
+            "total_sources": len(by_source),
+            "active_sources": sum(1 for s in by_source if s["is_active"] and s["job_count"] > 0),
+            "unknown_jobs": unknown_jobs,
+        }
+
+    def count_created_by_source(self) -> list[dict[str, Any]]:
+        """Counts of non-deleted jobs grouped by ``job.job_sources``.
+
+        Single GROUP BY query (join job_sources, count jobs); no N+1 and no
+        per-source queries. Sources with zero live jobs are not returned.
+        """
+        rows = (
+            self._base_query()
+            .join(JobSourceModel, JobSourceModel.id == JobModel.source_site_id)
+            .with_entities(
+                JobSourceModel.id.label("id"),
+                JobSourceModel.name.label("name"),
+                JobSourceModel.canonical_url.label("canonical_url"),
+                JobSourceModel.normalized_domain.label("domain"),
+                JobSourceModel.is_active.label("is_active"),
+                func.count(JobModel.id).label("job_count"),
+                func.max(JobModel.created_at).label("last_activity"),
+            )
+            .group_by(JobSourceModel.id)
+            .all()
+        )
+        return [
+            {
+                "id": r.id,
+                "name": r.name,
+                "canonical_url": r.canonical_url,
+                "domain": r.domain,
+                "is_active": bool(r.is_active),
+                "job_count": int(r.job_count or 0),
+                "last_activity": r.last_activity,
+            }
+            for r in rows
+        ]
+
+    def source_distribution(self, limit: int = 5) -> dict[str, Any]:
+        """Top ``limit`` sources by count with the remainder folded into other."""
+        items = sorted(self.count_created_by_source(), key=lambda s: -s["job_count"])
+        return {
+            "items": items[:limit],
+            "other_count": sum(s["job_count"] for s in items[limit:]),
+            "unknown_count": int(
+                self._base_query().filter(JobModel.source_site_id.is_(None)).count()
+            ),
+        }
+
+    def list_sources(
+        self,
+        page: int = 1,
+        page_size: int = 25,
+        query: str = "",
+        sort: str = "job_count",
+        order: str = "desc",
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Paginated source rows for the dashboard table.
+
+        Includes sources with zero live jobs (unlike the aggregates). Search,
+        sort and pagination happen in SQL; no per-source count queries.
+        """
+        base = (
+            self._session.query(JobSourceModel)
+            .outerjoin(
+                JobModel,
+                (JobModel.source_site_id == JobSourceModel.id)
+                & (JobModel.deleted == 0)
+                & self._user_scope_clause(),
+            )
+        )
+        if self._user_id:
+            base = base.filter(JobSourceModel.user_id == self._user_id)
+        if query:
+            like = f"{query.lower()}%"
+            base = base.filter(
+                or_(
+                    func.lower(func.coalesce(JobSourceModel.name, "")).like(like),
+                    func.lower(JobSourceModel.normalized_domain).like(like),
+                )
+            )
+
+        total = (
+            base.with_entities(func.count(func.distinct(JobSourceModel.id)))
+            .order_by(None)
+            .scalar()
+            or 0
+        )
+
+        job_count_exp = func.count(
+            case((JobModel.id.isnot(None), JobModel.id))
+        ).label("job_count_exp")
+        q = base.with_entities(
+            JobSourceModel,
+            job_count_exp,
+            func.max(JobModel.created_at).label("last_activity"),
+        ).group_by(JobSourceModel.id)
+
+        sort_column = {
+            "job_count": job_count_exp,
+            "name": JobSourceModel.name,
+            "last_activity": func.max(JobModel.created_at),
+        }[sort]
+        direction = sa_desc if order == "desc" else sa_asc
+        total_pages = max(1, -(-total // page_size))
+        page = max(1, min(page, total_pages))
+        ordering = direction(sort_column)
+        if order == "desc":
+            ordering = ordering.nulls_last()
+        rows = (
+            q.order_by(ordering, JobSourceModel.normalized_domain.asc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        items = [
+            {
+                "id": site.id,
+                "name": site.name,
+                "canonical_url": site.canonical_url,
+                "domain": site.normalized_domain,
+                "is_active": bool(site.is_active),
+                "job_count": int(count or 0),
+                "last_activity": last_activity,
+            }
+            for site, count, last_activity in rows
+        ]
+        return items, int(total)
+
+    def _user_scope_clause(self):
+        """User matching for join conditions (mirrors _base_query scoping)."""
+        return JobModel.user_id == self._user_id if self._user_id else sa_true()
+
     def delete_by_id(self, uuid: str) -> bool:
         """Hard-delete a job by UUID and its related tables.
 
@@ -331,10 +481,53 @@ class SQLAlchemyJobRepository(IJobRepository):
             source=source,
             user_id=self._user_id,
         )
+        resolved = resolve_source(url)
+        model.source_site_id = (
+            self._get_or_create_source_site(resolved).id if resolved else None
+        )
         self._session.add(model)
         self._session.commit()
         self._session.refresh(model)
         return job_model_to_dict(model)
+
+    def _get_or_create_source_site(self, normalized_domain: str) -> JobSourceModel:
+        """Reuse-or-create the user's source row for a canonical domain.
+
+        Same-session get-or-create; on a concurrent insert collision the
+        unique index decide the winner and we take the persisted row.
+        """
+        existing = (
+            self._session.query(JobSourceModel)
+            .filter(
+                JobSourceModel.user_id == self._user_id,
+                JobSourceModel.normalized_domain == normalized_domain,
+            )
+            .first()
+        )
+        if existing:
+            return existing
+
+        site = JobSourceModel(
+            user_id=self._user_id,
+            name=display_name_for_domain(normalized_domain),
+            canonical_url=f"https://{normalized_domain}",
+            normalized_domain=normalized_domain,
+            is_active=1,
+        )
+        self._session.add(site)
+        try:
+            self._session.flush()
+            return site
+        except IntegrityError:
+            self._session.rollback()
+            return (
+                self._session.query(JobSourceModel)
+                .filter(
+                    JobSourceModel.user_id == self._user_id,
+                    JobSourceModel.normalized_domain == normalized_domain,
+                )
+                .first()
+            )
 
     def get_by_url(self, url: str) -> dict[str, Any] | None:
         q = self._session.query(JobModel).filter(JobModel.url == url)

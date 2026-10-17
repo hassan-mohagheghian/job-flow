@@ -9,6 +9,7 @@ import {
   UserCircle,
   Signpost,
   TextT,
+  SquaresFour,
   type Icon,
 } from '@phosphor-icons/react'
 
@@ -25,6 +26,7 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: SquaresFour },
   { id: 'jobs', label: 'Jobs', icon: Briefcase },
   { id: 'opportunities', label: 'Opportunities', icon: TrayArrowDown },
   { id: 'companies', label: 'Companies', icon: Buildings },

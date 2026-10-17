@@ -152,6 +152,14 @@ filters.
 `apply_count`s. The frontend renders this in the narrow
 "Jobs added" side panel on the Jobs page, with `(N apply)` per qualifying day.
 
+### `GET /api/jobs/sources/*` (Dashboard)
+
+Job-source aggregates powering the Dashboard section (`docs/api/jobs/job-sources-dashboard.md`):
+`sources/stats`, `sources/distribution` (top-N + Other + Unknown) and
+`sources` (paginated table with search + sort). Sources are canonical hosts
+derived from each job's URL at ingestion (`job.job_sources`), user-scoped and
+counting only non-deleted listings.
+
 ### `PUT /api/jobs/{job_id}/pinned`
 
 Request: `{ "pinned": true }` → Response `200`: `{ "pinned": true }`, or

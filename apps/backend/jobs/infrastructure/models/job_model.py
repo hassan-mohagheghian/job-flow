@@ -4,10 +4,14 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
+import sqlalchemy as sa
 from sqlalchemy import Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.infrastructure.database.sqlalchemy_config import Base
+
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat()
 
 
 class JobModel(Base):
@@ -75,3 +79,24 @@ class JobModel(Base):
     session_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     easy_apply: Mapped[Optional[bool]] = mapped_column(Integer, nullable=True, default=None)
     user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True, default="")
+    source_site_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+
+
+class JobSourceModel(Base):
+    """SQLAlchemy model for job_sources — canonical job boards the listings
+    were posted on (derived from the job URL hostname at ingestion)."""
+
+    __tablename__ = "job_sources"
+    __table_args__ = (
+        sa.Index("uq_job_sources_user_domain", "user_id", "normalized_domain", unique=True),
+        {"schema": "job"},
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid7()))
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True, default="")
+    name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    canonical_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    normalized_domain: Mapped[Optional[str]] = mapped_column(String, nullable=False)
+    is_active: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[Optional[str]] = mapped_column(Text, default=_now_iso)
+    updated_at: Mapped[Optional[str]] = mapped_column(Text, default=_now_iso, onupdate=_now_iso)

@@ -23,6 +23,7 @@ of a slim top bar) that opens a left sheet with the same items.
 ```
 SIDEBAR RAIL
   ├── Job Search (brand → /jobs)
+  ├── Dashboard      Job sources overview (stats, distribution chart, table)
   ├── Jobs           Job list (infinite scroll) + Processing Queue drawer
   ├── Opportunities  Inbound messages → extract, resolve, evaluate, track
   ├── Companies      Company intelligence + processing queue
@@ -859,6 +860,30 @@ Rows open the Opportunity Detail drawer (original message, extracted info
 with uncertainty, linked job/company, scores + reasons, missing info,
 application path, next action, evaluation history). Incomplete opportunities
 show `Evaluation pending` instead of invented scores.
+
+---
+
+### Dashboard
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Dashboard                                                                    │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [Total listings] [Total sources] [Active sources] [Unknown]                  │
+│                                                                              │
+│ ┌── Listings by source (doughnut: top 5 + Other + Unknown) ─┐                │
+│ │ ● Indeed.com 412 • 36%  ● LinkedIn.com 284 • 25%  …       │                │
+│ └────────────────────────────────────────────────────────────┘                │
+│                                                                              │
+├── Sources ──────────────────────────────────────────────────────────────────┤
+│ Search sources…                          Page 1 of 1 • 14 sources            │
+│ Source        │ Website       │ Jobs │ Last activity                        │
+│ Indeed.com    | indeed.com(link) | 412 | Oct 14                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+All widgets are backed by `/api/jobs/sources/*` aggregates (see
+`docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`).
 
 ---
 

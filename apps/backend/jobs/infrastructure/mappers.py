@@ -21,6 +21,7 @@ def job_model_to_dict(model: JobModel) -> dict[str, Any]:
     """Convert a JobModel to a domain dictionary."""
     return {
         "id": model.id,
+        "source_site_id": getattr(model, "source_site_id", None),
         "company": model.company,
         "role": model.role,
         "location": model.location,

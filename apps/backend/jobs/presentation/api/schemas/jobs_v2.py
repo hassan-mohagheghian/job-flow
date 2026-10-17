@@ -177,6 +177,41 @@ class JobTimelineResponseSchema(BaseModel):
     apply_total: int = 0
 
 
+class SourceStatsSchema(BaseModel):
+    total_jobs: int
+    total_sources: int
+    active_sources: int
+    unknown_jobs: int
+
+
+class SourceDistributionItemSchema(BaseModel):
+    id: str
+    name: str | None = None
+    domain: str | None = None
+    job_count: int = 0
+
+
+class SourceDistributionSchema(BaseModel):
+    items: list[SourceDistributionItemSchema] = Field(default_factory=list)
+    other_count: int = 0
+    unknown_count: int = 0
+
+
+class SourceListItemSchema(BaseModel):
+    id: str
+    name: str | None = None
+    canonical_url: str | None = None
+    domain: str | None = None
+    is_active: bool = True
+    job_count: int = 0
+    last_activity: str | None = None
+
+
+class SourceListResponseSchema(BaseModel):
+    items: list[SourceListItemSchema] = Field(default_factory=list)
+    pagination: PaginationSchema
+
+
 class JobDetailWorkflowStepSchema(BaseModel):
     id: str
     title: str

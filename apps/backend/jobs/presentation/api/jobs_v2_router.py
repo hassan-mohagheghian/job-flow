@@ -36,6 +36,10 @@ from jobs.presentation.api.schemas.jobs_v2 import (
     SetJobCompanyRequest,
     SetJobTagsRequest,
     JobTimelineResponseSchema,
+    SourceStatsSchema,
+    SourceDistributionSchema,
+    SourceListItemSchema,
+    SourceListResponseSchema,
 )
 from jobs.application.use_cases.list_jobs_v2 import ListJobsV2UseCase, ListJobsV2Request
 from jobs.infrastructure import SQLAlchemyJobRepository
@@ -603,6 +607,73 @@ def get_job_timeline(
         days=days,
         total=sum(d["count"] for d in days),
         apply_total=sum(d.get("apply_count", 0) for d in days),
+    )
+
+
+_SOURCE_SORT_FIELDS = {"job_count", "name", "last_activity"}
+
+
+def _iso_or_none(value: Any) -> str | None:
+    """Normalize Text-datetime values to ISO for the API (str() → space form)."""
+    if value is None:
+        return None
+    return str(value).replace(" ", "T") if "T" not in str(value) else str(value)
+
+
+@router.get("/sources/stats", response_model=SourceStatsSchema)
+def get_source_stats(repo: SQLAlchemyJobRepository = Depends(get_job_repo)):
+    """Dashboard summary metrics (non-deleted jobs of the current user)."""
+    repo_annotations = repo.source_stats()
+    return SourceStatsSchema(**repo_annotations)
+
+
+@router.get("/sources/distribution", response_model=SourceDistributionSchema)
+def get_source_distribution(
+    repo: SQLAlchemyJobRepository = Depends(get_job_repo),
+    limit: int = Query(default=5, ge=1, le=20),
+):
+    """Top sources by listing count; the rest folds into `other_count`."""
+    return repo.source_distribution(limit=limit)
+
+
+@router.get("/sources", response_model=SourceListResponseSchema)
+def list_sources(
+    repo: SQLAlchemyJobRepository = Depends(get_job_repo),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=25, ge=1, le=100),
+    query: str = Query(default=""),
+    sort: str = Query(default="job_count"),
+    order: str = Query(default="desc"),
+):
+    """Paginated dashboard table of the user's known job sources."""
+    sort = sort.strip().lower()
+    order = order.strip().lower()
+    if sort not in _SOURCE_SORT_FIELDS:
+        raise HTTPException(status_code=422, detail="sort must be one of: job_count, name, last_activity")
+    if order not in {"asc", "desc"}:
+        raise HTTPException(status_code=422, detail="order must be asc or desc")
+    items, total = repo.list_sources(
+        page=page, page_size=page_size, query=query.strip(), sort=sort, order=order
+    )
+    return SourceListResponseSchema(
+        items=[
+            SourceListItemSchema(
+                id=item["id"],
+                name=item["name"],
+                canonical_url=item["canonical_url"],
+                domain=item["domain"],
+                is_active=item["is_active"],
+                job_count=item["job_count"],
+                last_activity=_iso_or_none(item["last_activity"]),
+            )
+            for item in items
+        ],
+        pagination=PaginationSchema(
+            page=page,
+            page_size=page_size,
+            total_items=total,
+            total_pages=max(1, -(-total // page_size)),
+        ),
     )
 
 
