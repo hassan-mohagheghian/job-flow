@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  useApplicationByJobQuery,
+  useCreateApplicationMutation,
+  useUpdateApplicationMutation,
+} from "@/entities/application/hooks";
+import {
   Drawer,
   DrawerHeader,
   DrawerContent,
@@ -33,7 +38,6 @@ import { RankBadge } from "@/shared/components/RankBadge";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
 import { TrackingStatusSelect } from "./TrackingStatusSelect";
-import { DismissDialog } from "./DismissDialog";
 import { CompanyPicker } from "./CompanyPicker";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -523,45 +527,7 @@ function ProcessingErrorBanner({
   );
 }
 
-function DismissToggle({ jobId, jobTitle, dismissed }: { jobId: string; jobTitle: string | null; dismissed?: boolean }) {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const setDismissed = useMutation({
-    mutationFn: ({ dismissed, note }: { dismissed: boolean; note?: string }) =>
-      jobApi.setDismissed(jobId, dismissed, note),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
-      queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-    },
-  });
-  if (dismissed) {
-    return (
-      <Button size="sm" variant="outline" onClick={() => setDismissed.mutate({ dismissed: false })} disabled={setDismissed.isPending}>
-        {setDismissed.isPending ? 'Restoring…' : 'Undismiss'}
-      </Button>
-    );
-  }
-  return (
-    <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        Mark as dismissed
-      </Button>
-      <DismissDialog
-        open={open}
-        onOpenChange={setOpen}
-        jobTitle={jobTitle ?? undefined}
-        onDismiss={(note) => {
-          setDismissed.mutate(
-            { dismissed: true, note: note || undefined },
-            { onSuccess: () => setOpen(false) },
-          );
-        }}
-        isPending={setDismissed.isPending}
-      />
-    </>
-  );
-}
+
 
 function JobDetailContent({
   detail,
@@ -587,6 +553,48 @@ function JobDetailContent({
   const recruiters = (detail.related_companies ?? []).filter(
     (c) => c.role === "recruiter",
   );
+  
+  // Application hooks for mark expired functionality
+  const { data: application, isLoading: isAppLoading, isError: isAppError } = useApplicationByJobQuery(detail.id);
+  const updateApplication = useUpdateApplicationMutation();
+  const createApplication = useCreateApplicationMutation();
+  
+  // Dismiss toggle state
+  const [isDismissOpen, setIsDismissOpen] = useState(false);
+  const dismissMutation = useMutation({
+    mutationFn: ({ dismissed, note }: { dismissed: boolean; note?: string }) =>
+      jobApi.setDismissed(detail.id, dismissed, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-detail", detail.id] });
+      queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      setIsDismissOpen(false);
+    },
+  });
+  
+  // Handle mark expired
+  const handleMarkExpired = () => {
+    createApplication.mutate(
+      { jobId: detail.id },
+      {
+        onSuccess: (created) => {
+          updateApplication.mutate(
+            { applicationId: created.id, data: { status: 'expired' } },
+            { onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["job-detail", detail.id] });
+                queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
+                queryClient.invalidateQueries({ queryKey: ["jobs"] });
+              } },
+          );
+        },
+      },
+    );
+  };
+  
+  // Handle dismiss toggle
+  const handleDismissToggleChange = (dismissed: boolean, note: string) => {
+    dismissMutation.mutate({ dismissed, note: note || undefined });
+  };
 
   return (
     <div className="space-y-1 min-w-0">
@@ -671,9 +679,29 @@ function JobDetailContent({
             <DetailRow
               label="Tracking"
               value={
-                <div className="flex flex-col gap-1.5">
-                  <TrackingStatusSelect jobId={detail.id} />
-                  <DismissToggle jobId={detail.id} jobTitle={detail.title} dismissed={detail.dismissed} />
+                <div className="flex gap-3">
+                  {/* Mark Expired Button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleMarkExpired}
+                    disabled={createApplication.isPending || updateApplication.isPending}
+                    className="w-[120px]"
+                  >
+                    {createApplication.isPending || updateApplication.isPending ? 'Marking…' : 'Mark expired'}
+                  </Button>
+                  {/* Mark as Dismissed Button */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsDismissOpen(true)}
+                    disabled={dismissMutation.isPending}
+                    className="w-[120px]"
+                  >
+                    {dismissMutation.isPending ? 
+  (detail?.dismissed ? 'Undismissing…' : 'Dismissing…') : 
+  (detail?.dismissed ? 'Undismiss' : 'Mark as dismissed')}
+                  </Button>
                 </div>
               }
             />
