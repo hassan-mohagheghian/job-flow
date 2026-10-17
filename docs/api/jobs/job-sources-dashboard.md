@@ -120,6 +120,31 @@ Query: `page` (default 1), `page_size` (default 25, max 100), `query`
   omitted when null). `canonical_url` persisted at row creation (host prefix
   of the first URL that created it).
 - Invalid `sort`/`order`/page values → 422.
+- The client exposes a per-page selector (10 / 25 / 50 / 100; changing it
+  resets to page 1); the server caps `page_size` at 100.
+
+### GET /api/jobs/recommendations/distribution
+
+Counts of the current user's **non-deleted** jobs grouped by the
+`recommendation` column of their `job_analysis` row (left join, so jobs
+without an analysis land in `none`; legacy/unknown labels also fold into
+`none`). Only non-empty buckets are returned; `total` is always the full
+non-deleted job count.
+
+```json
+{
+  "items": [
+    { "recommendation": "apply", "count": 12 },
+    { "recommendation": "consider", "count": 7 },
+    { "recommendation": "skip", "count": 3 }
+  ],
+  "total": 29
+}
+```
+
+`recommendation` ∈ `apply | consider | skip | none`. Rendered as the
+"Jobs by recommendation" doughnut next to the source distribution
+(semantic colors: green / amber / red / gray).
 
 ## Performance
 

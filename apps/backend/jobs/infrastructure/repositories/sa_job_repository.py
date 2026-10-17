@@ -307,6 +307,47 @@ class SQLAlchemyJobRepository(IJobRepository):
             ),
         }
 
+    def recommendation_distribution(self) -> dict[str, Any]:
+        """Count of non-deleted jobs per analysis recommendation.
+
+        Jobs are grouped by the `recommendation` column of their analysis
+        row (left join, so jobs without analysis land in `none`). Only
+        non-empty buckets are returned in `items`; `total` is always the
+        full non-deleted job count for the user.
+        """
+        analysis_join = JobAnalysisModel.job_id == JobModel.id
+        if self._user_id:
+            analysis_join = analysis_join & (
+                JobAnalysisModel.user_id == self._user_id
+            )
+        rows = (
+            self._base_query()
+            .outerjoin(JobAnalysisModel, analysis_join)
+            .with_entities(
+                JobAnalysisModel.recommendation,
+                func.count(func.distinct(JobModel.id)).label("count"),
+            )
+            .group_by(JobAnalysisModel.recommendation)
+            .all()
+        )
+        by_rec: dict[str, int] = {}
+        for recommendation, count in rows:
+            key = (recommendation or "").strip() or "none"
+            # Defensive: unexpected values (e.g. legacy labels) fold into none.
+            if key not in ("apply", "consider", "skip"):
+                key = "none"
+            by_rec[key] = by_rec.get(key, 0) + int(count)
+        return {
+            "items": [
+                {"recommendation": key, "count": count}
+                for key, count in sorted(
+                    by_rec.items(), key=lambda kv: (-kv[1], kv[0])
+                )
+                if count
+            ],
+            "total": int(self._base_query().count()),
+        }
+
     def list_sources(
         self,
         page: int = 1,

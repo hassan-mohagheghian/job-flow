@@ -21,6 +21,14 @@ export function useSourceDistribution() {
   })
 }
 
+export function useRecommendationDistribution() {
+  return useQuery({
+    queryKey: ['job-recommendation-distribution'],
+    queryFn: sourceApi.recommendationDistribution,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /** Debounces anything typed into `query` before it becomes part of a queryKey. */
 export function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value)
@@ -59,6 +67,10 @@ export function useSourcesList() {
     (page: number) => setQuery((q) => ({ ...q, page })),
     [],
   )
+  const setPageSize = useCallback(
+    (pageSize: number) => setQuery((q) => ({ ...q, page_size: pageSize, page: 1 })),
+    [],
+  )
   const setSearch = useCallback(
     (search: string) => setQuery((q) => ({ ...q, query: search, page: 1 })),
     [],
@@ -75,6 +87,7 @@ export function useSourcesList() {
     query: effectiveQuery,
     rawSearch: query.query,
     setPage,
+    setPageSize,
     setSearch,
     onSortChange,
     ...result,

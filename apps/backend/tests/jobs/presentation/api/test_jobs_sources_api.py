@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 from jobs.infrastructure.models.job_model import JobModel, JobSourceModel
+from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
 
 from jobs.domain.services.job_source_rules import resolve_source
 
@@ -88,6 +89,52 @@ class TestSourceStats:
 
         listing = client.get("/api/jobs/sources").json()
         assert [i["domain"] for i in listing["items"]] == []
+
+
+class TestRecommendationDistribution:
+    @staticmethod
+    def _create_analysis(test_db, job_id: str, recommendation: str | None) -> None:
+        model = JobAnalysisModel(
+            job_id=job_id,
+            user_id="test-user",
+            recommendation=recommendation,
+        )
+        test_db.add(model)
+        test_db.commit()
+
+    def test_counts_by_recommendation_with_none_bucket(self, client, test_db):
+        apply_job = _create_job(test_db, "https://linkedin.com/apply", None)
+        consider_job = _create_job(test_db, "https://linkedin.com/consider", None)
+        skip_job = _create_job(test_db, "https://linkedin.com/skip", None)
+        unknown_job = _create_job(test_db, "https://linkedin.com/unknown", None)
+        no_analysis_job = _create_job(test_db, "https://linkedin.com/bare", None)
+        self._create_analysis(test_db, apply_job.id, "apply")
+        self._create_analysis(test_db, consider_job.id, "consider")
+        self._create_analysis(test_db, skip_job.id, "skip")
+        self._create_analysis(test_db, unknown_job.id, None)
+
+        body = client.get("/api/jobs/recommendations/distribution").json()
+        assert body["total"] == 5
+        by_rec = {i["recommendation"]: i["count"] for i in body["items"]}
+        assert by_rec == {"apply": 1, "consider": 1, "skip": 1, "none": 2}
+
+    def test_deleted_and_other_users_jobs_excluded(self, client, test_db):
+        other_job = _create_job(test_db, "https://orphan.com/1", None, user_id="someone-else")
+        self._create_analysis(test_db, other_job.id, "apply")
+        _create_job(test_db, "https://orphan.com/2", None, deleted=1)
+
+        body = client.get("/api/jobs/recommendations/distribution").json()
+        assert body["items"] == []
+        assert body["total"] == 0
+
+    def test_legacy_labels_fold_into_none(self, client, test_db):
+        job = _create_job(test_db, "https://linkedin.com/legacy", None)
+        self._create_analysis(test_db, job.id, "maybe")
+
+        body = client.get("/api/jobs/recommendations/distribution").json()
+        by_rec = {i["recommendation"]: i["count"] for i in body["items"]}
+        assert by_rec == {"none": 1}
+        assert body["total"] == 1
 
 
 class TestSourceDistribution:

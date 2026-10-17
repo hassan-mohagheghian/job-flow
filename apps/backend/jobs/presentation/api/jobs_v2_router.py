@@ -37,6 +37,7 @@ from jobs.presentation.api.schemas.jobs_v2 import (
     SetJobTagsRequest,
     JobTimelineResponseSchema,
     SourceStatsSchema,
+    RecommendationDistributionSchema,
     SourceDistributionSchema,
     SourceListItemSchema,
     SourceListResponseSchema,
@@ -618,6 +619,12 @@ def _iso_or_none(value: Any) -> str | None:
     if value is None:
         return None
     return str(value).replace(" ", "T") if "T" not in str(value) else str(value)
+
+
+@router.get("/recommendations/distribution", response_model=RecommendationDistributionSchema)
+def get_recommendation_distribution(repo: SQLAlchemyJobRepository = Depends(get_job_repo)):
+    """Distribution of non-deleted jobs by analysis recommendation (apply/consider/skip/none)."""
+    return repo.recommendation_distribution()
 
 
 @router.get("/sources/stats", response_model=SourceStatsSchema)

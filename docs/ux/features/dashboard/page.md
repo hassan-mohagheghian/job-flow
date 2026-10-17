@@ -28,11 +28,12 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
     │   ├── Total sources
     │   ├── Active sources
     │   └── Unknown-source listings
-    ├── SourceDistributionChart (doughnut, top 5 + Other)   [desktop: right of table]
+    ├── SourceDistributionChart (doughnut, top 5 + Other)
+    ├── RecommendationChart (doughnut: Apply / Consider / Skip / No analysis)
     └── SourcesTable
         ├── Toolbar (search)
         ├── Columns: Source | Website | Jobs | Last activity
-        └── Pagination (page n of m • total)
+        └── Pagination (page n of m • total • per-page selector 10/25/50/100)
 ```
 
 ## Wireframe
@@ -80,9 +81,20 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
 - Legend lists slice + count (accessible summary is a text list).
 - Same data as the table (same endpoint constants and counting rules).
 
+## Recommendation chart
+
+- Second doughnut ("Jobs by recommendation") beside the source distribution:
+  one slice per bucket `apply | consider | skip | none` (jobs whose analysis
+  produced that recommendation; `none` covers unprocessed jobs, absent
+  recommendation, or legacy labels — `GET /api/jobs/recommendations/distribution`).
+- Fixed semantic colors: green (apply), amber (consider), red (skip), gray (none).
+- Zero-count buckets are hidden; empty dataset shows
+  "No recommendations yet — process jobs to populate this chart."
+
 ## Sources table
 
-- Server-side pagination (offset), search on name/normalized domain,
+- Server-side pagination (offset), per-page selector (10 / 25 / 50 / 100,
+  changing it resets to page 1), search on name/normalized domain,
   sort by `job_count` (default `desc`), `name`, or `last_activity`.
 - `Last activity` = newest job `created_at` for that source.
 - Website column links to the actual canonical URL (no invented URLs).
@@ -94,6 +106,7 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
 flowchart LR
   A[useSourceStats] --> B[GET /api/jobs/sources/stats]
   C[useSourceDistribution] --> D[GET /api/jobs/sources/distribution]
-  E[useSourcesList page/query/sort] --> F[GET /api/jobs/sources]
-  B & D & F --> G[Dashboard widgets]
+  R[useRecommendationDistribution] --> P[GET /api/jobs/recommendations/distribution]
+  E[useSourcesList page/query/sort/page-size] --> F[GET /api/jobs/sources]
+  B & D & P & F --> G[Dashboard widgets]
 ```

@@ -874,15 +874,20 @@ show `Evaluation pending` instead of invented scores.
 │ ┌── Listings by source (doughnut: top 5 + Other + Unknown) ─┐                │
 │ │ ● Indeed.com 412 • 36%  ● LinkedIn.com 284 • 25%  …       │                │
 │ └────────────────────────────────────────────────────────────┘                │
+│ ┌── Jobs by recommendation (doughnut) ────────────────────────┐               │
+│ │ ● Apply (green)  ● Consider (amber)  ● Skip (red)  ● None   │               │
+│ └──────────────────────────────────────────────────────────────┘              │
 │                                                                              │
 ├── Sources ──────────────────────────────────────────────────────────────────┤
 │ Search sources…                          Page 1 of 1 • 14 sources            │
 │ Source        │ Website       │ Jobs │ Last activity                        │
 │ Indeed.com    | indeed.com(link) | 412 | Oct 14                           │
+│ [Prev] select ▾ Rows per page (10/25/50/100) [Next]                          │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-All widgets are backed by `/api/jobs/sources/*` aggregates (see
+All widgets are backed by `/api/jobs/sources/*` plus
+`/api/jobs/recommendations/distribution` aggregates (see
 `docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`).
 
 ---

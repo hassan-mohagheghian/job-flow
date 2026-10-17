@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -210,6 +210,18 @@ class SourceListItemSchema(BaseModel):
 class SourceListResponseSchema(BaseModel):
     items: list[SourceListItemSchema] = Field(default_factory=list)
     pagination: PaginationSchema
+
+
+class RecommendationItemSchema(BaseModel):
+    recommendation: Literal["apply", "consider", "skip", "none"]
+    count: int
+
+
+class RecommendationDistributionSchema(BaseModel):
+    """Counts of non-deleted jobs per analysis recommendation bucket."""
+
+    items: list[RecommendationItemSchema] = Field(default_factory=list)
+    total: int = 0
 
 
 class JobDetailWorkflowStepSchema(BaseModel):

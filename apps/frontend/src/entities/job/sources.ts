@@ -45,6 +45,16 @@ export interface SourceSortField {
   order: 'asc' | 'desc'
 }
 
+export interface RecommendationItem {
+  recommendation: 'apply' | 'consider' | 'skip' | 'none'
+  count: number
+}
+
+export interface RecommendationDistribution {
+  items: RecommendationItem[]
+  total: number
+}
+
 export interface SourcesQuery extends SourceSortField {
   page: number
   page_size: number
@@ -55,6 +65,8 @@ export const sourceApi = {
   stats: () => api.get<SourceStats>('/jobs/sources/stats'),
   distribution: (limit = 5) =>
     api.get<SourceDistribution>(`/jobs/sources/distribution?limit=${limit}`),
+  recommendationDistribution: () =>
+    api.get<RecommendationDistribution>('/jobs/recommendations/distribution'),
   sources: (query: SourcesQuery) => {
     const params = new URLSearchParams({
       page: String(query.page),

@@ -1,11 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { SourceDistributionChart, buildSlices } from './SourceDistributionChart'
+import { buildRecommendationSlices, RecommendationChart } from './RecommendationChart'
 import { MetricCard } from './MetricCard'
 import { SourcesTable } from './SourcesTable'
 import { DashboardPage } from './DashboardPage'
 import type {
+  RecommendationDistribution,
   SourceDistribution,
   SourceListItem,
   SourceStats,
@@ -55,8 +57,61 @@ describe('buildSlices', () => {
   })
 })
 
-describe('MetricCard', () => {
-  it('renders value and label with an accessible label', () => {
+const recommendations: RecommendationDistribution = {
+  items: [
+    { recommendation: 'apply', count: 12 },
+    { recommendation: 'consider', count: 7 },
+    { recommendation: 'skip', count: 3 },
+  ],
+  total: 29,
+}
+
+describe('buildRecommendationSlices', () => {
+  it('keeps bucket order and hides zero/missing buckets', () => {
+    const { slices, total, pct } = buildRecommendationSlices(recommendations)
+    expect(total).toBe(22)
+    expect(slices.map((s) => s.label)).toEqual(['Apply', 'Consider', 'Skip'])
+    expect(slices[0].color).not.toBe(slices[1].color)
+    expect(pct(12)).toBe('55%')
+  })
+
+  it('maps jobs without analysis to No analysis', () => {
+    const { slices } = buildRecommendationSlices({
+      items: [{ recommendation: 'none', count: 4 }],
+      total: 4,
+    })
+    expect(slices.map((s) => s.label)).toEqual(['No analysis'])
+  })
+
+  it('is empty-safe', () => {
+    const { slices, total } = buildRecommendationSlices({ items: [], total: 0 })
+    expect(slices).toEqual([])
+    expect(total).toBe(0)
+  })
+})
+
+describe('RecommendationChart', () => {
+  it('renders the legend, total and chart role', () => {
+    render(<RecommendationChart distribution={recommendations} />)
+    expect(screen.getByTestId('recommendation-chart')).toBeInTheDocument()
+    expect(screen.getByText('Apply')).toBeInTheDocument()
+    expect(screen.queryByText('No analysis')).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /jobs per recommendation/i })).toBeInTheDocument()
+    expect(screen.getByText(/22 total listings/)).toBeInTheDocument()
+  })
+
+  it('empty and loading states', () => {
+    const { unmount } = render(
+      <RecommendationChart distribution={{ items: [], total: 0 }} />,
+    )
+    expect(screen.getByText(/No recommendations yet/i)).toBeInTheDocument()
+    unmount()
+    const { container } = render(<RecommendationChart distribution={recommendations} isLoading />)
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+  })
+})
+
+describe('MetricCard', () => {  it('renders value and label with an accessible label', () => {
     render(<MetricCard label="Total sources" value={14} />)
     expect(screen.getByText('14')).toBeInTheDocument()
     expect(screen.getByText('Total sources')).toBeInTheDocument()
@@ -122,12 +177,20 @@ function renderTable(overrides: Partial<Parameters<typeof SourcesTable>[0]> = {}
     onSearchChange: vi.fn(),
     onSortChange: vi.fn(),
     onPageChange: vi.fn(),
+    onPageSizeChange: vi.fn(),
     ...overrides,
   }
   return { props, ...render(<SourcesTable {...props} />) }
 }
 
 describe('SourcesTable', () => {
+  // jsdom lacks pointer-capture APIs that Radix Select relies on.
+  beforeAll(() => {
+    Element.prototype.hasPointerCapture = () => false
+    Element.prototype.setPointerCapture = () => {}
+    Element.prototype.releasePointerCapture = () => {}
+    Element.prototype.scrollIntoView = () => {}
+  })
   it('renders rows with links, counts and activity', () => {
     renderTable()
     expect(screen.getByText('Indeed.com')).toBeInTheDocument()
@@ -184,6 +247,15 @@ describe('SourcesTable', () => {
     await waitFor(() => expect(onSearchChange).toHaveBeenCalled())
   })
 
+  it('changes page size via the per-page select', async () => {
+    const user = userEvent.setup()
+    const onPageSizeChange = vi.fn()
+    renderTable({ onPageSizeChange })
+    await user.click(screen.getByRole('combobox', { name: 'Rows per page' }))
+    await user.keyboard('{ArrowDown}{Enter}') // 25 → 50
+    expect(onPageSizeChange).toHaveBeenCalledWith(50)
+  })
+
   it('sort headers trigger onSortChange', () => {
     const onSortChange = vi.fn()
     renderTable({ onSortChange })
@@ -204,58 +276,74 @@ describe('DashboardPage', () => {
     unknown_jobs: 23,
   }
 
-  it('renders metric cards, chart panel and table from real props', () => {
-    render(
-      <DashboardPage
-        stats={stats}
-        distribution={distribution}
-        statsLoading={false}
-        distributionLoading={false}
-        sources={[]}
-        sourcesLoading={false}
-        sourcesEmpty={false}
-        page={1}
-        pageSize={25}
-        totalPages={1}
-        totalItems={0}
-        sortField="job_count"
-        sortOrder="desc"
-        searchValue=""
-        onSearchChange={() => {}}
-        onSortChange={() => {}}
-        onPageChange={() => {}}
-      />,
-    )
+  const baseProps = {
+    stats,
+    distribution,
+    recommendations,
+    statsLoading: false,
+    distributionLoading: false,
+    recommendationsLoading: false,
+    sources: [],
+    sourcesLoading: false,
+    sourcesEmpty: false,
+    page: 1,
+    pageSize: 25,
+    totalPages: 1,
+    totalItems: 0,
+    sortField: 'job_count' as const,
+    sortOrder: 'desc' as const,
+    searchValue: '',
+    onSearchChange: () => {},
+    onSortChange: () => {},
+    onPageChange: () => {},
+    onPageSizeChange: () => {},
+  }
+
+  it('renders metric cards, chart panels, recommendation panel and table', () => {
+    render(<DashboardPage {...baseProps} />)
     expect(screen.getByTestId('dashboard-page')).toBeInTheDocument()
     expect(screen.getByText('1,258')).toBeInTheDocument()
     expect(screen.getByLabelText('Total listings: 1258')).toBeInTheDocument()
     expect(screen.getByText('Unknown source')).toBeInTheDocument()
     expect(screen.getByTestId('distribution-panel')).toBeInTheDocument()
     expect(screen.getByText('Listings by source')).toBeInTheDocument()
+    expect(screen.getByTestId('recommendation-panel')).toBeInTheDocument()
+    expect(screen.getByText('Jobs by recommendation')).toBeInTheDocument()
+    expect(screen.getByText('Apply')).toBeInTheDocument()
+    expect(screen.getByText('Consider')).toBeInTheDocument()
+    expect(screen.getByTestId('sources-table')).toBeInTheDocument()
+  })
+
+  it('shows recommendation errors with retry', async () => {
+    const user = userEvent.setup()
+    const onRetryRecommendations = vi.fn()
+    render(
+      <DashboardPage
+        {...baseProps}
+        recommendationsError="boom"
+        onRetryRecommendations={onRetryRecommendations}
+      />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load recommendations.')
+    await user.click(screen.getByText('Retry'))
+    expect(onRetryRecommendations).toHaveBeenCalledOnce()
   })
 
   it('metrics are zero-safe while loading', () => {
     render(
       <DashboardPage
+        {...baseProps}
         stats={undefined}
+        recommendations={undefined}
         statsLoading
         distributionLoading
+        recommendationsLoading
         sources={[]}
         sourcesLoading
         sourcesEmpty={false}
-        page={1}
-        pageSize={25}
-        totalPages={1}
-        totalItems={0}
-        sortField="job_count"
-        sortOrder="desc"
-        searchValue=""
-        onSearchChange={() => {}}
-        onSortChange={() => {}}
-        onPageChange={() => {}}
       />,
     )
     expect(screen.getAllByTestId('metric-card')).toHaveLength(4)
-    expect(screen.getAllByText('0')).toHaveLength(4)
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(4)
   })
 })

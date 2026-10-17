@@ -5,6 +5,13 @@ import { MagnifyingGlass } from '@phosphor-icons/react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { SortableHeader } from '@/features/jobs-v2/components/SortableHeader'
 import type { SourceListItem, SourceSortField } from '@/entities/job/sources'
 import { formatTimeAgo } from '@/shared/lib/formatTimeAgo'
@@ -25,6 +32,7 @@ interface SourcesTableProps {
   onSearchChange: (value: string) => void
   onSortChange: (field: SourceSortField['field']) => void
   onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
   onRetry?: () => void
 }
 
@@ -143,11 +151,29 @@ export function SourcesTable(props: SourcesTableProps) {
             ))}
           </ul>
 
-          <footer className="flex items-center justify-between border-t p-3 text-xs text-muted-foreground">
+          <footer className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
             <span>
               Page {props.page} of {props.totalPages} • {props.totalItems.toLocaleString()} sources
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Select
+                value={String(props.pageSize)}
+                onValueChange={(value) => props.onPageSizeChange(Number(value))}
+              >
+                <SelectTrigger
+                  aria-label="Rows per page"
+                  className="h-7 w-[8.5rem] gap-1 text-xs"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 25, 50, 100].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size} per page
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"

@@ -1,9 +1,15 @@
 'use client'
 
 import { MetricCard } from './MetricCard'
+import { RecommendationChart } from './RecommendationChart'
 import { SourceDistributionChart } from './SourceDistributionChart'
 import { SourcesTable } from './SourcesTable'
-import type { SourceDistribution, SourceListItem, SourceStats } from '@/entities/job/sources'
+import type {
+  RecommendationDistribution,
+  SourceDistribution,
+  SourceListItem,
+  SourceStats,
+} from '@/entities/job/sources'
 
 interface DashboardPageProps {
   stats: SourceStats | undefined
@@ -11,6 +17,9 @@ interface DashboardPageProps {
   distribution: SourceDistribution | undefined
   statsLoading: boolean
   distributionLoading: boolean
+  recommendations: RecommendationDistribution | undefined
+  recommendationsLoading: boolean
+  recommendationsError?: unknown
   sources: SourceListItem[]
   sourcesLoading: boolean
   sourcesEmpty: boolean
@@ -26,8 +35,10 @@ interface DashboardPageProps {
   onSearchChange: (value: string) => void
   onSortChange: (field: 'job_count' | 'name' | 'last_activity') => void
   onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
   onRetrySources?: () => void
   onRetryDistribution?: () => void
+  onRetryRecommendations?: () => void
 }
 
 export function DashboardPage(props: DashboardPageProps) {
@@ -75,6 +86,32 @@ export function DashboardPage(props: DashboardPageProps) {
           )}
         </section>
 
+        <section
+          className="rounded-lg border bg-card p-4 shadow-sm"
+          data-testid="recommendation-panel"
+        >
+          <h2 className="mb-2 text-sm font-medium">Jobs by recommendation</h2>
+          {props.recommendationsError ? (
+            <div className="p-4 text-center text-sm" role="alert">
+              <p className="text-destructive">Unable to load recommendations.</p>
+              {props.onRetryRecommendations && (
+                <button
+                  type="button"
+                  className="mt-2 text-xs underline underline-offset-2"
+                  onClick={props.onRetryRecommendations}
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          ) : (
+            <RecommendationChart
+              distribution={props.recommendations}
+              isLoading={props.recommendationsLoading}
+            />
+          )}
+        </section>
+
         <SourcesTable
           items={props.sources}
           isLoading={props.sourcesLoading}
@@ -91,6 +128,7 @@ export function DashboardPage(props: DashboardPageProps) {
           onSearchChange={props.onSearchChange}
           onSortChange={props.onSortChange}
           onPageChange={props.onPageChange}
+          onPageSizeChange={props.onPageSizeChange}
           onRetry={props.onRetrySources}
         />
       </div>

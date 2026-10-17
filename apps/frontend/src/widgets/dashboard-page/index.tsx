@@ -3,6 +3,7 @@
 import MainLayout from '@/widgets/main-layout'
 import { DashboardPage } from '@/features/dashboard/components/DashboardPage'
 import {
+  useRecommendationDistribution,
   useSourceDistribution,
   useSourceStats,
   useSourcesList,
@@ -13,6 +14,7 @@ function DashboardAdapter() {
   const sources = useSourcesList()
   const stats = useSourceStats()
   const distribution = useSourceDistribution()
+  const recommendations = useRecommendationDistribution()
 
   return (
     <DashboardPage
@@ -21,10 +23,14 @@ function DashboardAdapter() {
       distribution={distribution.data}
       statsLoading={stats.isLoading}
       distributionLoading={distribution.isLoading}
+      recommendations={recommendations.data}
+      recommendationsLoading={recommendations.isLoading}
+      recommendationsError={recommendations.isError ? recommendations.error : undefined}
       onRetryDistribution={() => {
         stats.refetch()
         distribution.refetch()
       }}
+      onRetryRecommendations={recommendations.refetch}
       sources={sources.data?.items ?? []}
       sourcesLoading={sources.isLoading}
       sourcesEmpty={!sources.isLoading && (sources.data?.items.length ?? 0) === 0}
@@ -42,6 +48,7 @@ function DashboardAdapter() {
       onSearchChange={sources.setSearch}
       onSortChange={sources.onSortChange}
       onPageChange={sources.setPage}
+      onPageSizeChange={sources.setPageSize}
       onRetrySources={sources.refetch}
     />
   )
