@@ -63,14 +63,69 @@ resolved on read by the Jobs API via the application repository (logical
 
 Both drawers show an editable **Tracking** status (`TrackingStatusSelect`):
 
-- **Job Detail drawer**: a "Tracking" row with a status select. Changing it
-  PATCHes the application status immediately (same mutation as the application
-  workspace) and refreshes the job list/detail caches.
+- **Job Detail drawer**: the "Tracking" row splits into two sub-columns that fit
+  inside the drawer's own two-column grid — the **status select alone** on the
+  left, and the **quick actions stacked** on the right:
+  **Mark applied** → **Mark expired** → **Mark as dismissed**.
+  Changing the select PATCHes the application status immediately (same mutation
+  as the application workspace) and refreshes the job list/detail caches.
+- **Mark applied** / **Mark expired** (`TrackingActions`) work with or without
+  an existing application: they PATCH the status when one exists, otherwise they
+  create the application first and then set the status (one click either way).
+  Both are disabled and read "Saving…" while a mutation is in flight.
+- When the job has **no application**, the select renders a disabled
+  **"Not applied"** placeholder (`emptyMode="placeholder"`) — the stacked
+  buttons own the actions, so no inline button is duplicated inside the row.
 - **Job Edit drawer**: a "Tracking" field with the same select, independent of
-  Save. The header also keeps the "Application" button to the workspace.
-- Jobs with no application show a **Mark expired** button instead, which
-  creates the application and sets it to `expired` in one step (e.g. triaging
-  a dead posting from the create-drawer duplicate card).
+  Save. There the default `emptyMode="button"` still applies, so a job without
+  an application shows the inline **Mark expired** button that creates it and
+  sets it to `expired` in one step (e.g. triaging a dead posting from the
+  create-drawer duplicate card). The header also keeps the "Application" button
+  to the workspace.
+
+```text
+Job Details — right drawer
+┌──────────────────────────────────────────────────────────────────┐
+│ Job Details                                          [⋮] [Edit]  │
+│ Staff Engineer                                                   │
+│ ┌──────────────┬──────────────────────────────────────────────┐  │
+│ │ COMPANY      │ Acme GmbH                                    │  │
+│ │ TRACKING     │ ┌───────────────────┐  ┌──────────────────┐  │  │
+│ │              │ │ [ applied ▾     ] │  │ [ Mark applied ] │  │  │
+│ │              │ └───────────────────┘  │ [ Mark expired ] │  │  │
+│ │              │                        │ [Mark as dismiss]│  │  │
+│ │              │                        └──────────────────┘  │  │
+│ │ EMPLOYMENT   │ Full-time                                    │  │
+│ └──────────────┴──────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+
+TRACKING row — one sub-column has the single select, the other stacks the
+actions. The select has two branches:
+
+  job HAS an application        job has NO application
+  ─────────────────────────     ─────────────────────────
+  [ applied ▾ ]  combobox       [ Not applied ]  disabled
+     │                            (buttons own the actions)
+     └─ PATCH status
+        + invalidate jobs/detail caches
+
+  stacked actions (with or without an application):
+  [ Mark applied ] ─┐
+  [ Mark expired ] ─┴─ PATCH status if one exists, else
+                       POST application → PATCH status
+  [ Mark as dismissed ] → opens the dismiss-reason dialog
+```
+
+```mermaid
+flowchart TD
+    A[Click Mark applied / Mark expired] --> B{Application exists?}
+    B -- yes --> C[PATCH status<br/>applied or expired]
+    B -- no --> D[POST application] --> E[PATCH created application status]
+    C --> F[Invalidate jobs-v2-infinite,<br/>job-detail and jobs caches]
+    E --> F
+    G[Click Mark as dismissed] --> H[Dismiss dialog<br/>optional reason]
+    H --> I[PATCH job dismissed + invalidate]
+```
 
 ## Application Workspace
 

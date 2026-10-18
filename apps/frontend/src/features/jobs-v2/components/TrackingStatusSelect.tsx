@@ -13,6 +13,15 @@ import { STATUS_OPTIONS } from '@/features/job-application/components/Applicatio
 
 interface TrackingStatusSelectProps {
   jobId: string
+  /**
+   * What to render when the job has no application yet:
+   * - 'button' (default): an inline "Mark expired" button that creates the
+   *   application and sets it to expired in one step.
+   * - 'placeholder': a disabled select showing "Not applied", for callers that
+   *   render their own action buttons (the Job Detail drawer stacks
+   *   Mark applied / Mark expired / Mark as dismissed next to this select).
+   */
+  emptyMode?: 'button' | 'placeholder'
 }
 
 function invalidateJobCaches(queryClient: ReturnType<typeof useQueryClient>, jobId: string) {
@@ -20,7 +29,7 @@ function invalidateJobCaches(queryClient: ReturnType<typeof useQueryClient>, job
   queryClient.invalidateQueries({ queryKey: ['job-detail', jobId] })
 }
 
-export function TrackingStatusSelect({ jobId }: TrackingStatusSelectProps) {
+export function TrackingStatusSelect({ jobId, emptyMode = 'button' }: TrackingStatusSelectProps) {
   const queryClient = useQueryClient()
   const { data: application, isLoading, isError } = useApplicationByJobQuery(jobId)
   const updateApplication = useUpdateApplicationMutation()
@@ -53,6 +62,15 @@ export function TrackingStatusSelect({ jobId }: TrackingStatusSelectProps) {
   }
 
   if (isError || !application) {
+    if (emptyMode === 'placeholder') {
+      return (
+        <Select value="" disabled>
+          <SelectTrigger size="sm" className="w-full justify-between capitalize" aria-label="Tracking status">
+            <SelectValue placeholder="Not applied" />
+          </SelectTrigger>
+        </Select>
+      )
+    }
     return (
       <Button
         size="sm"

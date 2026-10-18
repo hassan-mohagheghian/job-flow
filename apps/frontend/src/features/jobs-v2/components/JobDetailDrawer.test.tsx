@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { JobDetailDrawer } from './JobDetailDrawer'
@@ -52,14 +53,16 @@ const sampleDetail = {
   created_at: null,
 }
 
+const sampleApplication = {
+  id: 'app-1',
+  job_id: 'job-1',
+  status: 'applied',
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(jobApi.getDetail).mockResolvedValue(sampleDetail as any)
-  vi.mocked(applicationApi.getByJob).mockResolvedValue({
-    id: 'app-1',
-    job_id: 'job-1',
-    status: 'applied',
-  } as any)
+  vi.mocked(applicationApi.getByJob).mockResolvedValue(sampleApplication as any)
 })
 
 function renderDrawer(
@@ -193,6 +196,35 @@ describe('JobDetailDrawer tracking', () => {
 
     const trigger = await screen.findByRole('combobox', { name: 'Tracking status' })
     expect(trigger).toHaveTextContent('applied')
+  })
+
+  it('renders the stacked quick actions next to the status select', async () => {
+    renderDrawer('job-1')
+
+    await screen.findByRole('combobox', { name: 'Tracking status' })
+    expect(screen.getByRole('button', { name: 'Mark applied' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark expired' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark as dismissed' })).toBeInTheDocument()
+  })
+
+  it('marks the job applied when Mark applied is clicked', async () => {
+    vi.mocked(applicationApi.update).mockResolvedValue({ ...sampleApplication, status: 'applied' } as never)
+    const user = userEvent.setup()
+    renderDrawer('job-1')
+
+    await user.click(await screen.findByRole('button', { name: 'Mark applied' }))
+
+    await waitFor(() => {
+      expect(applicationApi.update).toHaveBeenCalledWith('app-1', { status: 'applied' })
+    })
+  })
+
+  it('shows the "Not applied" placeholder select when the job has no application', async () => {
+    vi.mocked(applicationApi.getByJob).mockRejectedValue(new Error('Not found'))
+    renderDrawer('job-1')
+
+    const trigger = await screen.findByRole('combobox', { name: 'Tracking status' })
+    expect(trigger).toHaveTextContent('Not applied')
   })
 })
 

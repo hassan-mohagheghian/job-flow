@@ -4,11 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useApplicationByJobQuery,
-  useCreateApplicationMutation,
-  useUpdateApplicationMutation,
-} from "@/entities/application/hooks";
-import {
   Drawer,
   DrawerHeader,
   DrawerContent,
@@ -38,6 +33,7 @@ import { RankBadge } from "@/shared/components/RankBadge";
 import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
 import { TrackingStatusSelect } from "./TrackingStatusSelect";
+import { TrackingActions } from "./TrackingActions";
 import { CompanyPicker } from "./CompanyPicker";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -554,11 +550,6 @@ function JobDetailContent({
     (c) => c.role === "recruiter",
   );
   
-  // Application hooks for mark expired functionality
-  const { data: application, isLoading: isAppLoading, isError: isAppError } = useApplicationByJobQuery(detail.id);
-  const updateApplication = useUpdateApplicationMutation();
-  const createApplication = useCreateApplicationMutation();
-  
   // Dismiss toggle state
   const [isDismissOpen, setIsDismissOpen] = useState(false);
   const dismissMutation = useMutation({
@@ -571,26 +562,7 @@ function JobDetailContent({
       setIsDismissOpen(false);
     },
   });
-  
-  // Handle mark expired
-  const handleMarkExpired = () => {
-    createApplication.mutate(
-      { jobId: detail.id },
-      {
-        onSuccess: (created) => {
-          updateApplication.mutate(
-            { applicationId: created.id, data: { status: 'expired' } },
-            { onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["job-detail", detail.id] });
-                queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
-                queryClient.invalidateQueries({ queryKey: ["jobs"] });
-              } },
-          );
-        },
-      },
-    );
-  };
-  
+
   // Handle dismiss toggle
   const handleDismissToggleChange = (dismissed: boolean, note: string) => {
     dismissMutation.mutate({ dismissed, note: note || undefined });
@@ -679,29 +651,26 @@ function JobDetailContent({
             <DetailRow
               label="Tracking"
               value={
-                <div className="flex gap-3">
-                  {/* Mark Expired Button */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleMarkExpired}
-                    disabled={createApplication.isPending || updateApplication.isPending}
-                    className="w-[120px]"
-                  >
-                    {createApplication.isPending || updateApplication.isPending ? 'Marking…' : 'Mark expired'}
-                  </Button>
-                  {/* Mark as Dismissed Button */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsDismissOpen(true)}
-                    disabled={dismissMutation.isPending}
-                    className="w-[120px]"
-                  >
-                    {dismissMutation.isPending ? 
+                <div className="flex items-start gap-2">
+                  {/* Sub-column 1: the status select on its own */}
+                  <div className="min-w-0 flex-1">
+                    <TrackingStatusSelect jobId={detail.id} emptyMode="placeholder" />
+                  </div>
+                  {/* Sub-column 2: the quick actions stacked */}
+                  <div className="flex w-[124px] shrink-0 flex-col gap-1">
+                    <TrackingActions jobId={detail.id} className="w-full" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsDismissOpen(true)}
+                      disabled={dismissMutation.isPending}
+                    >
+                      {dismissMutation.isPending ? 
   (detail?.dismissed ? 'Undismissing…' : 'Dismissing…') : 
   (detail?.dismissed ? 'Undismiss' : 'Mark as dismissed')}
-                  </Button>
+                    </Button>
+                  </div>
                 </div>
               }
             />

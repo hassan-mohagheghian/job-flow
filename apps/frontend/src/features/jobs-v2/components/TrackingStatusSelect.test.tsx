@@ -81,4 +81,35 @@ describe('TrackingStatusSelect', () => {
     renderSelect()
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
   })
+
+  it('renders a disabled "Not applied" select instead of a button with emptyMode=placeholder', async () => {
+    vi.mocked(applicationApi.getByJob).mockRejectedValue(new Error('Not found'))
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={qc}>
+        <TrackingStatusSelect jobId="job-1" emptyMode="placeholder" />
+      </QueryClientProvider>,
+    )
+
+    const trigger = await screen.findByRole('combobox', { name: 'Tracking status' })
+    expect(trigger).toBeDisabled()
+    expect(trigger).toHaveTextContent('Not applied')
+    expect(screen.queryByRole('button', { name: /mark expired/i })).not.toBeInTheDocument()
+  })
+
+  it('keeps rendering the inline Mark expired button with the default emptyMode', async () => {
+    vi.mocked(applicationApi.getByJob).mockRejectedValue(new Error('Not found'))
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={qc}>
+        <TrackingStatusSelect jobId="job-1" emptyMode="button" />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('button', { name: /mark expired/i })).toBeInTheDocument()
+  })
 })
