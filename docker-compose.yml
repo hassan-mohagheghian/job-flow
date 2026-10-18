@@ -53,6 +53,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    volumes:
+      - jobsearch-backups:/app/backups
 
   background:
     build:
@@ -102,3 +104,4 @@ services:
 volumes:
   jobsearch-pg-data:
     external: true
+  jobsearch-backups:
