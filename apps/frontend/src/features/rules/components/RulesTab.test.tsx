@@ -109,9 +109,30 @@ describe('RulesTab', () => {
     expect(screen.getByText('Loading rules...')).toBeInTheDocument()
   })
 
-  it('renders empty rule columns', () => {
+  it('renders the header when there are no rules', () => {
     render(<RulesTab rules={{}} onUpdate={vi.fn()} />)
     expect(screen.getByText('Scoring Rules')).toBeInTheDocument()
+  })
+
+  it('renders an empty state with an Add rule button when there are no rules', () => {
+    render(<RulesTab rules={{}} onUpdate={vi.fn()} />)
+    expect(screen.getByText('No scoring rules yet')).toBeInTheDocument()
+    expect(screen.queryByText('Job Rules')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add rule/ })).toBeInTheDocument()
+  })
+
+  it('opens the Add Rule drawer from the empty state', () => {
+    render(<RulesTab rules={{}} onUpdate={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Add rule/ }))
+    expect(screen.getByText('Add Rule')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('e.g. remote_work')).toBeInTheDocument()
+  })
+
+  it('shows a scoped empty state when the active filter has no rules', () => {
+    render(<RulesTab rules={mockRules} onUpdate={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Product Company/ }))
+    expect(screen.getByText('No rules in this scope yet')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add rule/ })).toBeInTheDocument()
   })
 
   it('renders category badges', () => {

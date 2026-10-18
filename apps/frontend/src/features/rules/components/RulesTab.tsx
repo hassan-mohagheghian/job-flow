@@ -228,14 +228,31 @@ export default function RulesTab({ rules, onUpdate }) {
         })}
       </div>
 
-      {/* Rule columns */}
-      <div className={cn("gap-3", filteredScopes.length <= 3 ? "grid grid-cols-3" : filteredScopes.length <= 4 ? "grid grid-cols-4" : "grid grid-cols-3")}>
-        {filteredScopes.map(scope => (
-          <RuleColumn key={scope} scope={scope} prefs={scopeGroups[scope] || []}
-            onOpenAdd={openAdd} onOpenEdit={openEdit}
-            onToggle={handleToggle} onDelete={handleDelete} onPriority={handlePriority} onReorder={handleReorder} />
-        ))}
-      </div>
+      {/* Rule columns, or the empty state when no scope matches the filter */}
+      {filteredScopes.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-10 text-center">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <Target className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">{total === 0 ? 'No scoring rules yet' : 'No rules in this scope yet'}</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+            {total === 0
+              ? 'Rules weight how jobs and companies are scored. Add your first rule to tune your matches.'
+              : 'This scope has no rules yet — add one to apply it to scoring.'}
+          </p>
+          <Button size="sm" className="mt-4 h-7 text-xs gap-1" onClick={() => openAdd(filter === 'all' ? 'SHARED' : filter)}>
+            <Plus className="w-3 h-3" /> Add rule
+          </Button>
+        </div>
+      ) : (
+        <div className={cn("gap-3", filteredScopes.length <= 3 ? "grid grid-cols-3" : filteredScopes.length <= 4 ? "grid grid-cols-4" : "grid grid-cols-3")}>
+          {filteredScopes.map(scope => (
+            <RuleColumn key={scope} scope={scope} prefs={scopeGroups[scope] || []}
+              onOpenAdd={openAdd} onOpenEdit={openEdit}
+              onToggle={handleToggle} onDelete={handleDelete} onPriority={handlePriority} onReorder={handleReorder} />
+          ))}
+        </div>
+      )}
 
       <RuleFormDrawer
         key={form.id || 'new'}

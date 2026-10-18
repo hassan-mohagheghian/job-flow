@@ -113,7 +113,9 @@ Each tab shows a rule count in parentheses.
 
 ## Available Actions
 
-- Add rule (opens the Add Rule drawer — see `rule-form-drawer.md`)
+- Add rule (opens the Add Rule drawer — see `rule-form-drawer.md`). Available
+  both inside every scope column **and** from the empty state, so the first
+  rule can always be created.
 - Edit rule (opens the Edit Rule drawer, prefilled)
 - Enable / Disable (instant toggle switch)
 - Move up / Move down (reorder by priority)
@@ -123,14 +125,46 @@ Each tab shows a rule count in parentheses.
 
 ## Empty State
 
+Rendered when the loaded rule set is empty (`rules = {}`), **and** when the
+active filter's scope has no rules. It replaces the scope-column grid; the
+header and filter tabs stay visible. An empty list is never a dead end — there
+is always a way to create the first rule.
+
 ```text
 Scoring Rules
 
 0/0 active — Shared rules apply to all entity types
 
-[All (0)] [Shared] [Jobs] [Product Company] [Recruiting]
+[All (0)] [Shared (0)] [Jobs (0)] [Product Company (0)] [Recruiting (0)]
 
-(no columns render until at least one scope has rules)
+        ┌──────────────────────────────────────────┐
+        │                    ◎                     │
+        │          No scoring rules yet            │
+        │                                          │
+        │   Rules weight how jobs and companies    │
+        │   are scored. Add your first rule to     │
+        │          tune your matches.              │
+        │                                          │
+        │               [ + Add rule ]             │
+        └──────────────────────────────────────────┘
+```
+
+- `+ Add rule` opens the **Add Rule** drawer (see `rule-form-drawer.md`) with
+  scope pre-selected: `SHARED` when the whole list is empty, otherwise the
+  scope of the active filter.
+- When the empty state is caused by a filter (other scopes do have rules), the
+  title reads **"No rules in this scope yet"** and the copy explains that the
+  rule will apply to that scope's scoring.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Loading: open /rules
+    Loading --> Empty: GET ok, 0 rules
+    Loading --> Populated: GET ok, rules
+    Empty --> Drawer: click + Add rule (scope = active filter or SHARED)
+    Populated --> Drawer: click + Add rule in a column
+    Drawer --> Populated: Save -> POST /api/rules
+    Populated --> Empty: filter tab whose scope has no rules
 ```
 
 ## Loading State

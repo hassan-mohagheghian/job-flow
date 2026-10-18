@@ -351,6 +351,24 @@ badge, and the LLM weight (`w:{n}`). Rules are grouped into scope columns.
 Priority badge legend: ≥90 Critical, ≥75 High, ≥50 Med, else Low. Move up/down
 sets the rule to `neighbor ± 1` (clamped 0–100); drag redistributes the column.
 
+Empty state (no rules yet, or the active filter's scope has none) — the
+column grid is replaced by a single panel that always offers a way to create
+the first rule:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Scoring Rules                                                          0/0   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [All (0)] [Shared (0)] [Jobs (0)] [Product Company (0)] [Recruiting (0)]      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                                    ◎                                         │
+│                          No scoring rules yet                                │
+│               Rules weight how jobs and companies are scored.                 │
+│                    [ + Add rule ]  → Add Rule drawer                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
 ### Add / Edit Rule Drawer
 
 A right-side drawer (same side as every other drawer), `lg` width.
