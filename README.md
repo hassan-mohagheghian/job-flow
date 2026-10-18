@@ -2,6 +2,16 @@
 
 AI-powered career platform for software engineers — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles in Europe (Germany, Netherlands).
 
+## Screenshots
+
+| Dashboard | Jobs |
+|-----------|------|
+| ![Dashboard — listing sources and recommendation distribution](docs/assets/dashboard.png) | ![Jobs — searchable list with scores, recommendation and actions](docs/assets/job-list.png) |
+
+**Real-time job processing** — live, step-by-step pipeline progress while a job is fetched, analyzed and scored:
+
+![Job Processing — live pipeline progress in the Processing Queue drawer](docs/assets/job-processing.png)
+
 ## Quick Start
 
 ### Local Development (recommended)
