@@ -109,14 +109,14 @@ describe('TrackingActions', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Mark applied' }))
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled()
-    })
-    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled()
+    const pendingButtons = await screen.findAllByRole('button', { name: 'Saving…' })
+    expect(pendingButtons).toHaveLength(2)
+    pendingButtons.forEach((button) => expect(button).toBeDisabled())
 
     resolveUpdate({ ...sampleApplication, status: 'applied' })
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Mark applied' })).toBeEnabled()
     })
+    expect(screen.getByRole('button', { name: 'Mark expired' })).toBeEnabled()
   })
 })

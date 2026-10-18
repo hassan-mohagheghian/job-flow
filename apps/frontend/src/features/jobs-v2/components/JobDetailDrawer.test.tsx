@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { JobDetailDrawer } from './JobDetailDrawer'
@@ -209,10 +208,14 @@ describe('JobDetailDrawer tracking', () => {
 
   it('marks the job applied when Mark applied is clicked', async () => {
     vi.mocked(applicationApi.update).mockResolvedValue({ ...sampleApplication, status: 'applied' } as never)
-    const user = userEvent.setup()
     renderDrawer('job-1')
 
-    await user.click(await screen.findByRole('button', { name: 'Mark applied' }))
+    // Gate on the combobox: TrackingStatusSelect only renders it once the
+    // application query has settled, so TrackingActions sees the same cached
+    // application. The quick-action buttons render from the first paint —
+    // clicking before the query settles would take the create-then-patch path.
+    await screen.findByRole('combobox', { name: 'Tracking status' })
+    fireEvent.click(screen.getByRole('button', { name: 'Mark applied' }))
 
     await waitFor(() => {
       expect(applicationApi.update).toHaveBeenCalledWith('app-1', { status: 'applied' })
