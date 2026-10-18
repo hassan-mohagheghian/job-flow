@@ -1301,6 +1301,116 @@ def version():
 
 
 @app.command()
+def add_user(
+    username: str = typer.Option(None, "--username", "-u", help="Username for the new user"),
+    password: str = typer.Option(None, "--password", "-p", help="Password for the new user"),
+    display_name: str = typer.Option(None, "--display-name", "-d", help="Display name for the new user"),
+):
+    """Add a new user to the system."""
+    # Prompt for missing values
+    if username is None:
+        username = typer.prompt("Username")
+    if password is None:
+        password = typer.prompt("Password", hide_input=True)
+    if display_name is None:
+        display_name = typer.prompt("Display name")
+
+    # Ensure backend is on sys.path
+    _this_file = os.path.abspath(__file__ if '__file__' in dir() else '.')
+    _app_dir = os.path.dirname(_this_file)
+    _backend_dir = os.path.join(_app_dir, "backend")
+    if _backend_dir not in sys.path:
+        sys.path.insert(0, _backend_dir)
+
+    try:
+        from dependencies import get_session_sync
+        from auth.infrastructure.user_repository import SQLAlchemyUserRepository
+        from auth.application.auth_service import AuthService
+    except ImportError as e:
+        _err(f"Failed to import backend modules: {e}. Please ensure the backend dependencies are installed (e.g., run 'uv sync' or 'pip install -r apps/backend/requirements.txt').")
+        raise typer.Exit(code=1)
+
+    session = get_session_sync()
+    try:
+        repo = SQLAlchemyUserRepository(session)
+        service = AuthService(repo)
+        user = service.register(username, password, display_name)
+        session.commit()
+        _ok(f"User '{username}' created successfully with ID: {user.id}")
+    except ValueError as e:
+        session.rollback()
+        _err(f"Failed to create user: {e}")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        session.rollback()
+        _err(f"Unexpected error: {e}")
+        raise typer.Exit(code=1)
+    finally:
+        session.close()
+
+
+@app.command()
+def reset_password(
+    username: str = typer.Option(None, "--username", "-u", help="Username of the user to reset password for"),
+    password: str = typer.Option(None, "--password", "-p", help="New password for the user"),
+):
+    """Reset a user's password."""
+    # Prompt for missing values
+    if username is None:
+        username = typer.prompt("Username")
+    if password is None:
+        password = typer.prompt("New password", hide_input=True)
+
+    # Ensure backend is on sys.path
+    _this_file = os.path.abspath(__file__ if '__file__' in dir() else '.')
+    _app_dir = os.path.dirname(_this_file)
+    _backend_dir = os.path.join(_app_dir, "backend")
+    if _backend_dir not in sys.path:
+        sys.path.insert(0, _backend_dir)
+
+    try:
+        from dependencies import get_session_sync
+        from auth.infrastructure.user_repository import SQLAlchemyUserRepository
+        from auth.domain.user import User
+        import bcrypt
+    except ImportError as e:
+        _err(f"Failed to import backend modules: {e}. Please ensure the backend dependencies are installed (e.g., run 'uv sync' or 'pip install -r apps/backend/requirements.txt').")
+        raise typer.Exit(code=1)
+
+    session = get_session_sync()
+    try:
+        repo = SQLAlchemyUserRepository(session)
+        user = repo.get_by_username(username)
+        if user is None:
+            _err(f"User '{username}' not found.")
+            raise typer.Exit(code=1)
+        # Update password hash and updated_at timestamp
+        from datetime import datetime, UTC
+        now = datetime.now(UTC)
+        updated_user = User(
+            id=user.id,
+            username=user.username,
+            display_name=user.display_name,
+            password_hash=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+            created_at=user.created_at,
+            updated_at=now,
+        )
+        repo.update(updated_user)
+        session.commit()
+        _ok(f"Password for user '{username}' has been reset.")
+    except ValueError as e:
+        session.rollback()
+        _err(f"Failed to reset password: {e}")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        session.rollback()
+        _err(f"Unexpected error: {e}")
+        raise typer.Exit(code=1)
+    finally:
+        session.close()
+
+
+@app.command()
 def stop():
     """Stop all running processes (dev and production)"""
     _log("Stopping all processes...")
