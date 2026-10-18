@@ -51,7 +51,7 @@ def _create_provider(name: str, config: Optional[ProviderConfig] = None) -> LLMP
     elif name == "agy":
         from .agy.adapter import AGYProvider
         return AGYProvider(config)
-    elif name == "opencode":
+    elif name == "opencode" or name == "fcc-opencode":
         from .opencode.adapter import OpencodeProvider
         return OpencodeProvider(config)
     elif name == "mock":

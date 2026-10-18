@@ -194,11 +194,6 @@ resource "docker_container" "backend" {
     "AI_PROVIDER=${var.ai_provider}",
   ]
 
-  volumes {
-    host_path      = var.opencode_bin
-    container_path = "/root/.opencode/bin/opencode"
-    read_only      = true
-  }
 
   volumes {
     host_path      = pathexpand(var.opencode_bin)

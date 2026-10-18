@@ -26,5 +26,5 @@ postgres_db       = "jobsearch"
 # =============================================================================
 
 ai_provider        = "opencode"
-opencode_bin       = "/home/hassan/.opencode/bin/opencode"
+opencode_bin       = "~/.opencode/bin/opencode"
 worker_concurrency = 4

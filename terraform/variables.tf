@@ -80,7 +80,7 @@ variable "postgres_db" {
 # =============================================================================
 
 variable "ai_provider" {
-  description = "AI provider to use (opencode, openai, gemini, local)"
+  description = "AI provider to use (opencode/fcc-opencode, openai, gemini, local)"
   type        = string
   default     = "opencode"
 }
@@ -88,6 +88,7 @@ variable "ai_provider" {
 variable "opencode_bin" {
   description = "Path to opencode binary on host (e.g. ~/.opencode/bin/opencode)"
   type        = string
+  default     = "~/.opencode/bin/opencode"
 }
 
 variable "worker_concurrency" {

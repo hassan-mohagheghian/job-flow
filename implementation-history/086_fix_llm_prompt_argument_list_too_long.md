@@ -8,7 +8,7 @@ provider with:
 ```
 RuntimeError: [analyze_company] The AI returned an analysis that does not match
 the required format. (LLM call failed: [Errno 7] Argument list too long:
-'/home/hassan/.opencode/bin/opencode')
+'~/.opencode/bin/opencode')
 ```
 
 Root cause: `OpencodeProvider._build_cmd` passes the entire prompt as a single
