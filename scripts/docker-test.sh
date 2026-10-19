@@ -67,7 +67,10 @@ case "${1:-all}" in
     run_frontend & F=$!
     RB=0; wait "$B" || RB=$?
     RF=0; wait "$F" || RF=$?
-    [ "$RB" -ne 0 ] || [ "$RF" -ne 0 ] && exit 1
+    # NB: a bare `[ ... ] || [ ... ] && exit 1` list evaluates to status 1
+    # when both suites pass (both tests false, exit 1 skipped), which under
+    # `set -e` made `all` fail even when everything was green.
+    if [ "$RB" -ne 0 ] || [ "$RF" -ne 0 ]; then exit 1; fi
     ;;
   *) echo "usage: $0 [backend|frontend|all]" >&2; exit 2 ;;
 esac
