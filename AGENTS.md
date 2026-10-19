@@ -4,7 +4,7 @@ This file gives AI coding agents the context needed to work correctly in this re
 
 ## Project Overview
 
-**Job Search Intelligence** is an AI-powered career platform for software engineers seeking visa-sponsored roles in Europe (Germany, Netherlands). It automates the job search workflow:
+**Job Search Intelligence** is an AI-powered career platform for software engineers seeking visa-sponsored roles. It automates the job search workflow:
 
 - Job discovery and processing (URL → fetch → extract → AI analysis → score → save)
 - Company intelligence (profile extraction, visa assessment, Fit/Success/Overall scoring)

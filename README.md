@@ -1,6 +1,38 @@
 # Job Search Intelligence
 
-AI-powered career platform for software engineers — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles in Europe (Germany, Netherlands).
+AI-powered career platform for software engineers — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles.
+
+## Introduction
+
+Job hunting is fragmented. Openings arrive from job boards, company pages,
+referrals, recruiters and messages; each one needs its own research; and the
+same questions repeat — *Is this a good fit? Is the company worth pursuing?
+Which skills am I missing? What have I already applied to?*
+
+**Job Search Intelligence** collapses that scattered workflow into a single,
+repeatable pipeline:
+
+1. **Capture** — submit a job URL or notes from any source.
+2. **Understand** — the platform fetches and extracts the posting, then a
+   structured LLM analysis produces the fields, a summary and tagged skills.
+3. **Evaluate** — deterministic scoring turns fit and success into an overall
+   score with an actionable recommendation: apply, consider or skip.
+4. **Research** — company profiles, company type and visa friendliness are
+   assessed alongside the role.
+5. **Improve** — skills management and market insights highlight what to learn
+   or emphasize next.
+6. **Track** — applications, notes, follow-ups and status history stay attached
+   to the job they belong to.
+
+The model is deliberately **location-agnostic**: it reasons about roles,
+companies, skills and fit — not about a particular city, country or job market —
+so the same workflow applies wherever you are searching.
+
+| | |
+|---|---|
+| **For** | Software engineers and career changers running a focused, data-driven search |
+| **Solves** | Scattered job data, guesswork about fit, slow company research, untracked applications |
+| **Delivers** | One pipeline from raw job posting to scored, researched, tracked opportunity |
 
 ## Screenshots
 
