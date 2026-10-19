@@ -15,7 +15,7 @@ import shared.infrastructure.database.backup_service as backup
 def _patch_config(tmp_path):
     """Point the backup service at a temp directory and known credentials."""
     with patch.object(backup, 'DB_BACKUP_DIR', str(tmp_path)), \
-            patch.object(backup, 'DB_BACKUP_CONTAINER', 'job-search-postgres-1'), \
+            patch.object(backup, 'DB_BACKUP_CONTAINER', 'job-search-postgres'), \
             patch.object(backup, 'DB_BACKUP_KEEP_COUNT', 3), \
             patch.object(backup, '_db_credentials', return_value=('jobsearch', 'jobsearch')):
         yield tmp_path
@@ -29,30 +29,83 @@ def _touch_backup(dir_path: str, name: str) -> str:
 
 
 class TestCreateDbBackup:
-    def test_runs_pg_dump_via_docker_exec(self, _patch_config):
-        with patch('shared.infrastructure.database.backup_service.subprocess.run',
-                   return_value=MagicMock(returncode=0, stderr=b'')) as m_run, \
-                patch('builtins.open', mock_open()):
+    def test_runs_local_pg_dump_inside_container(self, _patch_config):
+        def fake_run(*_args, **kwargs):
+            kwargs['stdout'].write(b'PGDMP-data')
+            return MagicMock(returncode=0, stderr=b'')
+
+        with patch.object(backup, '_uses_local_pg_dump', return_value=True), \
+                patch.object(backup, '_database_url',
+                             return_value=backup.make_url(
+                                 'postgresql+psycopg://jobsearch:secret@postgres:5432/jobsearch')), \
+                patch('shared.infrastructure.database.backup_service.subprocess.run',
+                      side_effect=fake_run) as m_run:
+            path = backup.create_db_backup()
+
+        args = m_run.call_args.args[0]
+        assert args[0] == 'pg_dump'
+        assert '--host' in args and args[args.index('--host') + 1] == 'postgres'
+        assert '--port' in args and args[args.index('--port') + 1] == '5432'
+        assert '--username' in args and args[args.index('--username') + 1] == 'jobsearch'
+        assert '--dbname' in args and args[args.index('--dbname') + 1] == 'jobsearch'
+        assert '--format=custom' in args
+        assert m_run.call_args.kwargs['env']['PGPASSWORD'] == 'secret'
+        assert os.path.basename(path).startswith('jobsearch_')
+        assert path.endswith('.dump')
+
+    def test_falls_back_to_docker_exec_on_host(self, _patch_config):
+        def fake_run(*_args, **kwargs):
+            kwargs['stdout'].write(b'PGDMP-data')
+            return MagicMock(returncode=0, stderr=b'')
+
+        with patch.object(backup, '_uses_local_pg_dump', return_value=False), \
+                patch('shared.infrastructure.database.backup_service.subprocess.run',
+                      side_effect=fake_run) as m_run:
             path = backup.create_db_backup()
 
         args = m_run.call_args.args[0]
         assert args[:2] == ['docker', 'exec']
-        assert args[2] == 'job-search-postgres-1'
+        assert args[2] == 'job-search-postgres'
         assert args[3] == 'pg_dump'
         assert '-U' in args and args[args.index('-U') + 1] == 'jobsearch'
         assert '-d' in args and args[args.index('-d') + 1] == 'jobsearch'
         assert '--format=custom' in args
+        assert m_run.call_args.kwargs['env'] is None
         assert os.path.basename(path).startswith('jobsearch_')
         assert path.endswith('.dump')
 
     def test_removes_file_and_raises_on_failure(self, _patch_config):
-        with patch('shared.infrastructure.database.backup_service.subprocess.run',
-                   return_value=MagicMock(returncode=1, stderr=b'connection refused')), \
+        with patch.object(backup, '_uses_local_pg_dump', return_value=False), \
+                patch('shared.infrastructure.database.backup_service.subprocess.run',
+                      return_value=MagicMock(returncode=1, stderr=b'connection refused')), \
                 patch('builtins.open', mock_open()), \
                 patch('shared.infrastructure.database.backup_service.os.remove') as m_remove:
             with pytest.raises(RuntimeError, match='pg_dump failed'):
                 backup.create_db_backup()
         m_remove.assert_called_once()
+        assert backup.list_backups() == []
+
+    def test_missing_pg_dump_binary_raises_and_cleans_up(self, _patch_config):
+        with patch.object(backup, '_uses_local_pg_dump', return_value=True), \
+                patch('shared.infrastructure.database.backup_service.subprocess.run',
+                      side_effect=FileNotFoundError('pg_dump')):
+            with pytest.raises(RuntimeError, match='could not run pg_dump'):
+                backup.create_db_backup()
+        assert backup.list_backups() == []
+
+    def test_empty_dump_is_removed_and_rejected(self, _patch_config):
+        def fake_run(*_args, **kwargs):
+            kwargs['stdout'].write(b'')
+            return MagicMock(returncode=0, stderr=b'')
+
+        with patch.object(backup, '_uses_local_pg_dump', return_value=True), \
+                patch.object(backup, '_database_url',
+                             return_value=backup.make_url(
+                                 'postgresql+psycopg://jobsearch:secret@postgres:5432/jobsearch')), \
+                patch('shared.infrastructure.database.backup_service.subprocess.run',
+                      side_effect=fake_run):
+            with pytest.raises(RuntimeError, match='empty dump'):
+                backup.create_db_backup()
         assert backup.list_backups() == []
 
 

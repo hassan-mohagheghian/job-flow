@@ -192,6 +192,7 @@ resource "docker_container" "backend" {
     "REDIS_HOST=${var.project_name}-redis",
     "REDIS_PORT=6379",
     "AI_PROVIDER=${var.ai_provider}",
+    "DB_BACKUP_DIR=/app/backups",
   ]
 
 
@@ -199,6 +200,11 @@ resource "docker_container" "backend" {
     host_path      = pathexpand(var.opencode_bin)
     container_path = "/root/.opencode/bin/opencode"
     read_only      = true
+  }
+
+  volumes {
+    container_path = "/app/backups"
+    volume_name    = var.backup_volume_name
   }
 
   networks_advanced {
@@ -235,12 +241,18 @@ resource "docker_container" "background" {
     "REDIS_PORT=6379",
     "AI_PROVIDER=${var.ai_provider}",
     "WORKER_CONCURRENCY=${var.worker_concurrency}",
+    "DB_BACKUP_DIR=/app/backups",
   ]
 
   volumes {
     host_path      = pathexpand(var.opencode_bin)
     container_path = "/root/.opencode/bin/opencode"
     read_only      = true
+  }
+
+  volumes {
+    container_path = "/app/backups"
+    volume_name    = var.backup_volume_name
   }
 
   networks_advanced {

@@ -2,6 +2,21 @@ FROM python:3.14-slim AS base
 
 WORKDIR /app
 
+# pg_dump for the periodic backup task (worker writes to /app/backups).
+# PostgreSQL 18 client from PGDG: Debian's default is v17, and pg_dump refuses
+# to talk to a newer server (18), so the client must match the DB major.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
+ && install -d /usr/share/postgresql-common/pgdg \
+ && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+ && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends postgresql-client-18 \
+ && apt-get purge -y --auto-remove curl gnupg \
+ && rm -rf /var/lib/apt/lists/*
+
 # ── Dependency layer (cached when pyproject.toml/uv.lock unchanged) ──────
 COPY pyproject.toml uv.lock ./
 RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev

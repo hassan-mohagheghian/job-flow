@@ -297,28 +297,61 @@ Scheduled execution:
 
 periodic_db_backup
 
-## Dev DB Backup Scheduler
+## DB Backup Scheduler
 
-During development (`./start -b` or `./start background`) a TaskIQ scheduler
-runs `periodic_db_backup`, which:
+A TaskIQ scheduler runs `periodic_db_backup`, which:
 
-- Dumps the main PostgreSQL database with `pg_dump` (run inside the
-  `job-search-postgres-1` container via `docker exec`).
+- Dumps the main PostgreSQL database with `pg_dump`. Inside the Docker stacks
+  the worker image ships `postgresql-client` and connects directly to the DB;
+  on a host without a local client the service falls back to
+  `docker exec <DB_BACKUP_CONTAINER> pg_dump`.
 - Runs every `DB_BACKUP_INTERVAL_MINUTES` minutes (default 10).
 - Keeps only the `DB_BACKUP_KEEP_COUNT` most recent dumps (default 3) and
   deletes older ones.
+- Rejects empty dumps (they are removed and the task fails) so a broken dump
+  never rotates out a good one.
 
 Configuration lives in `.env`:
 
 - `DB_BACKUP_INTERVAL_MINUTES` (default 10)
 - `DB_BACKUP_KEEP_COUNT` (default 3)
-- `DB_BACKUP_DIR` (default `<repo>/backups`)
-- `DB_BACKUP_CONTAINER` (default `job-search-postgres-1`)
+- `DB_BACKUP_DIR` (default `<repo>/backups`; the Docker stacks set it to
+  `/app/backups`, the mount point of the backup volume)
+- `DB_BACKUP_CONTAINER` (default `job-search-postgres`) — fallback only
 
 Backups are written to `DB_BACKUP_DIR` as `jobsearch_YYYYMMDD_HHMMSS.dump` and
 are gitignored. The task is registered in `shared.infrastructure.taskiq.tasks`
 (the worker's `TASK_MODULES`), so the worker can execute it — the "task not
 found" warning does not occur.
+
+### Backup volume (persistent, external)
+
+Backups must outlive the stack that produced them, so they live on a **dedicated
+Docker volume** — `jobsearch-backups` — that is external to both Compose and
+Terraform:
+
+| Action | Volume deleted? |
+| ------ | --------------- |
+| `docker compose down` / `down -v` | No (external) |
+| `terraform destroy` | No (not managed by Terraform) |
+| `docker volume rm jobsearch-backups` | **Yes** — the only way |
+
+It is created by `./start docker up` / `./start terraform up`
+(`_ensure_backup_volume()` in `apps/start.py`), or manually with
+`docker volume create jobsearch-backups`, and mounted at `/app/backups` into:
+
+- **background** (the writer, runs `periodic_db_backup`),
+- **backend** (reader, for inspecting/copying dumps).
+
+Inspect and restore:
+
+```bash
+docker exec job-search-background ls -lh /app/backups          # list (worker)
+docker exec job-search-backend    ls -lh /app/backups          # list (api)
+docker cp job-search-backend:/app/backups/jobsearch_<ts>.dump /tmp/
+docker exec job-search-postgres pg_restore -U jobsearch -d jobsearch \
+  --clean --if-exists /tmp/<copy>.dump                          # after docker cp into it
+```
 
 ## Scheduler in Docker Stacks
 

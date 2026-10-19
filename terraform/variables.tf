@@ -24,6 +24,12 @@ variable "use_existing_pg_volume" {
   default     = true
 }
 
+variable "backup_volume_name" {
+  description = "Dedicated DB backup volume (external — never removed by Terraform)"
+  type        = string
+  default     = "jobsearch-backups"
+}
+
 # =============================================================================
 # Ports
 # =============================================================================

@@ -10,6 +10,7 @@ Terraform
 ├── docker_network.job-search-network
 │
 ├── docker_volume.jobsearch-pg-data     (external — survives destroy)
+├── docker_volume.jobsearch-backups     (external — survives destroy)
 │
 ├── docker_container.job-search-postgres  :5433 → 5432
 ├── docker_container.job-search-redis     :6380 → 6379
@@ -124,6 +125,22 @@ The PostgreSQL volume `jobsearch-pg-data` is **external** — managed outside Te
 
 You can switch between Terraform and Docker Compose freely — both use the same volume.
 
+### Backup Volume
+
+DB backups are written by the background worker to the **`jobsearch-backups`**
+volume, mounted at `/app/backups` in `job-search-backend` and
+`job-search-background`. It is external to Terraform and Compose (never created
+or destroyed by them), so `terraform destroy` and `docker compose down -v`
+leave every dump intact — only `docker volume rm jobsearch-backups` deletes it.
+
+`./start terraform up` creates it if missing; if you run Terraform directly,
+create it first:
+
+```bash
+docker volume create jobsearch-backups
+docker exec job-search-background ls -lh /app/backups
+```
+
 ### Terraform-Managed Volume
 
 To have Terraform create and destroy the volume with infrastructure:
@@ -137,9 +154,13 @@ use_existing_pg_volume = false
 
 ### Restoring from Backup
 
+Dumps live in the `jobsearch-backups` volume (`/app/backups` in the backend /
+background containers).
+
 ```bash
-# Copy dump into container
-docker cp backups_copy/jobsearch_20260903_111303.dump job-search-postgres:/tmp/jobsearch.dump
+# Copy a dump out of the volume, then into the Postgres container
+docker cp job-search-backend:/app/backups/jobsearch_20260903_111303.dump /tmp/jobsearch.dump
+docker cp /tmp/jobsearch.dump job-search-postgres:/tmp/jobsearch.dump
 
 # Reset schema
 docker exec job-search-postgres psql -U jobsearch -d jobsearch \
@@ -179,6 +200,7 @@ Images are kept locally (`keep_locally = true`) and not re-pulled on each apply.
 | `worker_concurrency` | number | `4` | Background worker concurrency |
 | `pg_volume_name` | string | `jobsearch-pg-data` | PostgreSQL volume name |
 | `use_existing_pg_volume` | bool | `true` | Use external volume (survives destroy) |
+| `backup_volume_name` | string | `jobsearch-backups` | Dedicated DB backup volume (external, never destroyed) |
 | `frontend_uid` | number | `1000` | Frontend container user ID |
 | `frontend_gid` | number | `1000` | Frontend container group ID |
 
@@ -201,6 +223,7 @@ cd terraform && terraform output
 | `container_names` | Map of all container names |
 | `pg_volume_name` | Volume name |
 | `pg_volume_persistence` | `external` or `managed` |
+| `backup_volume_name` | Dedicated backup volume name (external) |
 
 ## Manual Terraform Commands
 

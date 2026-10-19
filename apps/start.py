@@ -171,6 +171,25 @@ def _header(msg: str):
     console.print()
 
 
+# Dedicated backup volume: external to Compose/Terraform, so `docker compose
+# down -v` and `terraform destroy` never delete it. Only an explicit
+# `docker volume rm` removes it.
+BACKUP_VOLUME = "jobsearch-backups"
+
+
+def _ensure_backup_volume():
+    """Create the dedicated DB backup volume if it does not exist yet."""
+    result = subprocess.run(
+        ["docker", "volume", "create", BACKUP_VOLUME],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        _err(f"Could not create backup volume '{BACKUP_VOLUME}': {result.stderr.strip()}")
+        raise typer.Exit(code=1)
+    _ok(f"Backup volume ready: {BACKUP_VOLUME}")
+
+
 def _check_tool(name: str, *args: str):
     if not shutil.which(name):
         return False, f"{name} not found"
@@ -898,6 +917,7 @@ def up(
     ),
 ):
     """Start docker containers (optionally specific services)"""
+    _ensure_backup_volume()
     cmd = ["docker", "compose", "up", "-d"]
     if services:
         cmd.extend(services)
@@ -1062,6 +1082,8 @@ def up(
     untested code is the user's own responsibility.
     """
     _header("Terraform: Starting infrastructure")
+
+    _ensure_backup_volume()
 
     if build:
         _build_images()

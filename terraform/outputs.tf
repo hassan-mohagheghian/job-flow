@@ -77,3 +77,8 @@ output "pg_volume_persistence" {
   description = "Volume persistence mode"
   value       = var.use_existing_pg_volume ? "external (survives terraform destroy)" : "managed (destroyed with terraform destroy)"
 }
+
+output "backup_volume_name" {
+  description = "Dedicated DB backup volume (external — survives destroy)"
+  value       = var.backup_volume_name
+}

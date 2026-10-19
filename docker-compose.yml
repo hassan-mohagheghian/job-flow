@@ -48,6 +48,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - AI_PROVIDER=${AI_PROVIDER:-opencode}
+      - DB_BACKUP_DIR=/app/backups
     depends_on:
       alembic:
         condition: service_completed_successfully
@@ -66,11 +67,14 @@ services:
       - REDIS_PORT=6379
       - AI_PROVIDER=${AI_PROVIDER:-opencode}
       - WORKER_CONCURRENCY=4
+      - DB_BACKUP_DIR=/app/backups
     depends_on:
       alembic:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    volumes:
+      - jobsearch-backups:/app/backups
 
   scheduler:
     build:
@@ -104,4 +108,8 @@ services:
 volumes:
   jobsearch-pg-data:
     external: true
+  # Dedicated backup volume: external, so `docker compose down -v` never
+  # deletes it. Create once with `docker volume create jobsearch-backups`
+  # (`./start docker up` does this automatically).
   jobsearch-backups:
+    external: true

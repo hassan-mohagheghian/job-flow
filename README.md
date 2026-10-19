@@ -49,7 +49,7 @@ Data persists across `terraform destroy` / `terraform up` cycles via an external
 
 Opens FastAPI backend (port 5000) + Next.js frontend (port 5173) + background workers (TaskIQ + Redis).
 
-Both apps run in **reload mode**: backend via uvicorn `--reload`, frontend via `next dev`. Code changes reload automatically; **test files are excluded** — editing `apps/backend/tests/` or frontend `*.test.*` files does not restart the apps. The backend's graceful shutdown is bounded to 5s so a long-lived SSE stream (e.g. the open Processing Queue drawer) can't block a reload. Pass `-b/--background` to also start the background worker + scheduler (the scheduler takes a DB backup every `DB_BACKUP_INTERVAL_MINUTES` and keeps the `DB_BACKUP_KEEP_COUNT` most recent dumps — see `.env`).
+Both apps run in **reload mode**: backend via uvicorn `--reload`, frontend via `next dev`. Code changes reload automatically; **test files are excluded** — editing `apps/backend/tests/` or frontend `*.test.*` files does not restart the apps. The backend's graceful shutdown is bounded to 5s so a long-lived SSE stream (e.g. the open Processing Queue drawer) can't block a reload. Pass `-b/--background` to also start the background worker + scheduler (the scheduler takes a DB backup every `DB_BACKUP_INTERVAL_MINUTES` and keeps the `DB_BACKUP_KEEP_COUNT` most recent dumps — see `.env`). In Docker the dumps land in the dedicated external `jobsearch-backups` volume mounted at `/app/backups`, so they survive `docker compose down -v` and `terraform destroy` (see `docs/queue/processing/taskiq-processing.md`).
 
 ## Tech Stack
 
