@@ -14,6 +14,7 @@ import json
 import time
 from typing import Any
 
+from ai.infrastructure.parsers import unwrap_schema_echo
 from ai.infrastructure.service import get_llm_service
 from pydantic import ValidationError
 from shared.infrastructure.taskiq.config import WORKER_JOB_TIMEOUT
@@ -37,14 +38,28 @@ CLEAN_FAILURE_MESSAGE = "The AI returned an analysis that does not match the req
 
 def _coerce_payload(content: Any) -> dict[str, Any]:
     if isinstance(content, dict):
-        return content
+        return unwrap_schema_echo(content)
     if isinstance(content, str):
         try:
             parsed = json.loads(content)
-            return parsed if isinstance(parsed, dict) else {}
+            return unwrap_schema_echo(parsed) if isinstance(parsed, dict) else {}
         except (json.JSONDecodeError, TypeError):
             return {}
     return {}
+
+
+# Fields that prove the model actually extracted the posting instead of only
+# scoring it. A payload without any of them is retried (schema-echo regressions
+# used to persist jobs with no title/company/location).
+_EXTRACTION_KEYS = ("title", "company", "location", "role", "description")
+
+
+def _has_extracted_fields(payload: dict[str, Any]) -> bool:
+    for key in _EXTRACTION_KEYS:
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
 
 
 def _is_json_parse_error(exc: Exception) -> bool:
@@ -66,18 +81,24 @@ def _extract_valid_payload(content: Any) -> tuple[dict[str, Any] | None, str]:
         return None, "the response was not parseable JSON"
     try:
         validated = JobAnalysisOutput.model_validate(payload)
-        return validated.model_dump(), ""
     except ValidationError as e:
         return None, _format_validation_error(e)
 
+    data = validated.model_dump()
+    if not _has_extracted_fields(data):
+        return None, "the response omitted the extracted job fields (title, company, location)"
+    return data, ""
+
 
 _RETRY_SHORTEN_HINT = (
-    "\n\nIMPORTANT: Your previous attempt was cut off or did not match the required schema. "
-    "Respond again with a SHORTER, COMPLETE JSON object matching the schema exactly: keep "
-    "description to at most 60 words, list at most 6 skills, at most 2 insights, and at most 2 "
-    "factors per list in scores_explanation. Include all required fields: scores (fit, success), "
-    "recommendation, apply_reason, summary, skills, insights. Never truncate the JSON — every "
-    "string and bracket must be closed."
+    "\n\nIMPORTANT: Your previous attempt was cut off, did not match the required schema, or "
+    "omitted the extracted job fields. Respond again with a SHORTER, COMPLETE JSON object "
+    "matching the schema exactly: keep description to at most 60 words, list at most 6 skills, "
+    "at most 2 insights, and at most 2 factors per list in scores_explanation. You MUST fill "
+    "title, company, location and role from the posting whenever they are present. Include all "
+    "required fields: scores (fit, success), recommendation, apply_reason, summary, skills, "
+    "insights. Return the data object itself — never wrap it in a JSON Schema "
+    "('type'/'properties') and never truncate it: every string and bracket must be closed."
 )
 
 _MAX_ATTEMPTS = LLM_RETRY_MAX_ATTEMPTS

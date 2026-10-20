@@ -310,6 +310,11 @@ Strict schema validation:
   `insights`).
 - On a JSON parse failure or a `ValidationError`, the call is retried once with
   a shorter-output directive.
+- A schema-shaped response
+  (`{"type": "object", "properties": {<fields>}}`) is unwrapped by
+  `ai/infrastructure/parsers.py::unwrap_schema_echo` before validation, and a
+  payload with no `title`/`company`/`location`/`role`/`description` is treated
+  as a format failure so the retry can fill the fields.
 - If the retry also fails validation, the step fails with the clean message
   "The AI returned an analysis that does not match the required format." and
   nothing is persisted — only schema-valid output ever reaches the database.
@@ -672,7 +677,7 @@ analysis phase has a durable LLM input.
   analysis_ready | execution_failed`.
 - Exactly ONE LLM call: `analyze` runs the versioned `job.analyze` prompt
   (`processing/application/services/job_analysis_prompt.py`,
-  `JOB_ANALYSIS_PROMPT_VERSION` / `JOB_ANALYSIS_SCHEMA_VERSION` = "1.0.0")
+  `JOB_ANALYSIS_PROMPT_VERSION` = "1.6.0", `JOB_ANALYSIS_SCHEMA_VERSION` = "1.1.0")
   via `LLMService.generate_structured(prompt, schema=…, timeout=240)`.
 - Deterministic scoring (`processing/application/services/job_analysis_scoring.py`):
   scores clamped 0-100, `overall = round(fit*0.6 + success*0.4)`,

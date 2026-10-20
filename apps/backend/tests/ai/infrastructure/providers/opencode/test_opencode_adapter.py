@@ -200,6 +200,97 @@ class TestNonzeroExitWithContent:
         assert _json.loads(resp.content) == {"scores": {"fit": 8}}
 
 
+class TestSchemaEcho:
+    """Regression (prompt 235): models sometimes echo the output schema as
+    {"type": "object", "properties": {<data>}}, which used to validate while
+    silently dropping title/company/location."""
+
+    @staticmethod
+    def _run_structured(text, prompt="prompt", schema=None):
+        import json as _json
+        from ai.infrastructure.providers.opencode.adapter import OpencodeProvider
+
+        line = _json.dumps({"type": "text", "part": {"text": text}})
+        provider = OpencodeProvider()
+        with patch.object(
+            provider, "_run_subprocess", return_value=(0, [line], None)
+        ) as run:
+            resp = provider.generate_structured(prompt, schema=schema, timeout=5)
+        sent_prompt = run.call_args.kwargs.get("stdin_data") or run.call_args.args[-1]
+        return resp, sent_prompt
+
+    def test_unwraps_schema_wrapper(self):
+        import json as _json
+        from ai.infrastructure.parsers import unwrap_schema_echo
+
+        wrapped = {
+            "type": "object",
+            "properties": {
+                "title": "Developer Advocate",
+                "company": "SerpApi",
+                "location": "Worldwide",
+            },
+            "scores": {"fit": 50, "success": 40},
+            "recommendation": "skip",
+        }
+        assert unwrap_schema_echo(wrapped) == {
+            "title": "Developer Advocate",
+            "company": "SerpApi",
+            "location": "Worldwide",
+            "scores": {"fit": 50, "success": 40},
+            "recommendation": "skip",
+        }
+        # A plain payload is returned untouched.
+        plain = {"title": "X"}
+        assert unwrap_schema_echo(plain) is plain
+        # A pure schema definition is left for validation to reject.
+        pure = {"type": "object", "properties": {"title": {"type": "string"}}}
+        assert unwrap_schema_echo(pure) is pure
+
+    def test_generate_structured_unwraps_schema_echo(self):
+        import json as _json
+
+        wrapped = _json.dumps(
+            {
+                "type": "object",
+                "properties": {
+                    "title": "Developer Advocate",
+                    "company": "SerpApi",
+                    "location": "Worldwide",
+                },
+                "scores": {"fit": 50, "success": 40},
+            }
+        )
+        resp, _ = self._run_structured(wrapped)
+        data = _json.loads(resp.content)
+        assert data["title"] == "Developer Advocate"
+        assert data["company"] == "SerpApi"
+        assert data["location"] == "Worldwide"
+        assert data["scores"] == {"fit": 50, "success": 40}
+        assert "properties" not in data
+
+    def test_does_not_duplicate_schema_already_in_prompt(self):
+        import json as _json
+
+        schema = {"type": "object", "properties": {"title": {"type": "string"}}}
+        prompt = (
+            "Extract the job.\n\nRespond ONLY with valid JSON matching exactly "
+            f"this schema:\n{_json.dumps(schema)}"
+        )
+        _, sent = self._run_structured('{"title": "X"}', prompt=prompt, schema=schema)
+        assert sent.count("Respond ONLY with valid JSON matching") == 1
+        assert "Return the DATA object itself" in sent
+
+    def test_appends_schema_when_prompt_has_none(self):
+        import json as _json
+
+        schema = {"type": "object", "properties": {"title": {"type": "string"}}}
+        _, sent = self._run_structured('{"title": "X"}', prompt="Extract the job.", schema=schema)
+        assert sent.count("Respond ONLY with valid JSON matching") == 1
+        assert _json.dumps(schema) in sent
+        assert "Return the DATA object itself" in sent
+
+
 class TestSessionIdFlow:
     """Test session_id is passed through context and saved."""
 

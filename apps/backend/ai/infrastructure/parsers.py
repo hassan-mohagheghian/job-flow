@@ -6,9 +6,75 @@ Prefer Pydantic models and validation over free-form parsing.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
+
+# Keys that only belong to a JSON Schema document, never to the answer data.
+_SCHEMA_METADATA_KEYS = frozenset(
+    {"type", "properties", "required", "$schema", "additionalProperties"}
+)
+_SCHEMA_NODE_KEYS = frozenset(
+    {
+        "type",
+        "items",
+        "properties",
+        "required",
+        "enum",
+        "minimum",
+        "maximum",
+        "default",
+        "description",
+        "title",
+        "additionalProperties",
+    }
+)
+
+
+def _is_schema_node(value: Any) -> bool:
+    """True when a value is a JSON Schema field definition (not answer data)."""
+    return (
+        isinstance(value, dict)
+        and "type" in value
+        and set(value).issubset(_SCHEMA_NODE_KEYS)
+    )
+
+
+def unwrap_schema_echo(payload: dict[str, Any]) -> dict[str, Any]:
+    """Unwrap a response that echoed the output schema instead of the data.
+
+    Prompt-based providers (opencode) sometimes answer with the schema skeleton
+    filled in::
+
+        {"type": "object", "properties": {"title": "...", ...},
+         "scores": {...}, "recommendation": "..."}
+
+    Pydantic would ignore the unknown wrapper keys, so all top-level fields
+    (`title`, `company`, `location`, ...) silently default to ``None``. This
+    function merges the real values from ``properties`` with the sibling keys
+    and drops the schema metadata.
+
+    A pure schema echo (every property is a ``{"type": ...}`` definition) is
+    returned unchanged so downstream validation rejects it.
+    """
+    if payload.get("type") != "object":
+        return payload
+
+    properties = payload.get("properties")
+    if not isinstance(properties, dict):
+        return payload
+
+    data = {name: value for name, value in properties.items() if not _is_schema_node(value)}
+    if not data:
+        return payload
+
+    siblings = {
+        key: value
+        for key, value in payload.items()
+        if key not in _SCHEMA_METADATA_KEYS
+    }
+    # ``properties`` holds the extracted fields, so it wins on collisions.
+    return {**siblings, **data}
 
 
 class JobExtractionOutput(BaseModel):

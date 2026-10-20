@@ -14,6 +14,7 @@ import subprocess
 import threading
 from typing import Any, Callable, Optional
 
+from ...parsers import unwrap_schema_echo
 from ..base import LLMProvider, ProviderConfig, ProviderResponse
 from shared.infrastructure.config.app_config import LLM_DEFAULT_TIMEOUT, SUBPROCESS_STDIN_JOIN_TIMEOUT
 from shared.infrastructure.process.logging_config import get_logger
@@ -24,6 +25,12 @@ _project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 OPENCODE_BIN = os.path.expanduser('~/.opencode/bin/opencode')
 
 _ANSI_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+_NO_SCHEMA_ECHO_HINT = (
+    "\n\nReturn the DATA object itself. Do NOT reproduce the schema: never wrap "
+    "the answer in {\"type\": \"object\", \"properties\": {...}} and never add "
+    "\"type\", \"properties\" or \"required\" keys."
+)
 
 
 class OpencodeProvider(LLMProvider):
@@ -111,15 +118,29 @@ class OpencodeProvider(LLMProvider):
         """Run opencode CLI expecting JSON output via stdout (no temp files)."""
         structured_prompt = prompt
         if schema:
-            structured_prompt += f"\n\nRespond ONLY with valid JSON matching this schema:\n{json.dumps(schema)}"
+            # Callers such as the job analysis prompt already embed the schema.
+            # Re-appending it doubles a large block and primes the model to
+            # answer with the schema skeleton instead of the data.
+            schema_json = json.dumps(schema)
+            if schema_json not in prompt and json.dumps(schema, indent=2) not in prompt:
+                structured_prompt += (
+                    f"\n\nRespond ONLY with valid JSON matching this schema:\n{schema_json}"
+                )
         else:
             structured_prompt += "\n\nRespond ONLY with a valid JSON object. Do not write any files."
+
+        structured_prompt += _NO_SCHEMA_ECHO_HINT
 
         response = self.generate(structured_prompt, context=context, timeout=timeout)
         content = response.content.strip()
 
         result = self._extract_json(content)
         if result is not None:
+            parsed = json.loads(result)
+            if isinstance(parsed, dict):
+                unwrapped = unwrap_schema_echo(parsed)
+                if unwrapped is not parsed:
+                    result = json.dumps(unwrapped, ensure_ascii=False)
             return ProviderResponse(
                 content=result,
                 metadata=response.metadata,

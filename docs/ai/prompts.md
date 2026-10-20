@@ -17,7 +17,7 @@
 > The `job.analyze` prompt is now self-contained and versioned in
 > `processing/application/services/job_analysis_prompt.py`
 > (`build_job_analysis_prompt`, `build_job_analysis_output_schema`,
-> `JOB_ANALYSIS_PROMPT_VERSION`, `JOB_ANALYSIS_SCHEMA_VERSION` — prompt "1.4.0",
+> `JOB_ANALYSIS_PROMPT_VERSION`, `JOB_ANALYSIS_SCHEMA_VERSION` — prompt "1.6.0",
 > schema "1.1.0").
 > It is executed by the `analyze` node of the JobAnalysisGraph via
 > `LLMService.generate_structured(prompt, schema=…, timeout=240)` — exactly
@@ -35,7 +35,7 @@ The v2 `job.analyze` prompt is a self-contained builder:
 
 ```python
 from processing.application.services.job_analysis_prompt import (
-    JOB_ANALYSIS_PROMPT_VERSION,   # "1.4.0"
+    JOB_ANALYSIS_PROMPT_VERSION,   # "1.6.0"
     JOB_ANALYSIS_SCHEMA_VERSION,   # "1.1.0"
     build_job_analysis_prompt,
     build_job_analysis_output_schema,
@@ -53,6 +53,27 @@ schema = build_job_analysis_output_schema()
 # Executed exactly once per job by the analyze node:
 resp = llm.generate_structured(prompt=prompt, schema=schema, timeout=240)
 ```
+
+### Schema-echo repair (since v1.6.0)
+
+Prompt-based providers can answer with the JSON Schema skeleton instead of the
+data, e.g. `{"type": "object", "properties": {"title": …}, "scores": …}`.
+Because `JobAnalysisOutput` ignores unknown keys, that shape used to validate
+while `title`/`company`/`location` stayed `None`.
+
+Three safeguards now apply:
+
+- `ai/infrastructure/parsers.py::unwrap_schema_echo` unwraps the `properties`
+  block and drops `type`/`properties`/`required` (pure schema definitions are
+  left for validation to reject). The opencode adapter applies it in
+  `generate_structured`, and the analyze node applies it again before
+  validation.
+- The opencode adapter no longer appends a schema that the prompt already
+  embeds, and always appends a "return the data object, never the schema
+  wrapper" instruction.
+- The analyze node treats a payload whose `title`, `company`, `location`,
+  `role` and `description` are all empty as a format failure and retries with
+  the corrective hint instead of persisting an empty job.
 
 ### Profile documents (since v1.4.0)
 

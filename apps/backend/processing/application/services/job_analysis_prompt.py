@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-JOB_ANALYSIS_PROMPT_VERSION = "1.5.0"
+JOB_ANALYSIS_PROMPT_VERSION = "1.6.0"
 JOB_ANALYSIS_SCHEMA_VERSION = "1.1.0"
 
 COMPANY_TYPE_VALUES = [
@@ -191,6 +191,7 @@ OUTPUT SIZE LIMITS (critical — keep the response short so it is never truncate
  4. scores_explanation: at most 3 items per list (fit_factors, success_factors, concerns).
  5. apply_reason and each summary field (summary, resume_fit, note): at most 40 words each.
  6. The JSON must be complete and valid — every string and bracket closed. Never truncate the output.
+7. Return the data object itself. The schema below describes the SHAPE of your answer — do NOT reproduce it: never include "type", "properties" or "required" keys, and never nest the fields under "properties". Always fill title, company and location when they appear in the posting.
 
 Respond ONLY with valid JSON matching exactly this schema:
 

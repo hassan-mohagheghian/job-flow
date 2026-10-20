@@ -456,8 +456,13 @@ class TestJobAnalysisPrompt:
         prompt = build_job_analysis_prompt("job text", "profile text", "rules text", "resume text")
         assert "resume text" in prompt
 
+    def test_prompt_forbids_schema_wrapper(self):
+        prompt = build_job_analysis_prompt("job text", "profile text", "rules text", "resume text")
+        assert "Return the data object itself" in prompt
+        assert 'never include "type", "properties" or "required"' in prompt
+
     def test_versions(self):
-        assert JOB_ANALYSIS_PROMPT_VERSION == "1.5.0"
+        assert JOB_ANALYSIS_PROMPT_VERSION == "1.6.0"
         assert JOB_ANALYSIS_SCHEMA_VERSION == "1.1.0"
 
 
@@ -757,8 +762,52 @@ class TestAnalyzeNode:
         assert len(llm.calls) == 1
         assert llm.calls[0]["timeout"] == 240
         assert state.analysis_context["raw_payload"]["scores"]["fit"] == 85
-        assert state.analysis_context["raw_payload"]["prompt_version"] == "1.5.0"
+        assert state.analysis_context["raw_payload"]["prompt_version"] == "1.6.0"
         assert state.status != ExecutionStatus.FAILED
+
+    def test_unwraps_schema_echo_payload(self):
+        wrapped = {"type": "object", "properties": _payload()}
+        state = _state()
+        state.analysis_context["job_text"] = "job text"
+        state = AnalyzeNode(FakeLLM(content=json.dumps(wrapped)))(state)
+
+        assert state.status != ExecutionStatus.FAILED
+        payload = state.analysis_context["raw_payload"]
+        assert payload["title"] == "Senior Backend Engineer"
+        assert payload["company"] == "Acme Inc"
+        assert payload["location"] == "Berlin, Germany"
+
+    def test_retries_when_extraction_fields_are_all_empty(self):
+        degraded = _payload(
+            title=None,
+            company=None,
+            role=None,
+            location=None,
+            description=None,
+        )
+
+        class DegradedThenFixedLLM(FakeLLM):
+            def __init__(self):
+                super().__init__(content=json.dumps(_payload()))
+                self._first = True
+
+            def generate_structured(self, prompt, schema=None, timeout=None):
+                if self._first:
+                    self._first = False
+                    self.calls.append({"prompt": prompt, "schema": schema, "timeout": timeout})
+                    return type("Resp", (), {"content": json.dumps(degraded)})
+                return super().generate_structured(prompt, schema=schema, timeout=timeout)
+
+        state = _state()
+        state.analysis_context["job_text"] = "job text"
+        llm = DegradedThenFixedLLM()
+        state = AnalyzeNode(llm)(state)
+
+        assert len(llm.calls) == 2
+        assert state.status != ExecutionStatus.FAILED
+        assert state.analysis_context["raw_payload"]["title"] == "Senior Backend Engineer"
+        assert "omitted the extracted job fields" in llm.calls[1]["prompt"]
+        assert "never wrap it in a JSON Schema" in llm.calls[1]["prompt"]
 
     def test_no_job_text_fails(self):
         llm = FakeLLM(_payload())
