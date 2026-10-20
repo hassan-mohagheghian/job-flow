@@ -12,6 +12,13 @@ import type { ApplicationStatus } from '@/entities/application/types'
 interface TrackingActionsProps {
   jobId: string
   className?: string
+  /**
+   * Subset of quick actions to render. Defaults to every action, preserving the
+   * declaration order below. The Job Detail drawer splits them across two
+   * columns: `applied` next to the status select and `expired` in the Actions
+   * group after Work Types.
+   */
+  statuses?: ReadonlyArray<ApplicationStatus>
 }
 
 /**
@@ -21,15 +28,16 @@ interface TrackingActionsProps {
  * one is created first and then patched to the target status (the same
  * two-step the legacy inline "Mark expired" button used).
  *
- * Rendered as full-width buttons so the caller controls the layout — the Job
- * Detail drawer stacks them in a narrow column next to the status select.
+ * Rendered as full-width buttons so the caller controls the layout. The Job
+ * Detail drawer renders `applied` next to the status select and `expired` in
+ * the second column's Actions group.
  */
 const QUICK_ACTIONS: ReadonlyArray<{ status: ApplicationStatus; label: string }> = [
   { status: 'applied', label: 'Mark applied' },
   { status: 'expired', label: 'Mark expired' },
 ]
 
-export function TrackingActions({ jobId, className }: TrackingActionsProps) {
+export function TrackingActions({ jobId, className, statuses }: TrackingActionsProps) {
   const queryClient = useQueryClient()
   const { data: application } = useApplicationByJobQuery(jobId)
   const createApplication = useCreateApplicationMutation()
@@ -64,9 +72,13 @@ export function TrackingActions({ jobId, className }: TrackingActionsProps) {
     )
   }
 
+  const actions = statuses
+    ? QUICK_ACTIONS.filter(({ status }) => statuses.includes(status))
+    : QUICK_ACTIONS
+
   return (
     <>
-      {QUICK_ACTIONS.map(({ status, label }) => (
+      {actions.map(({ status, label }) => (
         <Button
           key={status}
           size="sm"

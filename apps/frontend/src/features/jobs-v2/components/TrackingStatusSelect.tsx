@@ -18,8 +18,9 @@ interface TrackingStatusSelectProps {
    * - 'button' (default): an inline "Mark expired" button that creates the
    *   application and sets it to expired in one step.
    * - 'placeholder': a disabled select showing "Not applied", for callers that
-   *   render their own action buttons (the Job Detail drawer stacks
-   *   Mark applied / Mark expired / Mark as dismissed next to this select).
+   *   render their own action buttons (the Job Detail drawer renders
+   *   Mark applied next to this select and Mark expired / Mark as dismissed
+   *   in the second column's Actions group).
    */
   emptyMode?: 'button' | 'placeholder'
 }

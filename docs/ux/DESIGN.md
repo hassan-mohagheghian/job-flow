@@ -272,7 +272,9 @@ phase completes (data is refetched on the `execution.completed` SSE event).
 │ Senior Backend Engineer                                                      │
 │ Company   Acme Inc →▾   │ Employment  Permanent                            │
 │ Location  Berlin, DE…    │ Salary      90k                                  │
-│ Work Types Hybrid, FT    │ Visa        EU Blue Ca… (hover/click → full)    │
+│ Visa      EU Blue Ca…    │ Work Types  Hybrid, FT                           │
+│ TRACKING  [applied ▾]    │ ACTIONS     [ Mark expired ]                     │
+│           [Mark applied] │             [Mark as dismissed]                  │
 │ Open job posting ↗                                                          │
 │                                                                              │
 │ ┌─ Recommendation ─────────────────────────────────────────────────────────┐ │
@@ -310,13 +312,16 @@ in the full job list sorted by overall, then success, then fit score
 The `[Why]` button after the Overall score opens a **Scores Explanation**
 popover (Why it fits / Chance of success / Concerns). It auto-opens on hover,
 auto-closes on unhover, and clicking pins/unpins it. Below the title a
-balanced two-column block (each half the drawer width) shows six labeled rows,
-three per column: `Company` (picker) / `Location` / `Work Types` on the left;
-`Employment` / `Salary` / `Visa` on the right. Rows are aligned one-to-one
-across the columns. `Location` and `Visa` are truncated at 30 characters with
-an ellipsis; hovering reveals the full value in a tooltip and clicking
-expands/collapses the value inline. When the job's linked company has a
-**company type**, a `Type` detail row renders right below the Company row.
+balanced two-column block (each half the drawer width) splits the details:
+`Company` (picker, with an optional `Type` row) / `Location` / `Visa` /
+`Apply` (only for easy-apply jobs) / `Tracking` on the left;
+`Employment` / `Salary` / `Work Types` / `Actions` on the right. `Location` and
+`Visa` are truncated at 30 characters with an ellipsis; hovering reveals the
+full value in a tooltip and clicking expands/collapses the value inline. The
+`Tracking` row pairs the status select with **Mark applied**; the `Actions` row
+stacks **Mark expired** and **Mark as dismissed** (**Undismiss** once the job is
+dismissed) after `Work Types`. Dismissing opens the shared reason dialog; the
+quick status actions create the application first when the job has none.
 Tagged skills render as compact badges;
 `missing`/`low` skills are tinted to signal
 gaps. The **Published by** section is a collapsed-by-default `Collapsible`

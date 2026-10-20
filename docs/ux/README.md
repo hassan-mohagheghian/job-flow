@@ -69,7 +69,7 @@ docs/ux/
 │       ├── tracking.md        Job tracking status (application funnel column + filter)
 │       ├── job-row.md         Job row columns and scores
 │       ├── pinned-job.md      Pin a job for attention (replaces favorite)
-│       ├── dismissed-job.md  Hide a job from the default list
+│       ├── dismissed-jobs.md  Mark a job dismissed / restore it
 │       ├── job-tags.md       User-defined tags with multi-select filter
 │       ├── add-job.md         Add Job drawer (shared Create Entity, job mode)
 │       ├── edit-job.md        Edit Job drawer

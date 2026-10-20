@@ -34,6 +34,7 @@ import { gradeForScore, scoreColor } from "@/shared/lib/grade";
 import { RecommendationBadge } from "./RecommendationBadge";
 import { TrackingStatusSelect } from "./TrackingStatusSelect";
 import { TrackingActions } from "./TrackingActions";
+import { DismissDialog } from "./DismissDialog";
 import { CompanyPicker } from "./CompanyPicker";
 import { Button } from "@/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -160,6 +161,68 @@ function DetailRow({
         {value ?? "—"}
       </span>
     </div>
+  );
+}
+
+function DismissAction({
+  jobId,
+  jobTitle,
+  dismissed,
+}: {
+  jobId: string;
+  jobTitle?: string | null;
+  dismissed?: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const setDismissed = useMutation({
+    mutationFn: ({ dismissed, note }: { dismissed: boolean; note?: string }) =>
+      jobApi.setDismissed(jobId, dismissed, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-detail", jobId] });
+      queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+  });
+
+  if (dismissed) {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full"
+        onClick={() => setDismissed.mutate({ dismissed: false })}
+        disabled={setDismissed.isPending}
+      >
+        {setDismissed.isPending ? "Restoring…" : "Undismiss"}
+      </Button>
+    );
+  }
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full"
+        onClick={() => setOpen(true)}
+        disabled={setDismissed.isPending}
+      >
+        Mark as dismissed
+      </Button>
+      <DismissDialog
+        open={open}
+        onOpenChange={setOpen}
+        jobTitle={jobTitle ?? undefined}
+        onDismiss={(note) => {
+          setDismissed.mutate(
+            { dismissed: true, note: note || undefined },
+            { onSuccess: () => setOpen(false) },
+          );
+        }}
+        isPending={setDismissed.isPending}
+      />
+    </>
   );
 }
 
@@ -550,24 +613,6 @@ function JobDetailContent({
     (c) => c.role === "recruiter",
   );
   
-  // Dismiss toggle state
-  const [isDismissOpen, setIsDismissOpen] = useState(false);
-  const dismissMutation = useMutation({
-    mutationFn: ({ dismissed, note }: { dismissed: boolean; note?: string }) =>
-      jobApi.setDismissed(detail.id, dismissed, note),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["job-detail", detail.id] });
-      queryClient.invalidateQueries({ queryKey: ["jobs-v2-infinite"] });
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      setIsDismissOpen(false);
-    },
-  });
-
-  // Handle dismiss toggle
-  const handleDismissToggleChange = (dismissed: boolean, note: string) => {
-    dismissMutation.mutate({ dismissed, note: note || undefined });
-  };
-
   return (
     <div className="space-y-1 min-w-0">
       {execError && (
@@ -656,20 +701,13 @@ function JobDetailContent({
                   <div className="min-w-0 flex-1">
                     <TrackingStatusSelect jobId={detail.id} emptyMode="placeholder" />
                   </div>
-                  {/* Sub-column 2: the quick actions stacked */}
+                  {/* Sub-column 2: Mark applied on its own */}
                   <div className="flex w-[124px] shrink-0 flex-col gap-1">
-                    <TrackingActions jobId={detail.id} className="w-full" />
-                    <Button
-                      size="sm"
-                      variant="outline"
+                    <TrackingActions
+                      jobId={detail.id}
+                      statuses={["applied"]}
                       className="w-full"
-                      onClick={() => setIsDismissOpen(true)}
-                      disabled={dismissMutation.isPending}
-                    >
-                      {dismissMutation.isPending ? 
-  (detail?.dismissed ? 'Undismissing…' : 'Dismissing…') : 
-  (detail?.dismissed ? 'Undismiss' : 'Mark as dismissed')}
-                    </Button>
+                    />
                   </div>
                 </div>
               }
@@ -686,6 +724,24 @@ function JobDetailContent({
               label="Work Types"
               value={detail.work_types?.join(", ")}
             />
+
+            <div className="flex items-start justify-between gap-4 py-1.5">
+              <span className="text-2xs text-muted-foreground uppercase tracking-wide shrink-0">
+                Actions
+              </span>
+              <div className="flex w-[124px] flex-col gap-1">
+                <TrackingActions
+                  jobId={detail.id}
+                  statuses={["expired"]}
+                  className="w-full"
+                />
+                <DismissAction
+                  jobId={detail.id}
+                  jobTitle={detail.title}
+                  dismissed={detail.dismissed}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

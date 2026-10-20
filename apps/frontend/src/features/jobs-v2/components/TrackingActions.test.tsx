@@ -5,6 +5,7 @@ import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TrackingActions } from './TrackingActions'
 import { applicationApi } from '@/entities/application/api'
+import type { ApplicationStatus } from '@/entities/application/types'
 
 vi.mock('@/entities/application/api', () => ({
   applicationApi: {
@@ -31,13 +32,13 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-function renderActions(jobId = 'job-1') {
+function renderActions(jobId = 'job-1', statuses?: ApplicationStatus[]) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
   return render(
     <QueryClientProvider client={qc}>
-      <TrackingActions jobId={jobId} />
+      <TrackingActions jobId={jobId} statuses={statuses} />
     </QueryClientProvider>,
   )
 }
@@ -49,6 +50,14 @@ describe('TrackingActions', () => {
 
     expect(await screen.findByRole('button', { name: 'Mark applied' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mark expired' })).toBeInTheDocument()
+  })
+
+  it('renders only the requested statuses when the statuses prop is set', async () => {
+    vi.mocked(applicationApi.getByJob).mockResolvedValue(sampleApplication as never)
+    renderActions('job-1', ['expired'])
+
+    expect(await screen.findByRole('button', { name: 'Mark expired' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Mark applied' })).not.toBeInTheDocument()
   })
 
   it('marks an existing application as applied', async () => {

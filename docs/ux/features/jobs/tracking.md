@@ -63,19 +63,26 @@ resolved on read by the Jobs API via the application repository (logical
 
 Both drawers show an editable **Tracking** status (`TrackingStatusSelect`):
 
-- **Job Detail drawer**: the "Tracking" row splits into two sub-columns that fit
-  inside the drawer's own two-column grid — the **status select alone** on the
-  left, and the **quick actions stacked** on the right:
-  **Mark applied** → **Mark expired** → **Mark as dismissed**.
+- **Job Detail drawer** keeps the quick actions in its two-column details
+  block, split by column:
+  - **Tracking** (first column): the status select with **Mark applied**
+    stacked beside it.
+  - **Actions** (second column, after **Work Types**): **Mark expired** and
+    **Mark as dismissed / Undismiss** stacked vertically.
   Changing the select PATCHes the application status immediately (same mutation
   as the application workspace) and refreshes the job list/detail caches.
 - **Mark applied** / **Mark expired** (`TrackingActions`) work with or without
   an existing application: they PATCH the status when one exists, otherwise they
   create the application first and then set the status (one click either way).
   Both are disabled and read "Saving…" while a mutation is in flight.
+- **Mark as dismissed** opens the shared `DismissDialog` (optional reason,
+  Ctrl+Enter submits). Submitting calls `PUT /jobs/{id}/dismissed` and closes
+  the dialog; when the job is already dismissed the same slot shows
+  **Undismiss**, which clears the flag directly without a dialog.
 - When the job has **no application**, the select renders a disabled
-  **"Not applied"** placeholder (`emptyMode="placeholder"`) — the stacked
-  buttons own the actions, so no inline button is duplicated inside the row.
+  **"Not applied"** placeholder (`emptyMode="placeholder"`) — the action
+  buttons own the status changes, so no inline button is duplicated inside the
+  row.
 - **Job Edit drawer**: a "Tracking" field with the same select, independent of
   Save. There the default `emptyMode="button"` still applies, so a job without
   an application shows the inline **Mark expired** button that creates it and
@@ -85,22 +92,22 @@ Both drawers show an editable **Tracking** status (`TrackingStatusSelect`):
 
 ```text
 Job Details — right drawer
-┌──────────────────────────────────────────────────────────────────┐
-│ Job Details                                          [⋮] [Edit]  │
-│ Staff Engineer                                                   │
-│ ┌──────────────┬──────────────────────────────────────────────┐  │
-│ │ COMPANY      │ Acme GmbH                                    │  │
-│ │ TRACKING     │ ┌───────────────────┐  ┌──────────────────┐  │  │
-│ │              │ │ [ applied ▾     ] │  │ [ Mark applied ] │  │  │
-│ │              │ └───────────────────┘  │ [ Mark expired ] │  │  │
-│ │              │                        │ [Mark as dismiss]│  │  │
-│ │              │                        └──────────────────┘  │  │
-│ │ EMPLOYMENT   │ Full-time                                    │  │
-│ └──────────────┴──────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│ Job Details                                        [Application] [Edit]│
+│ Staff Engineer                                                     │
+│ ┌──────────────────────────┬─────────────────────────────────────┐ │
+│ │ COMPANY   Acme GmbH      │ EMPLOYMENT  Full-time               │ │
+│ │ TYPE      Product Co.    │ SALARY      100k                    │ │
+│ │ LOCATION  Berlin         │ WORK TYPES  Hybrid                  │ │
+│ │ VISA      Strong         │ ACTIONS     ┌───────────────────┐   │ │
+│ │ TRACKING  ┌────────────┐ │             │ [ Mark expired ]  │   │ │
+│ │           │[ applied ▾]│ │             ├───────────────────┤   │ │
+│ │           └────────────┘ │             │[Mark as dismissed]│   │ │
+│ │           [Mark applied] │             └───────────────────┘   │ │
+│ └──────────────────────────┴─────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────┘
 
-TRACKING row — one sub-column has the single select, the other stacks the
-actions. The select has two branches:
+TRACKING row (first column) — select plus Mark applied:
 
   job HAS an application        job has NO application
   ─────────────────────────     ─────────────────────────
@@ -109,11 +116,13 @@ actions. The select has two branches:
      └─ PATCH status
         + invalidate jobs/detail caches
 
-  stacked actions (with or without an application):
-  [ Mark applied ] ─┐
-  [ Mark expired ] ─┴─ PATCH status if one exists, else
-                       POST application → PATCH status
-  [ Mark as dismissed ] → opens the dismiss-reason dialog
+ACTIONS group (second column, after Work Types):
+
+  [ Mark expired ] ────── PATCH status if an application exists, else
+                          POST application → PATCH status
+  [ Mark as dismissed ] ─ opens the dismiss-reason dialog
+                          (an already-dismissed job shows [ Undismiss ],
+                           which PATCHes dismissed=false directly)
 ```
 
 ```mermaid

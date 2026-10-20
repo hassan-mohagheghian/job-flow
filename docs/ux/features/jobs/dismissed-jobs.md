@@ -18,7 +18,8 @@ Located in:
 - `features/jobs/page.md`
 - `features/jobs/job-row.md`
 
-Triggered from the **Dismiss** button on a **Job Row**.
+Triggered from **Mark as dismissed** in the **Job Detail drawer** (`Actions`
+group, second details column after Work Types), stacked under **Mark expired**.
 
 Related:
 
@@ -28,11 +29,12 @@ Related:
 
 # Trigger
 
-The **Dismiss** button (`×`) sits next to the Pin button in the row's action
-area. It is only shown for non-dismissed jobs.
+The **Mark as dismissed** button lives in the Job Detail drawer's `Actions`
+row, below **Mark expired** and after **Work Types**. It is only shown for
+non-dismissed jobs; a dismissed job shows **Undismiss** in the same slot.
 
-The button is a separate interactive element. Clicking it never triggers row
-selection (opening the Job Details drawer).
+Opening the dialog never changes the job by itself — only the dialog's
+**Dismiss** action calls the API.
 
 ---
 
@@ -53,7 +55,11 @@ Open Jobs Page
 
 ↓
 
-Click dismiss (×) on a Job Row
+Open a Job Row → Job Details drawer
+
+↓
+
+Click Mark as dismissed (Actions group in the second column)
 
 ↓
 
@@ -81,10 +87,16 @@ PUT /api/jobs/{job_id}/dismissed { dismissed: true, note: "..." }
 ↓
 
 Success:
-- Job row shows red "Dismissed" badge in Processing column
-- Dismiss button (×) disappears from the row
+- Job row shows red "Dismissed" badge in the Tags column
+- The drawer's Mark as dismissed button becomes Undismiss
 - If note was provided, it is appended to the job's notes
 ```
+
+## Undismiss
+
+Clicking **Undismiss** in the same `Actions` slot calls
+`PUT /api/jobs/{job_id}/dismissed { dismissed: false }` immediately (no dialog),
+removes the red badge and restores **Mark as dismissed**.
 
 ---
 
@@ -130,7 +142,8 @@ The dialog appears when the user clicks the dismiss button.
 
 ## Idle
 
-The row shows a `×` dismiss button next to the pin. Tooltip: *Dismiss — mark as dismissed*.
+The drawer's `Actions` row shows **Mark expired** and **Mark as dismissed**
+stacked. A dismissed job shows **Undismiss** instead of **Mark as dismissed**.
 
 ## Dialog Open
 
@@ -142,8 +155,8 @@ The Dismiss button in the dialog shows a loading state.
 
 ## Success
 
-- The `×` button disappears from the row
-- A red "Dismissed" badge appears in the Processing column
+- The drawer's button becomes **Undismiss**
+- A red "Dismissed" badge appears in the Tags column
 - If a note was provided, it is appended to the job's notes
 
 ---
@@ -168,7 +181,7 @@ The badge uses:
 
 # Accessibility
 
-- The dismiss button has an accessible label ("Dismiss job").
+- The dismiss button is labelled **Mark as dismissed** / **Undismiss**.
 - The dialog has a clear title and description.
 - The textarea is auto-focused when the dialog opens.
 - Cancel and Dismiss buttons are keyboard accessible.

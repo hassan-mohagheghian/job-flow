@@ -13,6 +13,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/entities/job/api', () => ({
   jobApi: {
     getDetail: vi.fn(),
+    setDismissed: vi.fn(),
   },
 }))
 
@@ -61,6 +62,7 @@ const sampleApplication = {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(jobApi.getDetail).mockResolvedValue(sampleDetail as any)
+  vi.mocked(jobApi.setDismissed).mockResolvedValue({ dismissed: true } as any)
   vi.mocked(applicationApi.getByJob).mockResolvedValue(sampleApplication as any)
 })
 
@@ -197,13 +199,40 @@ describe('JobDetailDrawer tracking', () => {
     expect(trigger).toHaveTextContent('applied')
   })
 
-  it('renders the stacked quick actions next to the status select', async () => {
+  it('renders Mark applied next to the status select and the expired/dismiss actions in the second column', async () => {
     renderDrawer('job-1')
 
     await screen.findByRole('combobox', { name: 'Tracking status' })
     expect(screen.getByRole('button', { name: 'Mark applied' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mark expired' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mark as dismissed' })).toBeInTheDocument()
+  })
+
+  it('opens the dismiss dialog and dismisses the job with an optional note', async () => {
+    renderDrawer('job-1')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark as dismissed' }))
+
+    expect(await screen.findByText('Dismiss job')).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText('Why are you dismissing this? (optional)'), {
+      target: { value: 'Not a fit' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+    await waitFor(() => {
+      expect(jobApi.setDismissed).toHaveBeenCalledWith('job-1', true, 'Not a fit')
+    })
+  })
+
+  it('restores a dismissed job when Undismiss is clicked', async () => {
+    vi.mocked(jobApi.getDetail).mockResolvedValue({ ...sampleDetail, dismissed: true } as any)
+    renderDrawer('job-1')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Undismiss' }))
+
+    await waitFor(() => {
+      expect(jobApi.setDismissed).toHaveBeenCalledWith('job-1', false, undefined)
+    })
   })
 
   it('marks the job applied when Mark applied is clicked', async () => {
