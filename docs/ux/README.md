@@ -129,8 +129,9 @@ docs/ux/
 The current product focus is the **Jobs** workspace:
 
 - Browse jobs with infinite scrolling (`docs/ux/features/jobs/page.md`).
-- **Dashboard** — job sources overview with stats, distribution chart and a
-  paginated sources table (`docs/ux/features/dashboard/page.md`).
+- **Dashboard** — overview with stats, source/recommendation/application-status
+  distribution charts and a paginated sources table
+  (`docs/ux/features/dashboard/page.md`).
 - Import jobs via the Add Job drawer (`docs/ux/features/jobs/add-job.md`).
 - Import a job by dragging a link into the page (`docs/ux/flows/jobs/drag-drop-job.md`).
 - Import a job by pressing Ctrl/Cmd+V with a copied link (`docs/ux/flows/jobs/paste-to-add-job.md`).

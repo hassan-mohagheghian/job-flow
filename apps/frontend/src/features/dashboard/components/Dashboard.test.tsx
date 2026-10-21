@@ -3,9 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { SourceDistributionChart, buildSlices } from './SourceDistributionChart'
 import { buildRecommendationSlices, RecommendationChart } from './RecommendationChart'
+import {
+  ApplicationStatusChart,
+  buildApplicationStatusSlices,
+} from './ApplicationStatusChart'
 import { MetricCard } from './MetricCard'
 import { SourcesTable } from './SourcesTable'
 import { DashboardPage } from './DashboardPage'
+import type { ApplicationStatusDistribution } from '@/entities/application/types'
 import type {
   RecommendationDistribution,
   SourceDistribution,
@@ -111,6 +116,81 @@ describe('RecommendationChart', () => {
   })
 })
 
+const applicationStatuses: ApplicationStatusDistribution = {
+  items: [
+    { status: 'applied', count: 12 },
+    { status: 'interview', count: 4 },
+    { status: 'offer', count: 1 },
+    { status: 'accepted', count: 2 },
+    { status: 'rejected', count: 3 },
+    { status: 'seen', count: 5 },
+    { status: 'withdrawn', count: 1 },
+  ],
+  total: 28,
+}
+
+describe('buildApplicationStatusSlices', () => {
+  it('keeps the important funnel order and folds the rest into Other statuses', () => {
+    const { slices, total, pct } = buildApplicationStatusSlices(applicationStatuses)
+
+    expect(total).toBe(28)
+    expect(slices.map((slice) => slice.label)).toEqual([
+      'Applied',
+      'Interview',
+      'Offer',
+      'Accepted',
+      'Rejected',
+      'Other statuses',
+    ])
+    expect(slices.at(-1)?.job_count).toBe(6)
+    expect(pct(12)).toBe('43%')
+  })
+
+  it('hides zero-count slices and has no Other bucket when every status is important', () => {
+    const { slices } = buildApplicationStatusSlices({
+      items: [
+        { status: 'applied', count: 2 },
+        { status: 'rejected', count: 1 },
+      ],
+      total: 3,
+    })
+
+    expect(slices.map((slice) => slice.label)).toEqual(['Applied', 'Rejected'])
+  })
+
+  it('is empty-safe', () => {
+    const { slices, total } = buildApplicationStatusSlices({ items: [], total: 0 })
+    expect(slices).toEqual([])
+    expect(total).toBe(0)
+  })
+})
+
+describe('ApplicationStatusChart', () => {
+  it('renders the legend, total and chart role', () => {
+    render(<ApplicationStatusChart distribution={applicationStatuses} />)
+
+    expect(screen.getByTestId('application-status-chart')).toBeInTheDocument()
+    expect(screen.getByText('Applied')).toBeInTheDocument()
+    expect(screen.getByText('Other statuses')).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: /applications per status/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/28 total applications/)).toBeInTheDocument()
+  })
+
+  it('empty and loading states', () => {
+    const { unmount } = render(
+      <ApplicationStatusChart distribution={{ items: [], total: 0 }} />,
+    )
+    expect(screen.getByText(/No applications yet/i)).toBeInTheDocument()
+    unmount()
+    const { container } = render(
+      <ApplicationStatusChart distribution={applicationStatuses} isLoading />,
+    )
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+  })
+})
+
 describe('MetricCard', () => {  it('renders value and label with an accessible label', () => {
     render(<MetricCard label="Total sources" value={14} />)
     expect(screen.getByText('14')).toBeInTheDocument()
@@ -168,7 +248,7 @@ function renderTable(overrides: Partial<Parameters<typeof SourcesTable>[0]> = {}
     isLoading: false,
     isEmpty: false,
     page: 1,
-    pageSize: 25,
+    pageSize: 10,
     totalPages: 1,
     totalItems: 2,
     sortField: 'job_count' as const,
@@ -252,8 +332,8 @@ describe('SourcesTable', () => {
     const onPageSizeChange = vi.fn()
     renderTable({ onPageSizeChange })
     await user.click(screen.getByRole('combobox', { name: 'Rows per page' }))
-    await user.keyboard('{ArrowDown}{Enter}') // 25 → 50
-    expect(onPageSizeChange).toHaveBeenCalledWith(50)
+    await user.keyboard('{ArrowDown}{Enter}') // 10 → 20
+    expect(onPageSizeChange).toHaveBeenCalledWith(20)
   })
 
   it('sort headers trigger onSortChange', () => {
@@ -280,14 +360,16 @@ describe('DashboardPage', () => {
     stats,
     distribution,
     recommendations,
+    applicationStatuses,
     statsLoading: false,
     distributionLoading: false,
     recommendationsLoading: false,
+    applicationStatusesLoading: false,
     sources: [],
     sourcesLoading: false,
     sourcesEmpty: false,
     page: 1,
-    pageSize: 25,
+    pageSize: 10,
     totalPages: 1,
     totalItems: 0,
     sortField: 'job_count' as const,
@@ -311,7 +393,25 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Jobs by recommendation')).toBeInTheDocument()
     expect(screen.getByText('Apply')).toBeInTheDocument()
     expect(screen.getByText('Consider')).toBeInTheDocument()
+    expect(screen.getByTestId('application-status-panel')).toBeInTheDocument()
+    expect(screen.getByText('Applications by status')).toBeInTheDocument()
+    expect(screen.getByText('Applied')).toBeInTheDocument()
     expect(screen.getByTestId('sources-table')).toBeInTheDocument()
+  })
+
+  it('shows application status errors with retry', async () => {
+    const user = userEvent.setup()
+    const onRetryApplicationStatuses = vi.fn()
+    render(
+      <DashboardPage
+        {...baseProps}
+        applicationStatusesError="boom"
+        onRetryApplicationStatuses={onRetryApplicationStatuses}
+      />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load application statuses.')
+    await user.click(screen.getByText('Retry'))
+    expect(onRetryApplicationStatuses).toHaveBeenCalledOnce()
   })
 
   it('shows recommendation errors with retry', async () => {
@@ -335,9 +435,11 @@ describe('DashboardPage', () => {
         {...baseProps}
         stats={undefined}
         recommendations={undefined}
+        applicationStatuses={undefined}
         statsLoading
         distributionLoading
         recommendationsLoading
+        applicationStatusesLoading
         sources={[]}
         sourcesLoading
         sourcesEmpty={false}

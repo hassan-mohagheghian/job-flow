@@ -12,7 +12,7 @@ How a user discovers, filters, and manages skills in the Skills workspace.
 Open Skills page
         │
         ▼
-Load first page (GET /api/skills/list, page_size=25)
+Load first page (GET /api/skills/list, page_size=10)
         │
         ▼
 ┌─────────────────────────┐

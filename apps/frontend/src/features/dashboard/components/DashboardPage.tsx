@@ -1,9 +1,11 @@
 'use client'
 
+import { ApplicationStatusChart } from './ApplicationStatusChart'
 import { MetricCard } from './MetricCard'
 import { RecommendationChart } from './RecommendationChart'
 import { SourceDistributionChart } from './SourceDistributionChart'
 import { SourcesTable } from './SourcesTable'
+import type { ApplicationStatusDistribution } from '@/entities/application/types'
 import type {
   RecommendationDistribution,
   SourceDistribution,
@@ -20,6 +22,9 @@ interface DashboardPageProps {
   recommendations: RecommendationDistribution | undefined
   recommendationsLoading: boolean
   recommendationsError?: unknown
+  applicationStatuses: ApplicationStatusDistribution | undefined
+  applicationStatusesLoading: boolean
+  applicationStatusesError?: unknown
   sources: SourceListItem[]
   sourcesLoading: boolean
   sourcesEmpty: boolean
@@ -39,6 +44,7 @@ interface DashboardPageProps {
   onRetrySources?: () => void
   onRetryDistribution?: () => void
   onRetryRecommendations?: () => void
+  onRetryApplicationStatuses?: () => void
 }
 
 export function DashboardPage(props: DashboardPageProps) {
@@ -47,7 +53,8 @@ export function DashboardPage(props: DashboardPageProps) {
       <header>
         <h1 className="text-lg font-semibold">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Where your listings come from and how they are distributed.
+          Where your listings come from, how they are distributed, and where your
+          applications stand.
         </p>
       </header>
 
@@ -108,6 +115,32 @@ export function DashboardPage(props: DashboardPageProps) {
             <RecommendationChart
               distribution={props.recommendations}
               isLoading={props.recommendationsLoading}
+            />
+          )}
+        </section>
+
+        <section
+          className="rounded-lg border bg-card p-4 shadow-sm"
+          data-testid="application-status-panel"
+        >
+          <h2 className="mb-2 text-sm font-medium">Applications by status</h2>
+          {props.applicationStatusesError ? (
+            <div className="p-4 text-center text-sm" role="alert">
+              <p className="text-destructive">Unable to load application statuses.</p>
+              {props.onRetryApplicationStatuses && (
+                <button
+                  type="button"
+                  className="mt-2 text-xs underline underline-offset-2"
+                  onClick={props.onRetryApplicationStatuses}
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          ) : (
+            <ApplicationStatusChart
+              distribution={props.applicationStatuses}
+              isLoading={props.applicationStatusesLoading}
             />
           )}
         </section>

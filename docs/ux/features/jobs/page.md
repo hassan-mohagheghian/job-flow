@@ -215,8 +215,8 @@ Configuration
 
 | Property          | Value               |
 | ----------------- | ------------------- |
-| Initial page size | 50                  |
-| Next page size    | 50                  |
+| Initial page size | 10                  |
+| Next page size    | 10                  |
 | Load threshold    | 80% of visible list |
 | Pagination        | Backend only        |
 | Frontend UX       | Infinite Loading    |

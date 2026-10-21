@@ -64,6 +64,16 @@ export interface ApplicationDetail {
   documents: ApplicationDocument[]
 }
 
+export interface ApplicationStatusDistributionItem {
+  status: ApplicationStatus
+  count: number
+}
+
+export interface ApplicationStatusDistribution {
+  items: ApplicationStatusDistributionItem[]
+  total: number
+}
+
 export interface GenerateResponse {
   execution_id: string
   status: string

@@ -29,6 +29,7 @@ from applications.presentation.api.schemas.applications import (
     ApplicationDocumentSchema,
     ApplicationFollowUpSchema,
     ApplicationNoteSchema,
+    ApplicationStatusDistributionResponse,
     ApplicationStatusEventSchema,
     CreateApplicationRequest,
     CreateFollowUpRequest,
@@ -116,6 +117,17 @@ def _dispatch(exec_repo: SQLAlchemyProcessingExecutionRepository, execution_type
     response = use_case.execute(request)
     DispatchProcessingExecutionService(exec_repo).dispatch(response.execution_id)
     return response.execution_id
+
+
+@router.get(
+    "/status-distribution",
+    response_model=ApplicationStatusDistributionResponse,
+)
+def get_status_distribution(
+    application_repo: SQLAlchemyApplicationRepository = Depends(get_application_repo),
+):
+    """Per-status counts of the current user's applications (Dashboard)."""
+    return application_repo.status_distribution()
 
 
 @router.get("/by-job/{job_id}", response_model=ApplicationDetailResponse)

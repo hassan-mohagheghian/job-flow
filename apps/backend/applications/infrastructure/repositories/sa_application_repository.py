@@ -2,8 +2,10 @@
 
 from typing import Any
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from applications.domain.entities.application import ApplicationStatus
 from applications.domain.repositories.application_repository import IApplicationRepository
 from applications.infrastructure.mappers import (
     application_model_to_dict,
@@ -66,6 +68,29 @@ class SQLAlchemyApplicationRepository(IApplicationRepository):
         if self._user_id:
             q = q.filter(ApplicationModel.user_id == self._user_id)
         return [row[0] for row in q.all()]
+
+    def status_distribution(self) -> dict[str, Any]:
+        q = self._session.query(
+            ApplicationModel.status, func.count(ApplicationModel.id)
+        )
+        if self._user_id:
+            q = q.filter(ApplicationModel.user_id == self._user_id)
+        counts = {
+            str(status): int(count)
+            for status, count in q.group_by(ApplicationModel.status).all()
+            if status is not None
+        }
+
+        known = [status for status in ApplicationStatus.ALL if counts.get(status)]
+        unknown = sorted(status for status in counts if status not in ApplicationStatus.ALL)
+        return {
+            "items": [
+                {"status": status, "count": counts[status]}
+                for status in (*known, *unknown)
+                if counts[status] > 0
+            ],
+            "total": sum(counts.values()),
+        }
 
     def create(self, data: dict[str, Any]) -> dict[str, Any]:
         data.setdefault("user_id", self._user_id)

@@ -351,7 +351,7 @@ class SQLAlchemyJobRepository(IJobRepository):
     def list_sources(
         self,
         page: int = 1,
-        page_size: int = 25,
+        page_size: int = 10,
         query: str = "",
         sort: str = "job_count",
         order: str = "desc",
@@ -835,7 +835,7 @@ class SQLAlchemyJobRepository(IJobRepository):
     def search_jobs(
         self,
         page: int = 1,
-        page_size: int = 25,
+        page_size: int = 10,
         query: str | None = None,
         sort: str = "updated_at",
         order: str = "desc",
@@ -925,7 +925,7 @@ class SQLAlchemyJobRepository(IJobRepository):
     def search_jobs_cursor(
         self,
         cursor: str | None = None,
-        page_size: int = 25,
+        page_size: int = 10,
         page: int = 1,
         query: str | None = None,
         sort: str = "updated_at",

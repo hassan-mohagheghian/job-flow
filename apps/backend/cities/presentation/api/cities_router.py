@@ -30,7 +30,7 @@ from cities.presentation.api.schemas.cities import (
 
 router = APIRouter()
 
-DEFAULT_PAGE_SIZE = 25
+DEFAULT_PAGE_SIZE = 10
 SORTABLE_FIELDS = {"jobs", "country", "city", "created_at"}
 
 

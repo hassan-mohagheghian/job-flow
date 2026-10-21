@@ -5,6 +5,7 @@ import type {
   ApplicationDocumentType,
   ApplicationFollowUp,
   ApplicationNote,
+  ApplicationStatusDistribution,
   ApplicationStatusEvent,
   CreateFollowUpInput,
   CreateNoteInput,
@@ -17,6 +18,8 @@ import type {
 export const applicationApi = {
   getByJob: (jobId: string) => api.get<ApplicationDetail>(`/applications/by-job/${jobId}`),
   get: (applicationId: string) => api.get<ApplicationDetail>(`/applications/${applicationId}`),
+  statusDistribution: () =>
+    api.get<ApplicationStatusDistribution>(`/applications/status-distribution`),
   create: (jobId: string, seenAt?: string | null) =>
     api.post<ApplicationDetail>(`/applications`, { job_id: jobId, seen_at: seenAt ?? null }),
   update: (applicationId: string, data: UpdateApplicationInput) =>

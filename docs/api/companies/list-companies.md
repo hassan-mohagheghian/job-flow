@@ -35,7 +35,7 @@ The list uses **cursor-based** pagination (keyset). There is no page number.
 | Parameter | Type   | Required | Default |
 | --------- | ------ | -------- | ------- |
 | cursor    | string | No       | null    |
-| page_size | integer| No       | 25      |
+| page_size | integer| No       | 10      |
 
 Maximum page_size is 100.
 

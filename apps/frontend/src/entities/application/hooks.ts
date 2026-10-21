@@ -12,6 +12,9 @@ import type {
 
 const APPLICATION_KEY = 'application'
 
+/** Dashboard aggregate key, invalidated whenever applications are created or their status changes. */
+export const applicationStatusDistributionKey = ['application-status-distribution'] as const
+
 function applicationKeys(applicationId: string | null) {
   return [APPLICATION_KEY, applicationId ?? 'none'] as const
 }
@@ -40,6 +43,7 @@ export function useCreateApplicationMutation() {
     onSuccess: (application) => {
       queryClient.setQueryData([APPLICATION_KEY, application.id], application)
       queryClient.invalidateQueries({ queryKey: [APPLICATION_KEY, 'by-job'] })
+      queryClient.invalidateQueries({ queryKey: applicationStatusDistributionKey })
     },
   })
 }
@@ -52,6 +56,7 @@ export function useUpdateApplicationMutation() {
     onSuccess: (application) => {
       queryClient.setQueryData([APPLICATION_KEY, application.id], application)
       queryClient.invalidateQueries({ queryKey: [APPLICATION_KEY, 'by-job'] })
+      queryClient.invalidateQueries({ queryKey: applicationStatusDistributionKey })
     },
   })
 }

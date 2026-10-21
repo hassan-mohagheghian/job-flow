@@ -40,6 +40,16 @@ class IApplicationRepository(ABC):
         ...
 
     @abstractmethod
+    def status_distribution(self) -> dict[str, Any]:
+        """Count the user's applications grouped by status.
+
+        Returns ``{"items": [{"status": ..., "count": ...}], "total": ...}``;
+        zero-count statuses are omitted, known statuses follow the canonical
+        lifecycle order, and ``total`` covers every status.
+        """
+        ...
+
+    @abstractmethod
     def create(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create an application. Returns the stored dict."""
         ...

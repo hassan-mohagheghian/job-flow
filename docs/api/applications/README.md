@@ -12,6 +12,7 @@ per-context routers (AGENTS.md rule 10).
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | GET | `/api/applications/by-job/{job_id}` | Application for a job (404 when none). |
+| GET | `/api/applications/status-distribution` | Current user's application counts by status (Dashboard). |
 | POST | `/api/applications` | Create an application for a job (default status `recommended`). |
 | PATCH | `/api/applications/{application_id}` | Update `status` / `applied_at` (status change records a timeline node). |
 | PATCH | `/api/applications/timeline/{timeline_id}` | Edit a status-timeline node's `changed_at`. |
@@ -34,6 +35,31 @@ Returns the full application detail: core fields + `status_timeline`,
 
 `status_timeline` is an ordered list of status events, each
 `{id, application_id, status, changed_at}` tracing the application lifecycle.
+
+## Application Status Distribution
+
+`GET /api/applications/status-distribution`
+
+Returns the current user's application counts grouped by status. Only statuses
+with a non-zero count are included, in the canonical lifecycle order
+(`seen`, `preparing`, `ready_to_apply`, `applied`, `interview`, `offer`,
+`accepted`, `rejected`, `withdrawn`, `expired`). `total` is the number of
+applications across every status (including others not listed when the caller
+filters them).
+
+```json
+{
+  "items": [
+    { "status": "applied", "count": 12 },
+    { "status": "interview", "count": 4 },
+    { "status": "offer", "count": 1 }
+  ],
+  "total": 17
+}
+```
+
+Read-only, user-scoped aggregate used by the Dashboard "Applications by status"
+doughnut; it creates no timeline events.
 
 ## Create Application
 

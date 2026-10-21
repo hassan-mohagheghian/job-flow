@@ -40,7 +40,7 @@ from shared.application.exceptions import NotFoundError, BadRequestError, Confli
 
 router = APIRouter()
 
-DEFAULT_PAGE_SIZE = 25
+DEFAULT_PAGE_SIZE = 10
 
 SORTABLE_SKILL_FIELDS = ("created_at", "name", "level", "confidence", "market_relevance", "mention_count")
 

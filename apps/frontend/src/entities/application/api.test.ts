@@ -82,6 +82,22 @@ describe('applicationApi', () => {
     expect(url).toBe('/api/applications/by-job/job-1')
   })
 
+  it('gets the application status distribution', async () => {
+    const distribution = {
+      items: [
+        { status: 'applied', count: 12 },
+        { status: 'interview', count: 4 },
+      ],
+      total: 16,
+    }
+    fetchMock.mockResolvedValue(ok(distribution))
+
+    const result = await applicationApi.statusDistribution()
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/applications/status-distribution')
+    expect(result.total).toBe(16)
+  })
+
   it('adds a follow-up', async () => {
     fetchMock.mockResolvedValue(ok({ id: 'fu-1', application_id: 'app-1', scheduled_at: null, note: 'ping', completed_at: null }))
 

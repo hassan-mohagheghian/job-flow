@@ -83,7 +83,7 @@ COMPANY_FUZZY_THRESHOLD = float(os.environ.get('COMPANY_FUZZY_THRESHOLD', '0.88'
 COMPANY_ROOT_DOMAIN_THRESHOLD = float(os.environ.get('COMPANY_ROOT_DOMAIN_THRESHOLD', '0.6'))
 
 # ── Pagination ───────────────────────────────────────────────────────────────
-DEFAULT_PAGE_SIZE = int(os.environ.get('DEFAULT_PAGE_SIZE', '25'))
+DEFAULT_PAGE_SIZE = int(os.environ.get('DEFAULT_PAGE_SIZE', '10'))
 MAX_PAGE_SIZE = int(os.environ.get('MAX_PAGE_SIZE', '200'))
 
 # ── SSE keepalive ────────────────────────────────────────────────────────────

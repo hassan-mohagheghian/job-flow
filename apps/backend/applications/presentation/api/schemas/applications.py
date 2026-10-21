@@ -118,6 +118,16 @@ class ApplicationDetailResponse(BaseModel):
     documents: list[ApplicationDocumentSchema] = Field(default_factory=list)
 
 
+class ApplicationStatusCountSchema(BaseModel):
+    status: str
+    count: int = 0
+
+
+class ApplicationStatusDistributionResponse(BaseModel):
+    items: list[ApplicationStatusCountSchema] = Field(default_factory=list)
+    total: int = 0
+
+
 class GenerateResponse(BaseModel):
     execution_id: str
     status: str
@@ -162,6 +172,8 @@ __all__ = [
     "ApplicationNoteSchema",
     "ApplicationDocumentSchema",
     "ApplicationDetailResponse",
+    "ApplicationStatusCountSchema",
+    "ApplicationStatusDistributionResponse",
     "GenerateResponse",
     "DeleteResponse",
     "build_detail_response",

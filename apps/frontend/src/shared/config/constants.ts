@@ -1,6 +1,8 @@
 // ── Pagination ──────────────────────────────────────────────────────────────
-export const PAGE_SIZE = 30
-export const PAGE_SIZE_SMALL = 25
+export const PAGE_SIZE = 10
+export const PAGE_SIZE_SMALL = 10
+/** User-facing rows-per-page choices, in consistent steps of 10. */
+export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as const
 export const HISTORY_PAGE_SIZE = 100
 export const MAX_PAGE_SIZE = 200
 

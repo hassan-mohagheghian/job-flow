@@ -173,6 +173,20 @@ class TestSourceDistribution:
 
 
 class TestSourcesList:
+    def test_default_page_size_is_ten(self, client, test_db):
+        for index in range(11):
+            _create_source(test_db, f"board{index}.com")
+
+        body = client.get("/api/jobs/sources").json()
+
+        assert len(body["items"]) == 10
+        assert body["pagination"] == {
+            "page": 1,
+            "page_size": 10,
+            "total_items": 11,
+            "total_pages": 2,
+        }
+
     def test_pagination_sort_by_count(self, client, test_db):
         a = _create_source(test_db, "a.com", name="Alpha")
         b = _create_source(test_db, "b.com", name="Beta")

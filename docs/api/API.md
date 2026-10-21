@@ -210,6 +210,7 @@ through the processing pipeline (see `docs/api/applications/README.md`,
 Endpoints:
 
 - `GET /api/applications/by-job/{job_id}` — application detail for a job.
+- `GET /api/applications/status-distribution` — current user's application counts by status (Dashboard).
 - `POST /api/applications` — create an application (`{ "job_id" }`, default status `recommended`).
 - `PATCH /api/applications/{application_id}` — update `status` / `applied_at` (status change records a timeline node).
 - `PATCH` / `DELETE` `/api/applications/timeline/{timeline_id}` — edit `changed_at` / remove a status-timeline node.

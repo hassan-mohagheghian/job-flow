@@ -211,7 +211,7 @@ Open Skills
 
 ↓
 
-Load first page (page_size=25)
+Load first page (page_size=10)
 
 ↓
 
@@ -242,8 +242,8 @@ Configuration
 
 | Property          | Value            |
 | ----------------- | ---------------- |
-| Initial page size | 25               |
-| Next page size    | 25               |
+| Initial page size | 10               |
+| Next page size    | 10               |
 | Pagination        | Backend only     |
 | Frontend UX       | Infinite Loading |
 

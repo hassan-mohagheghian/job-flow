@@ -316,7 +316,7 @@ def _v2_job_to_schema(
 @router.get("/list", response_model=JobListResponseSchema)
 def list_jobs_v2(
     page: int = Query(1, ge=1),
-    page_size: int = Query(25, ge=1, le=100),
+    page_size: int = Query(10, ge=1, le=100),
     cursor: str | None = Query(None),
     query: str | None = Query(None),
     sort: str = Query("created_at"),
@@ -647,7 +647,7 @@ def get_source_distribution(
 def list_sources(
     repo: SQLAlchemyJobRepository = Depends(get_job_repo),
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=25, ge=1, le=100),
+    page_size: int = Query(default=10, ge=1, le=100),
     query: str = Query(default=""),
     sort: str = Query(default="job_count"),
     order: str = Query(default="desc"),

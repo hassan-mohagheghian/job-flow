@@ -894,24 +894,26 @@ show `Evaluation pending` instead of invented scores.
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ [Total listings] [Total sources] [Active sources] [Unknown]                  │
 │                                                                              │
-│ ┌── Listings by source (doughnut: top 5 + Other + Unknown) ─┐                │
-│ │ ● Indeed.com 412 • 36%  ● LinkedIn.com 284 • 25%  …       │                │
-│ └────────────────────────────────────────────────────────────┘                │
-│ ┌── Jobs by recommendation (doughnut) ────────────────────────┐               │
-│ │ ● Apply (green)  ● Consider (amber)  ● Skip (red)  ● None   │               │
-│ └──────────────────────────────────────────────────────────────┘              │
-│                                                                              │
-├── Sources ──────────────────────────────────────────────────────────────────┤
-│ Search sources…                          Page 1 of 1 • 14 sources            │
-│ Source        │ Website       │ Jobs │ Last activity                        │
-│ Indeed.com    | indeed.com(link) | 412 | Oct 14                           │
-│ [Prev] select ▾ Rows per page (10/25/50/100) [Next]                          │
+│ ┌── Listings by source (doughnut: top 5 + Other + Unknown) ─┐ ┌── Jobs by recommendation (doughnut) ─┐ │
+│ │ ● Indeed.com 412 • 36%  ● LinkedIn.com 284 • 25%  …       │ │ ● Apply (green)  ● Consider (amber)  │ │
+│ └────────────────────────────────────────────────────────────┘ │ ● Skip (red)  ● None (gray)          │ │
+│ ┌── Applications by status (doughnut) ───────────────────────┐ └──────────────────────────────────────┘ │
+│ │ ● Applied (green)  ● Interview (cyan)  ● Offer (purple)   │ ┌── Sources ───────────────────────────┐ │
+│ │ ● Accepted (emerald)  ● Rejected (red)  ● Other (gray)    │ │ Search sources…  Page 1 of 1 • 14     │ │
+│ │ 28 total applications                                     │ │ Source │ Website │ Jobs │ Last act  │ │
+│ └────────────────────────────────────────────────────────────┘ │ Indeed.com │ indeed.com │ 412 │ Oct │ │
+│                                                                │ [Prev] 10/page ▾ [Next]               │ │
+│                                                                └──────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-All widgets are backed by `/api/jobs/sources/*` plus
-`/api/jobs/recommendations/distribution` aggregates (see
-`docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`).
+The source, recommendation and application-status doughnuts are backed by
+`/api/jobs/sources/*`, `/api/jobs/recommendations/distribution` and
+`/api/applications/status-distribution` aggregates (see
+`docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`,
+`docs/api/applications/README.md`). The application chart shows Applied,
+Interview, Offer, Accepted and Rejected individually; every other status is
+folded into **Other statuses**.
 
 ---
 

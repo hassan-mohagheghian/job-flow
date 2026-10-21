@@ -112,6 +112,38 @@ class TestApplicationAPI:
         resp = client.get("/api/applications/by-job/some-missing-job")
         assert resp.status_code == 404
 
+    def test_status_distribution_for_current_user(self, client, sa_session):
+        first = _create_job(sa_session)
+        second = _create_job(sa_session)
+        third = _create_job(sa_session)
+        _create_application(sa_session, first.id, status="applied")
+        _create_application(sa_session, second.id, status="interview")
+        _create_application(sa_session, third.id, status="rejected")
+        _create_application(
+            sa_session,
+            _create_job(sa_session).id,
+            status="offer",
+            user_id="other-user",
+        )
+
+        resp = client.get("/api/applications/status-distribution")
+
+        assert resp.status_code == 200
+        assert resp.json() == {
+            "items": [
+                {"status": "applied", "count": 1},
+                {"status": "interview", "count": 1},
+                {"status": "rejected", "count": 1},
+            ],
+            "total": 3,
+        }
+
+    def test_status_distribution_empty(self, client):
+        resp = client.get("/api/applications/status-distribution")
+
+        assert resp.status_code == 200
+        assert resp.json() == {"items": [], "total": 0}
+
     def test_update_status(self, client, sa_session):
         job = _create_job(sa_session)
         app = _create_application(sa_session, job.id)

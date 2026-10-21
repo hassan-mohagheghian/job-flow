@@ -93,7 +93,7 @@ naturally drop; empty `is_active` sources remain listed).
 
 ### GET /api/jobs/sources
 
-Query: `page` (default 1), `page_size` (default 25, max 100), `query`
+Query: `page` (default 1), `page_size` (default 10, max 100), `query`
 (search on name + normalized_domain, ILIKE prefix match), `sort`
 (`job_count` default | `name` | `last_activity`), `order` (`desc` default |
 `asc`).
@@ -112,7 +112,7 @@ Query: `page` (default 1), `page_size` (default 25, max 100), `query`
       "last_activity_display": "Oct 14"
     }
   ],
-  "pagination": {"page": 1, "page_size": 25, "total_items": 14, "total_pages": 1}
+  "pagination": {"page": 1, "page_size": 10, "total_items": 14, "total_pages": 2}
 }
 ```
 
@@ -120,8 +120,9 @@ Query: `page` (default 1), `page_size` (default 25, max 100), `query`
   omitted when null). `canonical_url` persisted at row creation (host prefix
   of the first URL that created it).
 - Invalid `sort`/`order`/page values → 422.
-- The client exposes a per-page selector (10 / 25 / 50 / 100; changing it
-  resets to page 1); the server caps `page_size` at 100.
+- The client defaults to 10 rows and exposes a per-page selector in steps of
+  10 (10 / 20 / 30 / … / 100; changing it resets to page 1); the server caps
+  `page_size` at 100.
 
 ### GET /api/jobs/recommendations/distribution
 

@@ -2,8 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { applicationApi } from '@/entities/application/api'
+import { applicationStatusDistributionKey } from '@/entities/application/hooks'
 import { sourceApi, type SourcesQuery } from '@/entities/job/sources'
-import { DEFAULT_STALE_TIME } from '@/shared/config/constants'
+import { DEFAULT_STALE_TIME, PAGE_SIZE_SMALL } from '@/shared/config/constants'
 
 export function useSourceStats() {
   return useQuery({
@@ -29,6 +31,14 @@ export function useRecommendationDistribution() {
   })
 }
 
+export function useApplicationStatusDistribution() {
+  return useQuery({
+    queryKey: applicationStatusDistributionKey,
+    queryFn: applicationApi.statusDistribution,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 /** Debounces anything typed into `query` before it becomes part of a queryKey. */
 export function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value)
@@ -41,7 +51,7 @@ export function useDebouncedValue<T>(value: T, delay = 300): T {
 
 const DEFAULT_QUERY: SourcesQuery = {
   page: 1,
-  page_size: 25,
+  page_size: PAGE_SIZE_SMALL,
   query: '',
   field: 'job_count',
   order: 'desc',

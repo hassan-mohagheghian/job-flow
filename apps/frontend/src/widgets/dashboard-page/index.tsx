@@ -3,6 +3,7 @@
 import MainLayout from '@/widgets/main-layout'
 import { DashboardPage } from '@/features/dashboard/components/DashboardPage'
 import {
+  useApplicationStatusDistribution,
   useRecommendationDistribution,
   useSourceDistribution,
   useSourceStats,
@@ -15,6 +16,7 @@ function DashboardAdapter() {
   const stats = useSourceStats()
   const distribution = useSourceDistribution()
   const recommendations = useRecommendationDistribution()
+  const applicationStatuses = useApplicationStatusDistribution()
 
   return (
     <DashboardPage
@@ -26,6 +28,12 @@ function DashboardAdapter() {
       recommendations={recommendations.data}
       recommendationsLoading={recommendations.isLoading}
       recommendationsError={recommendations.isError ? recommendations.error : undefined}
+      applicationStatuses={applicationStatuses.data}
+      applicationStatusesLoading={applicationStatuses.isLoading}
+      applicationStatusesError={
+        applicationStatuses.isError ? applicationStatuses.error : undefined
+      }
+      onRetryApplicationStatuses={applicationStatuses.refetch}
       onRetryDistribution={() => {
         stats.refetch()
         distribution.refetch()

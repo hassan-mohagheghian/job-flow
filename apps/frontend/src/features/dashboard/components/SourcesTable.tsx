@@ -14,6 +14,7 @@ import {
 } from '@/shared/ui/select'
 import { SortableHeader } from '@/features/jobs-v2/components/SortableHeader'
 import type { SourceListItem, SourceSortField } from '@/entities/job/sources'
+import { PAGE_SIZE_OPTIONS } from '@/shared/config/constants'
 import { formatTimeAgo } from '@/shared/lib/formatTimeAgo'
 
 interface SourcesTableProps {
@@ -167,7 +168,7 @@ export function SourcesTable(props: SourcesTableProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[10, 25, 50, 100].map((size) => (
+                  {PAGE_SIZE_OPTIONS.map((size) => (
                     <SelectItem key={size} value={String(size)}>
                       {size} per page
                     </SelectItem>

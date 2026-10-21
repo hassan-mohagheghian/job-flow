@@ -131,7 +131,7 @@ class IJobRepository(ABC):
     def search_jobs_cursor(
         self,
         cursor: str | None = None,
-        page_size: int = 25,
+        page_size: int = 10,
         page: int = 1,
         query: str | None = None,
         sort: str = "updated_at",

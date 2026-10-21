@@ -26,7 +26,7 @@ GET /api/skills/list
 
 | Parameter | Type    | Required | Default |
 | --------- | ------- | -------- | ------- |
-| page_size | integer | No       | 25      |
+| page_size | integer | No       | 10      |
 | cursor    | string  | No       | —       |
 
 Maximum page_size is 200.

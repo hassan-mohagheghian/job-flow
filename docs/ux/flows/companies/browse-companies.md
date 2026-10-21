@@ -12,7 +12,7 @@ How a user discovers, filters, and opens companies in the Companies workspace.
 Open Companies page
         │
         ▼
-Load first page (GET /api/companies/list, page_size=25)
+Load first page (GET /api/companies/list, page_size=10)
         │
         ▼
 ┌─────────────────────────┐

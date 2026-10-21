@@ -32,7 +32,7 @@ GET /api/jobs
 | Parameter | Type    | Required | Default |
 | --------- | ------- | -------- | ------- |
 | page      | integer | No       | 1       |
-| page_size | integer | No       | 25      |
+| page_size | integer | No       | 10      |
 
 Maximum page_size is 100.
 
@@ -303,7 +303,7 @@ desc
 
   "pagination": {
     "page": 1,
-    "page_size": 25,
+    "page_size": 10,
     "total_items": 523,
     "total_pages": 21
   }

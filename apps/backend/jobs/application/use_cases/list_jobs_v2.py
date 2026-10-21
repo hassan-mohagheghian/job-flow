@@ -11,7 +11,7 @@ from jobs.domain.repositories.job_repository import IJobRepository
 @dataclass
 class ListJobsV2Request:
     page: int = 1
-    page_size: int = 25
+    page_size: int = 10
     cursor: str | None = None
     query: str | None = None
     sort: str = "created_at"

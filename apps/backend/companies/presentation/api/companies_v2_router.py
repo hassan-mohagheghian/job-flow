@@ -63,7 +63,7 @@ from shared.application.exceptions import NotFoundError
 
 router = APIRouter()
 
-DEFAULT_PAGE_SIZE = 25
+DEFAULT_PAGE_SIZE = 10
 
 SORTABLE_SCORE_FIELDS = ("overall_score", "fit_score", "success_score")
 
