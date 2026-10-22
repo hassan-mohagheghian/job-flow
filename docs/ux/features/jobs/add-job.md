@@ -203,9 +203,9 @@ If left empty, the processing pipeline should automatically extract the title fr
 
 Examples
 
-- Senior Backend Engineer
-- Python Developer
-- Staff Software Engineer
+- Marketing Manager
+- Project Coordinator
+- Registered Nurse
 
 ---
 

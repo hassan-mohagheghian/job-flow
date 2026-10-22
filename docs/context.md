@@ -2,13 +2,16 @@
 
 ## What This Project Solves
 
-Job Search Intelligence is an AI-powered career platform that helps software engineers find and apply for jobs, especially visa-sponsored roles. It automates the job search workflow: discovering jobs, analyzing companies, managing skills, and providing career insights.
+Job Search Intelligence is an AI-powered career platform that helps anyone find and apply for jobs, especially visa-sponsored roles. It automates the job search workflow: discovering jobs, analyzing companies, managing skills, and providing career insights.
+
+The platform is **profession-agnostic**: it makes no assumption about the user's job title, industry or seniority level. Job analysis, company intelligence, skill gap analysis and generated documents work the same way for any profession.
 
 ## Target Users
 
-- Software engineers seeking visa-sponsored positions
+- Job seekers in any profession or seniority level, not limited to software engineering
 - Career changers who need data-driven skill gap analysis
-- Job seekers who want data-driven application insights
+- Candidates seeking visa-sponsored positions
+- Anyone who wants data-driven application insights
 
 ## Core Concepts
 

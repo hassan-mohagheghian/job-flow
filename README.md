@@ -1,6 +1,6 @@
 # Job Search Intelligence
 
-AI-powered career platform for software engineers — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles.
+AI-powered career platform for any profession — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles.
 
 ## Introduction
 
@@ -24,13 +24,14 @@ repeatable pipeline:
 6. **Track** — applications, notes, follow-ups and status history stay attached
    to the job they belong to.
 
-The model is deliberately **location-agnostic**: it reasons about roles,
-companies, skills and fit — not about a particular city, country or job market —
-so the same workflow applies wherever you are searching.
+The model is deliberately **location- and profession-agnostic**: it reasons
+about roles, companies, skills and fit — not about a particular city, country,
+job market or job title — so the same workflow applies to any profession and
+wherever you are searching.
 
 | | |
 |---|---|
-| **For** | Software engineers and career changers running a focused, data-driven search |
+| **For** | Job seekers in any profession or seniority level running a focused, data-driven search |
 | **Solves** | Scattered job data, guesswork about fit, slow company research, untracked applications |
 | **Delivers** | One pipeline from raw job posting to scored, researched, tracked opportunity |
 

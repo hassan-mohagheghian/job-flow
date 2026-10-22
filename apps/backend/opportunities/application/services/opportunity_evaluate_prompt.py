@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-OPPORTUNITY_EVALUATE_PROMPT_VERSION = "1.0.0"
+OPPORTUNITY_EVALUATE_PROMPT_VERSION = "1.0.1"
 OPPORTUNITY_EVALUATE_SCHEMA_VERSION = "1.0.0"
 
 
@@ -57,7 +57,7 @@ def build_opportunity_evaluate_prompt(
         linked += f"\nLINKED JOB (existing record):\n{linked_job_summary}\n"
     if linked_company_summary:
         linked += f"\nLINKED COMPANY (existing record):\n{linked_company_summary}\n"
-    return f"""You are a senior career advisor for a software engineer seeking a visa-sponsored role in Germany or the Netherlands.
+    return f"""You are a senior career advisor for a professional seeking a visa-sponsored role.
 
 Evaluate the inbound opportunity below against the candidate profile and the scoring rules.
 

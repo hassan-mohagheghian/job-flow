@@ -14,7 +14,7 @@ from typing import Any
 
 from shared.infrastructure.prompts.loader import load_prompt
 
-COMPANY_ANALYSIS_PROMPT_VERSION = "1.2.0"
+COMPANY_ANALYSIS_PROMPT_VERSION = "1.2.1"
 COMPANY_ANALYSIS_SCHEMA_VERSION = "1.2.0"
 
 _COMBINED_PROMPT_NAME = "company/company_combined_analyze"

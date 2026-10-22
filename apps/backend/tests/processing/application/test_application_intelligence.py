@@ -338,7 +338,7 @@ class TestPrompts:
         assert "{{linkedin}}" in prompt
 
     def test_prompt_version_constant(self):
-        assert APPLICATION_INTELLIGENCE_PROMPT_VERSION == "1.0.0"
+        assert APPLICATION_INTELLIGENCE_PROMPT_VERSION == "1.0.1"
 
 
 # --------------------------------------------------------------------------- #

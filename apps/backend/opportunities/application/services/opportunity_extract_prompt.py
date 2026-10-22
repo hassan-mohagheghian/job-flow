@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-OPPORTUNITY_EXTRACT_PROMPT_VERSION = "1.0.0"
+OPPORTUNITY_EXTRACT_PROMPT_VERSION = "1.0.1"
 OPPORTUNITY_EXTRACT_SCHEMA_VERSION = "1.0.0"
 
 
@@ -97,7 +97,7 @@ def build_opportunity_extract_prompt(
         header.append(f"SUBJECT: {subject}")
     meta = "\n".join(header)
 
-    return f"""You are parsing an inbound recruiting message for a software engineer seeking a visa-sponsored role in Germany or the Netherlands.
+    return f"""You are parsing an inbound recruiting message for a professional seeking a visa-sponsored role.
 
 {meta}
 
@@ -108,7 +108,7 @@ Extract whatever information is actually present in the message. Rules:
 1. NEVER fabricate missing information. When a field is absent, set its value to null and its state to "unknown".
 2. "known": stated explicitly in the message. "inferred": reasonably derived (e.g. a company careers URL implies the company). "needs_verification": plausible but uncertain (e.g. a bare company name with no other evidence). "unknown": absent.
 3. job_urls: every URL in the message that looks like a job posting or application link, verbatim. Other URLs (company homepages, LinkedIn profiles) go in contacts, not job_urls.
-4. skills: atomic technology names only, lowercase (e.g. "python", not "Python 3.12"). Omit seniority words and non-skills.
+4. skills: atomic skill or tool names only, lowercase (e.g. "python", not "Python 3.12"). Omit seniority words and non-skills.
 5. sponsorship: quote any visa/sponsorship/work-authorization mentions verbatim in mentions; requires_sponsorship is true/false only when the message says so, else null.
 6. work_modes: subset of On-site / Remote / Hybrid actually stated. employment_types: subset of Full-time / Part-time / Contract / Internship / Temporary actually stated.
 7. uncertainties: short labels for everything important that is still unknown (e.g. "location", "visa sponsorship", "job description").

@@ -2,7 +2,9 @@
 
 ## Design Language
 
-Job Search Intelligence is a **dense, data-focused dashboard** built for software engineers comparing many job opportunities at once.
+Job Search Intelligence is a **dense, data-focused dashboard** for job seekers comparing many job opportunities at once, whatever their profession.
+
+- **Profession-agnostic copy**: UI strings, labels and placeholders never assume a job title, industry or seniority level. Example titles in the wireframes are illustrative only.
 
 - **UI library**: shadcn/ui primitives (Radix UI + Tailwind CSS)
 - **Icons**: Lucide

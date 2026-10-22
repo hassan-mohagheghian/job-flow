@@ -12,7 +12,7 @@ const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'})
 
 export const metadata: Metadata = {
   title: 'Job Search Intelligence',
-  description: 'AI-powered career platform for software engineers',
+  description: 'AI-powered career platform for any profession',
 }
 
 export default function RootLayout({

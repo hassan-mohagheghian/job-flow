@@ -376,7 +376,7 @@ class TestPrompts:
         assert "no data available" in prompt
 
     def test_prompt_and_schema_versions(self):
-        assert ROADMAP_GENERATION_PROMPT_VERSION == "1.0.0"
+        assert ROADMAP_GENERATION_PROMPT_VERSION == "1.0.1"
         assert ROADMAP_GENERATION_SCHEMA_VERSION == "1.0.0"
 
 
@@ -497,7 +497,7 @@ class TestGenerateNode:
         assert state.status != ExecutionStatus.FAILED
         assert state.result["title"] == "Kafka Readiness"
         assert state.result["milestones"][0]["priority"] == "critical"
-        assert state.result.get("prompt_version") == "1.0.0"
+        assert state.result.get("prompt_version") == "1.0.1"
 
     def test_llm_error_fails_clean(self):
         state = GenerateNode(FakeLLM(error=RuntimeError("provider down")))(self._ready_state())

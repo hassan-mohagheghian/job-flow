@@ -677,7 +677,7 @@ analysis phase has a durable LLM input.
   analysis_ready | execution_failed`.
 - Exactly ONE LLM call: `analyze` runs the versioned `job.analyze` prompt
   (`processing/application/services/job_analysis_prompt.py`,
-  `JOB_ANALYSIS_PROMPT_VERSION` = "1.6.0", `JOB_ANALYSIS_SCHEMA_VERSION` = "1.1.0")
+  `JOB_ANALYSIS_PROMPT_VERSION` = "1.6.1", `JOB_ANALYSIS_SCHEMA_VERSION` = "1.1.0")
   via `LLMService.generate_structured(prompt, schema=…, timeout=240)`.
 - Deterministic scoring (`processing/application/services/job_analysis_scoring.py`):
   scores clamped 0-100, `overall = round(fit*0.6 + success*0.4)`,

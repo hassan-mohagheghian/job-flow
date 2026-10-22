@@ -66,7 +66,7 @@ export function RoadmapCreateDialog({
               id="rc-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Advance to staff engineer"
+              placeholder="e.g. Advance to senior manager"
             />
           </div>
           <div className="space-y-1">
@@ -85,7 +85,7 @@ export function RoadmapCreateDialog({
               id="rc-goal"
               value={goalTitle}
               onChange={(e) => setGoalTitle(e.target.value)}
-              placeholder="e.g. Land a staff-level role in 12 months"
+              placeholder="e.g. Land a senior role in 12 months"
             />
           </div>
         </div>

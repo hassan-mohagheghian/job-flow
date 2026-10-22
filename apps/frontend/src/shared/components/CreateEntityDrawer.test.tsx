@@ -48,7 +48,7 @@ describe('CreateEntityDrawer — job mode', () => {
     renderDrawer('job')
     expect(screen.getByText('Import Job')).toBeInTheDocument()
     expect(screen.getByText('Job Post URL')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Senior Backend Engineer')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('e.g. Marketing Manager')).toBeInTheDocument()
     expect(screen.getByText('Additional Links')).toBeInTheDocument()
     expect(screen.getByText('Notes')).toBeInTheDocument()
   })
@@ -109,7 +109,7 @@ describe('CreateEntityDrawer — job mode', () => {
     fireEvent.change(screen.getByPlaceholderText('https://linkedin.com/jobs/view/...'), {
       target: { value: 'https://example.com/job' },
     })
-    fireEvent.keyDown(screen.getByPlaceholderText('Senior Backend Engineer'), {
+    fireEvent.keyDown(screen.getByPlaceholderText('e.g. Marketing Manager'), {
       key: 'Enter',
     })
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ queue: true, job_post_url: 'https://example.com/job' }))

@@ -199,7 +199,7 @@ export function JobEditDrawer({ jobId, onOpenChange }: JobEditDrawerProps) {
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Staff Software Engineer"
+                placeholder="e.g. Marketing Manager"
               />
             </Field>
             <Field label="Tracking">
@@ -211,7 +211,7 @@ export function JobEditDrawer({ jobId, onOpenChange }: JobEditDrawerProps) {
               <Input
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                placeholder="Backend Engineer"
+                placeholder="e.g. Marketing"
               />
             </Field>
             <Field label="Company">

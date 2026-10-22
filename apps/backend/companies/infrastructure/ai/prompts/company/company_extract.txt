@@ -54,7 +54,7 @@ Output the result as JSON (no other text) with this structure:
     "testing": "Testing practices (TDD, CI/CD, etc.)",
     "open_source": "Open source activity or contributions",
     "tech_blog": "Tech blog URL if available",
-    "engineering_values": ["Any stated engineering values or principles"]
+    "engineering_values": ["Any stated values or principles"]
   }},
 
   "work_environment": {{
@@ -89,7 +89,7 @@ Output the result as JSON (no other text) with this structure:
     "glassdoor_rating": "Glassdoor rating if found",
     "culture_description": "Description of company culture",
     "team_structure": "How teams are organized",
-    "decision_making": "How technical decisions are made",
+    "decision_making": "How key decisions are made",
     "innovation": "Innovation culture indicators",
     "diversity": "Diversity and inclusion indicators"
   }},
@@ -111,7 +111,7 @@ COMPANY TYPE CLASSIFICATION:
 Classify the company into one of these types based on the evidence:
 
 - PRODUCT_COMPANY: Builds and sells software products, SaaS platforms, developer tools, AI products, APIs, or digital services. Core revenue comes from their own product.
-- RECRUITING_AGENCY: Primary business is connecting candidates with employers. Earns fees from employers for filling positions. Signals: "recruitment", "talent acquisition", "hiring", "executive search", "tech recruiter", "connecting engineers with companies".
+- RECRUITING_AGENCY: Primary business is connecting candidates with employers. Earns fees from employers for filling positions. Signals: "recruitment", "talent acquisition", "hiring", "executive search", "specialist recruiter", "connecting candidates with companies".
 - STAFFING_COMPANY: Provides temporary or contract workers to client companies. Earns from staffing fees. Signals: "staffing", "contract staffing", "temporary workers", "staff augmentation".
 - CONSULTING_COMPANY: Provides expert advice or implementation services. May have products but primary revenue is from consulting. Signals: "consulting", "advisory", "professional services", "implementation".
 - UNKNOWN: Cannot determine the company type from available evidence.

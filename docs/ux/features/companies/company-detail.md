@@ -7,7 +7,7 @@ linked jobs in a single scrollable page — the same pattern as the Job Detail
 drawer. It is the successor to the legacy `CompanyDrawer`, migrated from the
 legacy `AppDrawer` to the shared vaul `Drawer` and driven by react-query. There are
 no tabs; company-exclusive sections are ordered by importance for a
-visa-seeking software engineer.
+visa-seeking job seeker.
 
 ---
 

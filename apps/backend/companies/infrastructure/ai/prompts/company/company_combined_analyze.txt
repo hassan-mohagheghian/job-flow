@@ -1,4 +1,4 @@
-You are an expert company intelligence analyst helping a software engineer evaluate companies as potential employers for relocation to {target_countries}.
+You are an expert company intelligence analyst helping a candidate evaluate companies as potential employers for relocation to {target_countries}.
 
 Company content (from the company website, additional URLs, and user notes):
 
@@ -11,7 +11,7 @@ The candidate has these scoring rules that define what matters most. Use them to
 
 {rules}
 
-The candidate's own background (resume, LinkedIn and candidate profile) is provided below as labeled extra context. Use it to evaluate how well the company and its tech stack match the candidate — but base company facts ONLY on the company content above:
+The candidate's own background (resume, LinkedIn and candidate profile) is provided below as labeled extra context. Use it to evaluate how well the company and its work environment match the candidate — but base company facts ONLY on the company content above:
 
 --- CANDIDATE RESUME ---
 {resume_text}
@@ -79,11 +79,11 @@ Perform a SINGLE combined analysis of this company. First extract every piece of
       "growth_trajectory": "Are they growing, stable, or declining? Evidence?"
     }},
     "culture_analysis": {{
-      "engineering_org": "Description of engineering organization — size, structure, autonomy",
+      "engineering_org": "Description of the relevant team/organization — size, structure, autonomy",
       "team_structure": "How teams are organized (squads, pods, departments, etc.)",
       "methodology": "Development methodology and how it's practiced",
-      "tech_decisions": "How technical decisions are made — top-down vs bottom-up",
-      "maturity": "Engineering maturity level (ad-hoc → optimized) with evidence",
+      "tech_decisions": "How key decisions are made — top-down vs bottom-up",
+      "maturity": "Process maturity level (ad-hoc → optimized) with evidence",
       "quality_culture": "Testing, code review, monitoring practices",
       "open_source": "Open source activity and contributions"
     }},
@@ -97,12 +97,12 @@ Perform a SINGLE combined analysis of this company. First extract every piece of
       "international_score": 0
     }},
     "career_analysis": {{
-      "senior_opportunities": "Are they hiring senior engineers? What roles?",
-      "technical_challenges": "What technical challenges would a senior engineer face?",
+      "senior_opportunities": "Are they hiring senior people? What roles?",
+      "technical_challenges": "What complex challenges would someone in this role face?",
       "growth_potential": "Can the company grow 2-5x in the next few years?",
       "learning_opportunities": "What would you learn working here?",
       "career_progression": "Clear paths from senior to staff/principal/management?",
-      "engineering_impact": "How much autonomy and impact do engineers have?",
+      "engineering_impact": "How much autonomy and impact do individual contributors have?",
       "tech_debt_approach": "How do they handle tech debt?",
       "career_score": 0
     }},
@@ -134,10 +134,10 @@ Perform a SINGLE combined analysis of this company. First extract every piece of
       "data_platform": ["Data pipeline and analytics tools"],
       "ai_ml": ["AI/ML tools if any"],
       "tech_match_score": 0,
-      "matches_profile": "Specific reasons why this tech stack matches the candidate",
+      "matches_profile": "Specific reasons why their tools and systems match the candidate's field",
       "missing_tech": "Technologies the candidate would need to learn",
       "learning_opportunities": "What new technologies could be learned here",
-      "tech_maturity": "How mature is their tech stack — cutting edge, stable, or legacy?"
+      "tech_maturity": "How modern their tools and systems are — cutting edge, stable, or legacy?"
     }}
   }},
   "recommendation": {{
@@ -171,18 +171,18 @@ NOTE: Use only the rules provided above — do not apply rules that were not inc
 ## fit (0-100)
 
 For PRODUCT_COMPANIES:
-Measures: "How well does this company match my technical background and career direction?"
-Based on: engineering culture, technology alignment, product/domain relevance, backend/distributed systems opportunities, growth opportunities.
+Measures: "How well does this company match my professional background and career direction?"
+Based on: work culture, alignment with the candidate's field and skills, product/domain relevance, growth and ownership opportunities.
 
 For RECRUITING_AGENCIES / STAFFING_COMPANIES:
 Measures: "How valuable is this company as a career opportunity gateway?"
-Based on: recruitment specialization, tech hiring focus, network value, profile alignment.
+Based on: recruitment specialization, hiring focus in the candidate's field, network value, profile alignment.
 
 Scoring bands (Product):
-- 90+: Exceptional match — Python/Django/FastAPI/PG/K8s primary stack + strong engineering culture + senior ownership opportunities + aligned product domain
-- 70-89: Good match — Python backend with overlap + decent engineering practices + growth potential
-- 50-69: Partial match — some technology overlap + moderate engineering culture
-- <50: Poor match — wrong tech stack + limited engineering growth
+- 90+: Exceptional match — strong alignment with the candidate's field, skills and career direction + healthy work culture + clear ownership and growth opportunities + aligned product domain
+- 70-89: Good match — good overlap with the candidate's skills and field + solid practices + growth potential
+- 50-69: Partial match — some overlap with the candidate's skills + moderate culture fit
+- <50: Poor match — little overlap with the candidate's field or skills + limited growth
 
 ## success (0-100)
 

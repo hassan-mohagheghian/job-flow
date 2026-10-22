@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-CANDIDATE_EXTRACT_PROMPT_VERSION = "1.0.0"
+CANDIDATE_EXTRACT_PROMPT_VERSION = "1.0.1"
 CANDIDATE_EXTRACT_SCHEMA_VERSION = "1.0.0"
 
 PROFICIENCY_VALUES = ("basic", "conversational", "professional", "fluent", "native")
@@ -153,7 +153,7 @@ def build_candidate_extract_output_schema() -> dict[str, Any]:
 def build_candidate_extract_prompt(source_type: str, raw_text: str) -> str:
     """Build the structured extraction prompt for a single source document."""
     schema = json.dumps(build_candidate_extract_output_schema(), indent=2)
-    return f"""You are a career intelligence engine. Extract the COMPLETE factual profile of a software engineer from the raw {source_type.upper()} document below.
+    return f"""You are a career intelligence engine. Extract the COMPLETE factual profile of a professional from the raw {source_type.upper()} document below.
 
 Extract ONLY facts that are actually present in the document. Do not invent, guess, or fill gaps from general knowledge. When a fact is absent, omit it (null / empty string / empty array as appropriate).
 
@@ -165,9 +165,9 @@ PROFILE:
   location: their location / city, if present.
 
 SKILLS:
-  List every skill mentioned (languages, frameworks, tools, domains, certifications). One entry per skill name.
+  List every skill mentioned (skills, tools, domains, certifications, methods). One entry per skill name.
   level: an estimate of proficiency 1-5 based on the document (5 = expert, daily use for years).
-  category: a coarse category (e.g. language, framework, infrastructure, cloud, devops, data, ai, testing, domain, tool). Empty when unclear.
+  category: a coarse category that fits the person's profession (e.g. skill, tool, domain, certification, language, method). Empty when unclear.
   years_of_experience: number of years evidenced in the document, or null.
   last_used: the last year/context the skill appears, or null.
   confidence: how certain you are this skill belongs to the person (0.0-1.0). Default 0.8 when stated, 0.5 when only implied.

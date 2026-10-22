@@ -57,7 +57,7 @@ See `docs/ai/application-intelligence.md` for the section table.
 
 `processing/application/services/roadmap_generation_prompts.py`:
 
-- `ROADMAP_GENERATION_PROMPT_VERSION = "1.0.0"`.
+- `ROADMAP_GENERATION_PROMPT_VERSION = "1.0.1"`.
 - `build_roadmap_prompt` — asks for a roadmap grounded in the persisted
   intelligence (never re-analysis), with **outcome-based milestones** (3–8),
   concrete tasks (1–8 per milestone), priorities, success criteria and skill links

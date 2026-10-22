@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-JOB_ANALYSIS_PROMPT_VERSION = "1.6.0"
+JOB_ANALYSIS_PROMPT_VERSION = "1.6.1"
 JOB_ANALYSIS_SCHEMA_VERSION = "1.1.0"
 
 COMPANY_TYPE_VALUES = [
@@ -148,7 +148,7 @@ def build_job_analysis_prompt(
                 + "\n"
             )
 
-    return f"""You are a senior career advisor for a software engineer seeking a visa-sponsored role in {target_countries}.
+    return f"""You are a senior career advisor for a professional seeking a visa-sponsored role in {target_countries}.
 
 Analyze the job posting below and the user's profile, then produce a complete structured analysis.
 
@@ -165,7 +165,7 @@ SCORING RULES TO APPLY:
 {scoring_rules}
 
 Your analysis must:
-1. Extract the job fields (title, company, company_url, role, location, salary, stack, visa, work_types, employment_types, industry, domain, description). Use null when a field is absent. company_url is the hiring company's website (root domain) when it can be identified from the posting; otherwise null. work_types is an array of On-site / Remote / Hybrid; employment_types is an array of Full-time / Part-time / Contract / Internship / Temporary. Usually each array has exactly one value.
+1. Extract the job fields (title, company, company_url, role, location, salary, stack, visa, work_types, employment_types, industry, domain, description). Use null when a field is absent. stack lists the key tools, technologies or systems the role works with. company_url is the hiring company's website (root domain) when it can be identified from the posting; otherwise null. work_types is an array of On-site / Remote / Hybrid; employment_types is an array of Full-time / Part-time / Contract / Internship / Temporary. Usually each array has exactly one value.
 1b. Identify EVERY company mentioned in the posting inside the companies block. A job may reference multiple companies (e.g. published by a recruiter while another company is hiring). Classify their relationship to the job:
    - hiring_company: the company actually hiring. Only set it with reasonable evidence ("Join Google", "Google is hiring", "At Google...", internal benefits/culture, official company domain, company career page). Do NOT assume the publishing company is the hiring company. Weak evidence (recruiter website, recruiter contact info, recruiter logo) must not promote a recruiter to hiring company. When the hiring company cannot be determined confidently, return hiring_company: null — never guess.
    - related_companies: zero or more recruiting / staffing / agency / consulting companies that published or represent the job.
@@ -178,9 +178,9 @@ Your analysis must:
 7. List the skills the job requires and tag each as "matched" (user already has it), "missing" (user lacks it), or "low" (user has it but below the required level). Include the user's level (1-5), the category, and brief evidence from the posting.
 
    SKILL EXTRACTION RULES:
-   - Emit each skill as a SINGLE ATOMIC technology. Split composite entries into separate skills: "NoSQL / SQL" must become two skills named "sql" and "nosql"; likewise split on ",", " and ", "&" and " or ".
+   - Emit each skill as a SINGLE ATOMIC skill, tool or competency. Split composite entries into separate skills: "NoSQL / SQL" must become two skills named "sql" and "nosql"; likewise split on ",", " and ", "&" and " or ".
    - Use lowercase names only, without versions or levels ("python 3.12" → "python", "reactjs" → "reactjs").
-   - Use consistent lowercase category names (e.g. "backend", "database", "devops").{""
+   - Use consistent lowercase category names that fit the candidate's profession and the posting (e.g. "tool", "domain", "method", "communication").{""
     f"{breakdown_section}"
    }8. Add 2-4 short insights (what to highlight in the application, salary/visa notes, etc.).
 

@@ -476,7 +476,7 @@ export default function CreateEntityDrawer({
                   type="text"
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
-                  placeholder="Senior Backend Engineer"
+                  placeholder="e.g. Marketing Manager"
                   onKeyDown={handleJobEnterKey}
                 />
               </div>

@@ -152,7 +152,7 @@ export default function AddSkillDrawer({
             <Input
               value={roles}
               onChange={(e) => setRoles(e.target.value)}
-              placeholder="backend engineer, data engineer"
+              placeholder="e.g. project manager, program manager"
             />
           </Field>
           <Field label="Path">
