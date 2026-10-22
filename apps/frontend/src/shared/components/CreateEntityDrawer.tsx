@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import {
   Drawer,
   DrawerHeader,
@@ -202,9 +202,42 @@ export default function CreateEntityDrawer({
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
 
+  const wasOpenRef = useRef(open);
+
+  const resetForm = useCallback(() => {
+    setUrlInput("");
+    setTitleInput("");
+    setCompanyName("");
+    setPrimaryUrl("");
+    setPrimaryTitle("");
+    setLinks([]);
+    setShowLinkInput(false);
+    setNewLinkTitle("");
+    setNewLinkUrl("");
+    setNotes([]);
+    setShowNoteInput(false);
+    setNewNoteTitle("");
+    setNewNoteContent("");
+  }, []);
+
   useEffect(() => {
-    if (!open) return;
-    // Clear the link field first so every open starts fresh, then prefill from
+    const wasOpen = wasOpenRef.current;
+    wasOpenRef.current = open;
+
+    if (!open) {
+      // A successful Add closes the drawer programmatically from the parent,
+      // bypassing `handleOpenChange`, so reset here as well. The next open must
+      // never inherit values (title, links, notes, drafts) from the previous
+      // job/company.
+      if (wasOpen) resetForm();
+      return;
+    }
+
+    // Opening starts from a completely empty form; re-opening the same drawer
+    // while it is already open keeps the user's in-progress input.
+    if (!wasOpen) resetForm();
+
+    // Clear the URL field first so every open starts fresh, then prefill from
     // the gesture-captured clipboardUrl (or, as a fallback, read the clipboard).
     // Replacing (not `prev || url`) also overwrites any stale value left behind
     // by a programmatic close that skipped the reset.
@@ -237,7 +270,7 @@ export default function CreateEntityDrawer({
     return () => {
       cancelled = true;
     };
-  }, [open, isCompany, clipboardUrl]);
+  }, [open, isCompany, clipboardUrl, resetForm]);
 
   const urlValid = urlInput.trim().startsWith("http");
 
@@ -313,21 +346,7 @@ export default function CreateEntityDrawer({
 
   const handleOpenChange = (next: boolean) => {
     onOpenChange(next);
-    if (!next) {
-      setUrlInput("");
-      setTitleInput("");
-      setCompanyName("");
-      setPrimaryUrl("");
-      setPrimaryTitle("");
-      setLinks([]);
-      setNotes([]);
-      setShowLinkInput(false);
-      setNewLinkUrl("");
-      setNewLinkTitle("");
-      setShowNoteInput(false);
-      setNewNoteContent("");
-      setNewNoteTitle("");
-    }
+    if (!next) resetForm();
   };
 
   const presetDisabledInLinks = (label: string) =>

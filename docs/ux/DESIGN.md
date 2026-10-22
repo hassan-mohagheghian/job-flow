@@ -160,6 +160,11 @@ On duplicate URL (409) the error box adds an **Open existing job** link that
 navigates to `/jobs?job=<id>` (id from `error.details.job_id`) and opens the
 existing job's detail drawer.
 
+Every open of the drawer starts from an empty form: title, additional links,
+notes and link/note drafts are cleared, including after the programmatic close
+that follows a successful Add. Only the Job Post URL may arrive pre-filled from
+the clipboard.
+
 ### Drag-and-Drop Job Import
 
 The Jobs page accepts a link dragged from another browser tab. Dropping it on

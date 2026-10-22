@@ -181,6 +181,18 @@ Because the clipboard is read fresh on **every** open, the prefill is **not**
 suppressed after an Add — if the user copies another job link and opens the
 drawer again, the new link fills immediately (no need to open twice).
 
+## Fresh form on every open
+
+Every open starts from a **completely empty form**. No value from a previous
+job creation is carried over: the Job Title, Additional Links, Notes and any
+half-typed Add Link / Add Note drafts are all cleared. This includes the
+programmatic close that follows a successful **Add** / **Add & Queue** (which
+never goes through the drawer's Cancel/X close path, so it has its own reset).
+
+The only pre-filled value is the clipboard URL described above — it comes from
+the clipboard at open time, never from the previously created job. When the
+clipboard holds no link, the Job Post URL also opens empty.
+
 ---
 
 # Job Title
@@ -365,7 +377,8 @@ Rules
 
 ## Default
 
-Empty form.
+Empty form — every open resets all fields, so nothing from a previous job
+creation (title, links, notes, drafts) is carried over.
 
 The Job Post URL field is pre-filled when the clipboard holds a URL.
 

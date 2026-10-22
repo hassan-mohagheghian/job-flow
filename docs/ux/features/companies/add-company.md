@@ -62,6 +62,11 @@ The prefill is **not** suppressed after an Add — the clipboard is read fresh o
 every open, so if the user copies another link and opens the drawer again, the
 new link fills immediately (no need to open twice).
 
+Every other field starts empty on **every** open: the Company Name, selected
+primary title, Additional Links, Notes and any half-typed link/note drafts are
+cleared, including after the programmatic close that follows a successful Add.
+Only the clipboard URL can arrive pre-filled.
+
 The **Primary Link** input is **auto-focused** when the drawer opens.
 
 A title can be selected from the preset chips **Website** and **LinkedIn**.

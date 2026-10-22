@@ -214,6 +214,173 @@ describe('CreateEntityDrawer — company mode', () => {
   })
 })
 
+describe('CreateEntityDrawer — fresh form on every open', () => {
+  it('clears every job field after a successful Add closes the drawer programmatically', () => {
+    const onOpenChange = vi.fn()
+    const onSubmit = vi.fn()
+    const { rerender } = render(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="job"
+        onSubmit={onSubmit}
+        clipboardUrl="https://example.com/job-a"
+      />
+    )
+
+    const urlInput = screen.getByPlaceholderText('https://linkedin.com/jobs/view/...') as HTMLInputElement
+    const titleInput = screen.getByPlaceholderText('e.g. Marketing Manager') as HTMLInputElement
+    expect(urlInput.value).toBe('https://example.com/job-a')
+
+    fireEvent.change(titleInput, { target: { value: 'Engineer A' } })
+    fireEvent.click(screen.getByText('Add Link'))
+    fireEvent.change(screen.getByPlaceholderText('https://...'), {
+      target: { value: 'https://ref.example/a' },
+    })
+    fireEvent.click(screen.getAllByText('Add')[0])
+    fireEvent.click(screen.getByText('Add Note'))
+    fireEvent.change(screen.getByPlaceholderText('Raw copied text...'), {
+      target: { value: 'Note A' },
+    })
+    fireEvent.click(screen.getAllByText('Add')[0])
+    expect(screen.getByText('https://ref.example/a')).toBeInTheDocument()
+    expect(screen.getByText('Note A')).toBeInTheDocument()
+
+    // The parent closes the drawer after a successful create without routing
+    // through onOpenChange — the stale state used to survive this close.
+    rerender(
+      <CreateEntityDrawer
+        open={false}
+        onOpenChange={onOpenChange}
+        mode="job"
+        onSubmit={onSubmit}
+        clipboardUrl="https://example.com/job-a"
+      />
+    )
+    rerender(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="job"
+        onSubmit={onSubmit}
+        clipboardUrl={null}
+      />
+    )
+
+    expect(
+      (screen.getByPlaceholderText('https://linkedin.com/jobs/view/...') as HTMLInputElement).value
+    ).toBe('')
+    expect(
+      (screen.getByPlaceholderText('e.g. Marketing Manager') as HTMLInputElement).value
+    ).toBe('')
+    expect(screen.getByText('No additional links')).toBeInTheDocument()
+    expect(screen.getByText('No notes')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('https://...')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Raw copied text...')).not.toBeInTheDocument()
+  })
+
+  it('clears every company field after a successful Add closes the drawer programmatically', () => {
+    const onOpenChange = vi.fn()
+    const onSubmit = vi.fn()
+    const { rerender } = render(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="company"
+        onSubmit={onSubmit}
+        clipboardUrl="https://acme.example"
+      />
+    )
+
+    fireEvent.change(screen.getByPlaceholderText('Acme GmbH'), {
+      target: { value: 'Acme GmbH' },
+    })
+    fireEvent.click(screen.getByText('Website'))
+    fireEvent.click(screen.getByText('Add Link'))
+    fireEvent.change(screen.getByPlaceholderText('https://...'), {
+      target: { value: 'https://careers.acme.example' },
+    })
+    fireEvent.click(screen.getAllByText('Add')[0])
+    fireEvent.click(screen.getByText('Add Note'))
+    fireEvent.change(screen.getByPlaceholderText('Raw copied text...'), {
+      target: { value: 'Company note' },
+    })
+    fireEvent.click(screen.getAllByText('Add')[0])
+
+    rerender(
+      <CreateEntityDrawer
+        open={false}
+        onOpenChange={onOpenChange}
+        mode="company"
+        onSubmit={onSubmit}
+        clipboardUrl="https://acme.example"
+      />
+    )
+    rerender(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="company"
+        onSubmit={onSubmit}
+        clipboardUrl={null}
+      />
+    )
+
+    const primaryInput = screen.getByPlaceholderText('https://acme.example') as HTMLInputElement
+    const nameInput = screen.getByPlaceholderText('Acme GmbH') as HTMLInputElement
+    expect(primaryInput.value).toBe('')
+    expect(nameInput.value).toBe('')
+    expect(screen.getByText('No additional links')).toBeInTheDocument()
+    expect(screen.getByText('No notes')).toBeInTheDocument()
+
+    // The primary title preset must be cleared too: a fresh submit carries no
+    // title from the previous company.
+    fireEvent.change(primaryInput, { target: { value: 'https://new.example' } })
+    fireEvent.click(screen.getByText('Add'))
+    expect(onSubmit).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        primaryLink: { url: 'https://new.example', title: '' },
+        links: [],
+        notes: [],
+      })
+    )
+  })
+
+  it('replaces only the URL when the clipboard URL changes while the drawer is open', async () => {
+    const onOpenChange = vi.fn()
+    const onSubmit = vi.fn()
+    const { rerender } = render(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="job"
+        onSubmit={onSubmit}
+        clipboardUrl="https://example.com/job-a"
+      />
+    )
+
+    const titleInput = screen.getByPlaceholderText('e.g. Marketing Manager') as HTMLInputElement
+    fireEvent.change(titleInput, { target: { value: 'Engineer A' } })
+
+    rerender(
+      <CreateEntityDrawer
+        open
+        onOpenChange={onOpenChange}
+        mode="job"
+        onSubmit={onSubmit}
+        clipboardUrl="https://example.com/job-b"
+      />
+    )
+
+    await waitFor(() =>
+      expect(
+        (screen.getByPlaceholderText('https://linkedin.com/jobs/view/...') as HTMLInputElement).value
+      ).toBe('https://example.com/job-b')
+    )
+    expect(titleInput.value).toBe('Engineer A')
+  })
+})
+
 describe('CreateEntityDrawer — error state', () => {
   it('renders the error message', () => {
     render(
