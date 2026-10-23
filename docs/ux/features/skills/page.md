@@ -65,6 +65,10 @@ Skills Page
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
+The page fills the shared app-shell content area edge-to-edge with only a small
+horizontal gutter (`px-2`, `lg:px-3`); there is no fixed max-width cap
+(`docs/ux/app-shell.md`).
+
 There is no fixed Actions column: row actions are revealed on hover (see
 `features/skills/skill-row.md#actions`).
 

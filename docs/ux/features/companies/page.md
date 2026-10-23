@@ -77,6 +77,10 @@ Companies Page
 └───────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+The page fills the shared app-shell content area edge-to-edge with only a small
+horizontal gutter (`px-2`, `lg:px-3`); there is no fixed max-width cap
+(`docs/ux/app-shell.md`), so the table uses the full width on wide monitors.
+
 ---
 
 # Primary Sections

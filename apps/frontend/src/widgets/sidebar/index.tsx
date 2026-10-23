@@ -306,8 +306,8 @@ export default function Sidebar({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-[1400px] mx-auto h-full">
+        <main className="flex-1 overflow-y-auto px-2 py-3 lg:px-3">
+          <div className="h-full w-full" data-testid="page-content">
             {children}
           </div>
         </main>

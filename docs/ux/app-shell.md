@@ -170,6 +170,11 @@ item navigates and closes the Drawer.
 - The rail and Drawer share the same `NAV_ITEMS` data and `NavRow` rendering.
 - Page content sits in a `flex` column beside the rail; there is **no** fixed
   header offset (`pt-16` is gone). Page widgets fill `h-full`.
+- Page content spans the **full available width** with only a small horizontal
+  gutter (`px-2`, `lg:px-3` — 8px mobile / 12px desktop). There is no fixed
+  max-width cap (the former `max-w-[1400px]` wrapper was removed), so the
+  data-heavy pages (Dashboard, Jobs, Opportunities, Companies, Cities, Skills)
+  use the extra room on wide monitors.
 - `GenerationHistoryDrawer` is dynamically imported (`ssr: false`).
 
 ---

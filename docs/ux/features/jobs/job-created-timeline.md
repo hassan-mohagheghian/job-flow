@@ -31,9 +31,10 @@ JOBS PAGE
 └─────────────────────────────────────────────────────────────────┴──┴─────────────┴┘
 ```
 
-The timeline is a narrow ~96px (`w-24`) column on the **right** edge of the card,
-separated by a vertical border. It has its own vertical scrollbar
-(`overflow-y-auto`) that is independent of the list's scroll.
+The timeline is a responsive `w-40` (~160px) column on the **right** edge of
+the card, widening to `w-48` (~192px) at `xl` so month dividers and day/apply
+counts have breathing room. It is separated by a vertical border and has its own
+vertical scrollbar (`overflow-y-auto`) that is independent of the list's scroll.
 
 ## Anatomy
 

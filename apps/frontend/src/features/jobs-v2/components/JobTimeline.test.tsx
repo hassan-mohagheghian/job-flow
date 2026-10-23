@@ -26,6 +26,13 @@ describe('JobTimeline', () => {
     expect(screen.getByText('Jobs added')).toBeInTheDocument()
   })
 
+  it('uses a wide, responsive timeline column', () => {
+    renderTimeline(days)
+    const panel = screen.getByRole('complementary')
+    expect(panel).toHaveClass('w-40', 'xl:w-48')
+    expect(panel).not.toHaveClass('w-24')
+  })
+
   it('renders a row per day with the count', () => {
     renderTimeline(days)
     expect(screen.getByText('Aug 19')).toBeInTheDocument()

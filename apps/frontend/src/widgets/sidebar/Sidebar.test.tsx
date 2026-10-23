@@ -84,4 +84,15 @@ describe('Sidebar', () => {
     renderSidebar()
     expect(screen.getAllByTitle('Generation History').length).toBeGreaterThan(0)
   })
+
+  it('gives page content near full width with small horizontal gutters', () => {
+    renderSidebar()
+    const main = screen.getByRole('main')
+    expect(main).toHaveClass('px-2', 'lg:px-3')
+    expect(main).not.toHaveClass('p-4')
+
+    const content = screen.getByTestId('page-content')
+    expect(content).toHaveClass('w-full')
+    expect(content).not.toHaveClass('max-w-[1400px]')
+  })
 })

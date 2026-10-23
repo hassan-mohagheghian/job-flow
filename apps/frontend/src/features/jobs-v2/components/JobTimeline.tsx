@@ -42,21 +42,21 @@ export function JobTimeline({ days, isLoading = false }: JobTimelineProps) {
   }, [days])
 
   return (
-    <aside className="w-24 shrink-0 border-l border-border/40 bg-card/40 flex flex-col">
-      <header className="px-2 py-2 border-b border-border/40">
+    <aside className="w-40 xl:w-48 shrink-0 border-l border-border/40 bg-card/40 flex flex-col">
+      <header className="px-3 py-2 border-b border-border/40">
         <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
           Jobs added
         </p>
       </header>
       <div className="flex-1 overflow-y-auto py-1">
         {isLoading ? (
-          <p className="text-2xs text-muted-foreground px-2 py-2">Loading…</p>
+          <p className="text-2xs text-muted-foreground px-3 py-2">Loading…</p>
         ) : groups.length === 0 ? (
-          <p className="text-2xs text-muted-foreground px-2 py-2">No jobs yet</p>
+          <p className="text-2xs text-muted-foreground px-3 py-2">No jobs yet</p>
         ) : (
           groups.map((group) => (
             <div key={group.month}>
-              <div className="flex items-center gap-1 px-1 mt-2 mb-0.5">
+              <div className="flex items-center gap-1 px-2 mt-2 mb-0.5">
                 <span className="h-px flex-1 bg-border/60" />
                 <span className="text-2xs font-medium text-foreground/70 whitespace-nowrap">
                   {formatMonth(group.items[0].date)}
@@ -68,7 +68,7 @@ export function JobTimeline({ days, isLoading = false }: JobTimelineProps) {
                 return (
                   <Tooltip key={day.date}>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center justify-between gap-1 px-2 py-1 cursor-default">
+                      <div className="flex items-center justify-between gap-2 px-3 py-1 cursor-default">
                         <span className="text-xs text-foreground">{formatDay(day.date)}</span>
                         <span className="flex flex-col items-end leading-tight">
                           <span className="text-xs font-semibold tabular-nums text-primary">

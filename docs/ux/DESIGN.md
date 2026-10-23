@@ -94,7 +94,12 @@ Placement is right by default; all variants become full-screen on mobile.
 A **Jobs Created Timeline** panel (`job-created-timeline.md`) sits on the right
 edge of the page, beside the list. It shows the number of jobs created per day
 (newest first) with month dividers ("Aug 2026"), has its own scroll, and is
-independent of the list's filters/pagination.
+independent of the list's filters/pagination. The panel is `w-40`, widening to
+`w-48` at `xl` so its rows are not cramped.
+
+All pages fill the app-shell content area edge-to-edge with only a small
+horizontal gutter (`px-2`, `lg:px-3`) — there is no fixed `max-w-[1400px]` cap,
+so tables take advantage of wide monitors (`docs/ux/app-shell.md`).
 
 There is **no dedicated Actions column**. Job row actions (Process / Reprocess /
 Retry / Cancel / Details / Application / Edit / Delete) are revealed as a
