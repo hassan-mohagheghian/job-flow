@@ -2,22 +2,21 @@
 
 ## What This Project Solves
 
-Job Search Intelligence is an AI-powered career platform that helps anyone find and apply for jobs, especially visa-sponsored roles. It automates the job search workflow: discovering jobs, analyzing companies, managing skills, and providing career insights.
+Job Search Intelligence is an AI-powered career platform that helps anyone find and apply for jobs. It automates the job search workflow: discovering jobs, analyzing companies, managing skills, and providing career insights.
 
-The platform is **profession-agnostic**: it makes no assumption about the user's job title, industry or seniority level. Job analysis, company intelligence, skill gap analysis and generated documents work the same way for any profession.
+The platform is **profession-, location- and work-arrangement-agnostic**: it makes no assumption about the user's job title, industry, seniority level, location or way of working. Job analysis, company intelligence, skill gap analysis and generated documents work the same way for any profession and any type of role.
 
 ## Target Users
 
 - Job seekers in any profession or seniority level, not limited to software engineering
 - Career changers who need data-driven skill gap analysis
-- Candidates seeking visa-sponsored positions
 - Anyone who wants data-driven application insights
 
 ## Core Concepts
 
 - **Job Processing Pipeline**: URL → fetch → extract → AI analysis → score → save. Runs as a single `ProcessingExecution` over **two LangGraph phases**: (1) an LLM-free context preparation phase (fetch, extract, build, validate, persist) and (2) a Job Analysis phase that performs **one combined LLM call** (`job.analyze`) extracting fields, scores, recommendation, summary, and tagged skills, then persists the result.
 - **Job Analysis**: Canonical output stored in the `job.job_analysis` table — full payload, fit/success/overall scores, apply/consider/skip recommendation, apply reason, summary, matched/missing/low skill tags, and insights. Exposed through the Job Details drawer (`GET /api/jobs/{id}` → `analysis` block).
-- **Company Intelligence**: Profile extraction, visa assessment, Fit/Success/Overall scoring
+- **Company Intelligence**: Profile extraction, company intelligence signals, Fit/Success/Overall scoring
 - **Skills Management**: 5-category taxonomy, aliases, AI-powered insights
 - **Career Insights**: Health score, market analysis, opportunity funnel
 - **Candidate Profile**: Upload a resume or LinkedIn profile as analysis input (masked PII); sources converge into a canonical candidate profile used as job-analysis context

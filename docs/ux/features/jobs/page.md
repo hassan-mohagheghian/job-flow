@@ -1033,7 +1033,7 @@ shows a single scrollable page:
 │                                                         │
 │ ┌─ Recommendation ─────────────────────────────┐        │
 │ │ [Apply]  analyzed 2h ago                     │        │
-│ │ Strong match for your visa profile...        │        │
+│ │ Strong match for your skills and experience... │        │
 │ └──────────────────────────────────────────────┘        │
 │                                                         │
 │ ┌─ Tagged Skills ──────────────────────────────┐        │

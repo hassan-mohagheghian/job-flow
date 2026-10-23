@@ -6,8 +6,8 @@ The Company Detail drawer shows a company's intelligence, scores, notes, and
 linked jobs in a single scrollable page — the same pattern as the Job Detail
 drawer. It is the successor to the legacy `CompanyDrawer`, migrated from the
 legacy `AppDrawer` to the shared vaul `Drawer` and driven by react-query. There are
-no tabs; company-exclusive sections are ordered by importance for a
-visa-seeking job seeker.
+no tabs; company-exclusive sections are ordered by importance for a job seeker
+evaluating the company.
 
 ---
 
@@ -136,7 +136,7 @@ growth trajectory).
 ## Intelligence
 
 Rendered from the detail payload (`company.intelligence`). The **product-company**
-variant orders sections by importance for the user's visa-sponsorship goal:
+variant orders sections by relevance to the role and company evaluation:
 
 1. Company Overview
 2. Visa & Relocation Signals

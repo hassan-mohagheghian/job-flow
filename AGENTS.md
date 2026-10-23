@@ -4,10 +4,10 @@ This file gives AI coding agents the context needed to work correctly in this re
 
 ## Project Overview
 
-**Job Search Intelligence** is an AI-powered career platform for job seekers in any profession, especially visa-sponsored roles. It automates the job search workflow:
+**Job Search Intelligence** is an AI-powered career platform for job seekers in any profession and any work arrangement. It automates the job search workflow:
 
 - Job discovery and processing (URL → fetch → extract → AI analysis → score → save)
-- Company intelligence (profile extraction, visa assessment, Fit/Success/Overall scoring)
+- Company intelligence (profile extraction, company signals, Fit/Success/Overall scoring)
 - Skills management (5-category taxonomy, aliases, AI insights)
 - Career insights (health score, market analysis, opportunity funnel)
 - Candidate profile (resume / LinkedIn upload as analysis input)

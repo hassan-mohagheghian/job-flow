@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-OPPORTUNITY_EVALUATE_PROMPT_VERSION = "1.0.1"
+OPPORTUNITY_EVALUATE_PROMPT_VERSION = "1.0.2"
 OPPORTUNITY_EVALUATE_SCHEMA_VERSION = "1.0.0"
 
 
@@ -57,7 +57,7 @@ def build_opportunity_evaluate_prompt(
         linked += f"\nLINKED JOB (existing record):\n{linked_job_summary}\n"
     if linked_company_summary:
         linked += f"\nLINKED COMPANY (existing record):\n{linked_company_summary}\n"
-    return f"""You are a senior career advisor for a professional seeking a visa-sponsored role.
+    return f"""You are a senior career advisor for a professional evaluating an inbound opportunity.
 
 Evaluate the inbound opportunity below against the candidate profile and the scoring rules.
 
@@ -72,7 +72,7 @@ SCORING RULES TO APPLY:
 
 Your evaluation must:
 1. Score fit (0-100): how well the opportunity matches the profile (skills, seniority, domain). Only use information actually present; uncertainty lowers confidence, never raises scores.
-2. Score success (0-100): the probability of an offer (seniority match, competition, authorization outlook).
+2. Score success (0-100): the probability of an offer (seniority match, competition, hiring-process fit).
 3. Explain with concrete factors; list concerns (gaps, mismatches, risks) — at most 3.
 4. List missing requirements and unknown information explicitly (at most 5 each). Do not invent values to fill them.
 5. Set enough_to_apply only when the candidate could act now (a reachable path plus sufficient facts).

@@ -59,7 +59,7 @@ rendered to the LLM.
 
 `processing/application/services/application_intelligence_prompts.py`:
 
-- `APPLICATION_INTELLIGENCE_PROMPT_VERSION = "1.0.1"`.
+- `APPLICATION_INTELLIGENCE_PROMPT_VERSION = "1.0.2"`.
 - `build_resume_prompt` / `build_cover_letter_prompt` — ask for a document with
   `build_document_output_schema` (a `{content}` envelope holding the markdown).
 

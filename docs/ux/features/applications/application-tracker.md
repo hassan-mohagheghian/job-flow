@@ -23,7 +23,7 @@ note, a done toggle). The timeline traces every status change with its time.
 │  ──────────────────────────────────────────────────────────── │
 │  FOLLOW-UPS                                                   │
 │  ☑ Follow up after interview · Sep 1, 2026              [🗑]   │
-│  ☐ Ask about visa timeline                           [🗑]   │
+│  ☐ Ask about interview timeline                        [🗑]   │
 │  ──────────────────────────────────────────────────────────── │
 │  [ Note (e.g. follow up after interview) ] [ 📅 ] [ Add ]     │
 └──────────────────────────────────────────────────────────────┘

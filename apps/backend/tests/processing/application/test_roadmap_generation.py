@@ -370,13 +370,14 @@ class TestPrompts:
         assert "Hassan" in prompt
         assert "milestones:" in prompt
         assert "priority" in prompt
+        assert "visa-sponsored" not in prompt
 
     def test_missing_context_falls_back_gracefully(self):
         prompt = build_roadmap_prompt({"job": "", "job_skills": None})
         assert "no data available" in prompt
 
     def test_prompt_and_schema_versions(self):
-        assert ROADMAP_GENERATION_PROMPT_VERSION == "1.0.1"
+        assert ROADMAP_GENERATION_PROMPT_VERSION == "1.0.2"
         assert ROADMAP_GENERATION_SCHEMA_VERSION == "1.0.0"
 
 
@@ -497,7 +498,7 @@ class TestGenerateNode:
         assert state.status != ExecutionStatus.FAILED
         assert state.result["title"] == "Kafka Readiness"
         assert state.result["milestones"][0]["priority"] == "critical"
-        assert state.result.get("prompt_version") == "1.0.1"
+        assert state.result.get("prompt_version") == "1.0.2"
 
     def test_llm_error_fails_clean(self):
         state = GenerateNode(FakeLLM(error=RuntimeError("provider down")))(self._ready_state())

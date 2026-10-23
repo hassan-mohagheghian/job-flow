@@ -9,7 +9,7 @@
 5. **Typed inputs** — Every prompt accepts a strongly typed Pydantic input model.
 6. **Structured outputs** — Prompts instruct the LLM to return structured JSON or Pydantic models.
 7. **Provider-independent** — Templates contain no provider-specific syntax. Providers adapt prompts when necessary.
-8. **Profession-agnostic** — Prompts address "a professional" or "the candidate", never a specific job title or industry; examples stay field-neutral so any job seeker gets the same quality of analysis.
+8. **Profession- and work-arrangement-agnostic** — Prompts address "a professional" or "the candidate", never a specific job title, industry or way of working; examples stay field-neutral so any job seeker gets the same quality of analysis.
 
 ## Organization
 
@@ -18,7 +18,7 @@
 > The `job.analyze` prompt is now self-contained and versioned in
 > `processing/application/services/job_analysis_prompt.py`
 > (`build_job_analysis_prompt`, `build_job_analysis_output_schema`,
-> `JOB_ANALYSIS_PROMPT_VERSION`, `JOB_ANALYSIS_SCHEMA_VERSION` — prompt "1.6.1",
+> `JOB_ANALYSIS_PROMPT_VERSION`, `JOB_ANALYSIS_SCHEMA_VERSION` — prompt "1.6.2",
 > schema "1.1.0").
 > It is executed by the `analyze` node of the JobAnalysisGraph via
 > `LLMService.generate_structured(prompt, schema=…, timeout=240)` — exactly
@@ -36,7 +36,7 @@ The v2 `job.analyze` prompt is a self-contained builder:
 
 ```python
 from processing.application.services.job_analysis_prompt import (
-    JOB_ANALYSIS_PROMPT_VERSION,   # "1.6.1"
+    JOB_ANALYSIS_PROMPT_VERSION,   # "1.6.2"
     JOB_ANALYSIS_SCHEMA_VERSION,   # "1.1.0"
     build_job_analysis_prompt,
     build_job_analysis_output_schema,

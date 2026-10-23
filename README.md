@@ -1,6 +1,6 @@
 # Job Search Intelligence
 
-AI-powered career platform for any profession — job discovery, company analysis, skill management, and career insights. Built for visa-sponsored roles.
+AI-powered career platform for any profession — job discovery, company analysis, skill management, and career insights.
 
 ## Introduction
 
@@ -17,17 +17,17 @@ repeatable pipeline:
    structured LLM analysis produces the fields, a summary and tagged skills.
 3. **Evaluate** — deterministic scoring turns fit and success into an overall
    score with an actionable recommendation: apply, consider or skip.
-4. **Research** — company profiles, company type and visa friendliness are
+4. **Research** — company profiles, company type and hiring signals are
    assessed alongside the role.
 5. **Improve** — skills management and market insights highlight what to learn
    or emphasize next.
 6. **Track** — applications, notes, follow-ups and status history stay attached
    to the job they belong to.
 
-The model is deliberately **location- and profession-agnostic**: it reasons
-about roles, companies, skills and fit — not about a particular city, country,
-job market or job title — so the same workflow applies to any profession and
-wherever you are searching.
+The model is deliberately **location-, profession- and work-arrangement-agnostic**:
+it reasons about roles, companies, skills and fit — not about a particular city,
+country, job market, job title or way of working — so the same workflow applies
+to any profession, wherever you are searching and however the role is performed.
 
 | | |
 |---|---|
@@ -166,7 +166,7 @@ Rules             Scoring rules configuration
 
 ### Company Intelligence
 - Multi-source input (notes + links) for profile extraction
-- Product vs Recruiting classification, visa friendliness assessment
+- Product vs Recruiting classification and company intelligence signals
 - Fit/Success/Overall scoring (A++ to D)
 
 ### Skills Management

@@ -5,7 +5,7 @@
 > The v2 `job.analyze` prompt is self-contained and versioned in
 > `processing/application/services/job_analysis_prompt.py`
 > (`build_job_analysis_prompt`, `build_job_analysis_output_schema`,
-> `JOB_ANALYSIS_PROMPT_VERSION` = "1.6.1", `JOB_ANALYSIS_SCHEMA_VERSION` = "1.1.0").
+> `JOB_ANALYSIS_PROMPT_VERSION` = "1.6.2", `JOB_ANALYSIS_SCHEMA_VERSION` = "1.1.0").
 > It is executed by the `analyze` node of the JobAnalysisGraph via
 > `LLMService.generate_structured(prompt, schema=…, timeout=240)` — exactly
 > one LLM call per job. The legacy resume/cover letter `.txt` prompt files

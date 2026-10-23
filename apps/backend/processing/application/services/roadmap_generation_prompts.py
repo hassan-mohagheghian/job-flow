@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-ROADMAP_GENERATION_PROMPT_VERSION = "1.0.1"
+ROADMAP_GENERATION_PROMPT_VERSION = "1.0.2"
 ROADMAP_GENERATION_SCHEMA_VERSION = "1.0.0"
 
 
@@ -71,7 +71,7 @@ def build_roadmap_output_schema() -> dict[str, Any]:
 def build_roadmap_prompt(context: dict[str, str]) -> str:
     """Build the roadmap generation prompt (grounded in job + skills + company + candidate)."""
     schema = json.dumps(build_roadmap_output_schema(), indent=2)
-    return f"""You are a senior career coach guiding a professional toward a visa-sponsored role.
+    return f"""You are a senior career coach guiding a professional toward the role they are targeting.
 
 Build a practical, prioritized job-preparation ROADMAP from the structured intelligence below. Never re-analyze the job, company or candidate — use the persisted analysis, tagged skills and scores as the source of truth.
 

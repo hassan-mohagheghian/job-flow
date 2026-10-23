@@ -527,13 +527,13 @@ refetched live when the execution completes/fails (SSE invalidates the
 ```text
 ┌──────────────────────────────────────────────────────────────┐
 │ Senior Backend Engineer                                      │
-│ GetYourGuide · Berlin · visa-sponsored                        │
+│ GetYourGuide · Berlin                                        │
 ├──────────────────────────────────────────────────────────────┤
 │ [A+]  Overall 91   Fit 94   Success 88                      │
 │                                                              │
 │ Recommendation                      [ Apply ]                │
 │  Because the role matches your Go + Postgres stack and the   │
-│  company sponsors work visas.                                │
+│  company invests in its engineering team.                    │
 │                                                              │
 │ AI Analysis                    generated Jul 30, 2026, 4:32 PM │
 │                                                              │

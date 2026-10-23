@@ -313,12 +313,14 @@ class TestPrompts:
         assert "MARKDOWN" in prompt
         assert "Acme GmbH" in prompt
         assert "Hassan" in prompt
-        assert "visa-sponsored" in prompt
+        assert "applying for a role" in prompt
+        assert "visa-sponsored" not in prompt
 
     def test_cover_letter_prompt(self):
         prompt = build_cover_letter_prompt(_context())
         assert "Subject" in prompt
-        assert "visa-sponsored" in prompt
+        assert "applying for a role" in prompt
+        assert "visa-sponsored" not in prompt
         assert "350 words" in prompt
 
     def test_document_schema_shape(self):
@@ -338,7 +340,7 @@ class TestPrompts:
         assert "{{linkedin}}" in prompt
 
     def test_prompt_version_constant(self):
-        assert APPLICATION_INTELLIGENCE_PROMPT_VERSION == "1.0.1"
+        assert APPLICATION_INTELLIGENCE_PROMPT_VERSION == "1.0.2"
 
 
 # --------------------------------------------------------------------------- #

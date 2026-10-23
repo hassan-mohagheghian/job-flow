@@ -14,7 +14,7 @@ Shows everything known about one inbound opportunity: the original message, extr
 │ ┌─ Score ────────────────────────────────────────────────┐ │
 │ │ Overall 79 · Fit 85 · Success 70 · consider             │ │
 │ │ Technical Match 88 · Experience 92 · Location ?        │ │
-│ │ Concerns: sponsorship is unclear                       │ │
+│ │ Concerns: salary range is unclear                      │ │
 │ └────────────────────────────────────────────────────────┘ │
 │ ┌─ Next ─────────────────────────────────────────────────┐ │
 │ │ Ask the recruiter for the location and JD              │ │
@@ -33,11 +33,11 @@ Shows everything known about one inbound opportunity: the original message, extr
 │ │ Job: Senior Backend Engineer → · Company: —            │ │
 │ └────────────────────────────────────────────────────────┘ │
 │ ┌─ Missing ──────────────────────────────────────────────┐ │
-│ │ Job location · Visa sponsorship                        │ │
+│ │ Job location · Salary range                            │ │
 │ └────────────────────────────────────────────────────────┘ │
 │ ┌─ Follow-ups ───────────────────────────────────────────┐ │
 │ │ Recruiter replied · Hassan · 2h ago        [Delete]    │ │
-│ │ "They sent the full JD — Berlin, hybrid."             │ │
+│ │ "They sent the full JD — Berlin, Germany."             │ │
 │ │ Title [________________]                               │ │
 │ │ [Paste the follow-up message or new details…      ]    │ │
 │ │ [Add follow-up]                                        │ │

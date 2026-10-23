@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-OPPORTUNITY_EXTRACT_PROMPT_VERSION = "1.0.1"
+OPPORTUNITY_EXTRACT_PROMPT_VERSION = "1.0.2"
 OPPORTUNITY_EXTRACT_SCHEMA_VERSION = "1.0.0"
 
 
@@ -97,7 +97,7 @@ def build_opportunity_extract_prompt(
         header.append(f"SUBJECT: {subject}")
     meta = "\n".join(header)
 
-    return f"""You are parsing an inbound recruiting message for a professional seeking a visa-sponsored role.
+    return f"""You are parsing an inbound recruiting message for a professional evaluating an opportunity.
 
 {meta}
 
@@ -111,7 +111,7 @@ Extract whatever information is actually present in the message. Rules:
 4. skills: atomic skill or tool names only, lowercase (e.g. "python", not "Python 3.12"). Omit seniority words and non-skills.
 5. sponsorship: quote any visa/sponsorship/work-authorization mentions verbatim in mentions; requires_sponsorship is true/false only when the message says so, else null.
 6. work_modes: subset of On-site / Remote / Hybrid actually stated. employment_types: subset of Full-time / Part-time / Contract / Internship / Temporary actually stated.
-7. uncertainties: short labels for everything important that is still unknown (e.g. "location", "visa sponsorship", "job description").
+7. uncertainties: short labels for everything important that is still unknown (e.g. "location", "salary", "job description").
 8. Keep the output short and complete. Respond ONLY with valid JSON matching exactly this schema:
 
 {schema}

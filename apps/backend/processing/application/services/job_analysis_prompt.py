@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-JOB_ANALYSIS_PROMPT_VERSION = "1.6.1"
+JOB_ANALYSIS_PROMPT_VERSION = "1.6.2"
 JOB_ANALYSIS_SCHEMA_VERSION = "1.1.0"
 
 COMPANY_TYPE_VALUES = [
@@ -148,7 +148,7 @@ def build_job_analysis_prompt(
                 + "\n"
             )
 
-    return f"""You are a senior career advisor for a professional seeking a visa-sponsored role in {target_countries}.
+    return f"""You are a senior career advisor for a professional evaluating a role in {target_countries}.
 
 Analyze the job posting below and the user's profile, then produce a complete structured analysis.
 
@@ -182,7 +182,7 @@ Your analysis must:
    - Use lowercase names only, without versions or levels ("python 3.12" → "python", "reactjs" → "reactjs").
    - Use consistent lowercase category names that fit the candidate's profession and the posting (e.g. "tool", "domain", "method", "communication").{""
     f"{breakdown_section}"
-   }8. Add 2-4 short insights (what to highlight in the application, salary/visa notes, etc.).
+   }8. Add 2-4 short insights (what to highlight in the application, salary/benefits notes, etc.).
 
 OUTPUT SIZE LIMITS (critical — keep the response short so it is never truncated):
  1. description: a concise 1-2 sentence overview, at most 120 words. Do NOT copy the full posting.
