@@ -21,6 +21,14 @@ const IMPORTANT_STATUSES: ImportantStatus[] = [
   { status: 'rejected', label: 'Rejected', color: 'hsl(0 84% 60%)' },
 ]
 
+/** Statuses that precede the first application submission. */
+const PRE_APPLICATION_STATUSES: ApplicationStatus[] = [
+  'seen',
+  'preparing',
+  'ready_to_apply',
+]
+
+const NOT_APPLIED_COLOR = 'hsl(38 92% 50%)'
 const OTHER_COLOR = 'hsl(0 0% 55%)'
 
 export interface ApplicationStatusSlice {
@@ -31,7 +39,8 @@ export interface ApplicationStatusSlice {
 }
 
 /**
- * Dashboard doughnut data: the five important outcomes in fixed order, plus a
+ * Dashboard doughnut data: an amber "Not applied" slice for every
+ * pre-application status, the five important outcomes in fixed order, plus a
  * single gray bucket for every remaining status. Percentages use all
  * applications as the denominator.
  */
@@ -49,17 +58,32 @@ export function buildApplicationStatusSlices(
   const total = Math.max(distribution.total || 0, itemsTotal)
   const pct = (count: number) => (total > 0 ? `${Math.round((count / total) * 100)}%` : '0%')
 
-  const slices: ApplicationStatusSlice[] = IMPORTANT_STATUSES.map(
-    ({ status, label, color }) => ({
+  const slices: ApplicationStatusSlice[] = []
+
+  const notAppliedCount = PRE_APPLICATION_STATUSES.reduce(
+    (acc, status) => acc + (byStatus.get(status) ?? 0),
+    0,
+  )
+  if (notAppliedCount > 0) {
+    slices.push({
+      key: 'not_applied',
+      label: 'Not applied',
+      job_count: notAppliedCount,
+      color: NOT_APPLIED_COLOR,
+    })
+  }
+
+  slices.push(
+    ...IMPORTANT_STATUSES.map(({ status, label, color }) => ({
       key: status,
       label,
       job_count: byStatus.get(status) ?? 0,
       color,
-    }),
-  ).filter((slice) => slice.job_count > 0)
+    })).filter((slice) => slice.job_count > 0),
+  )
 
-  const importantTotal = slices.reduce((acc, slice) => acc + slice.job_count, 0)
-  const otherCount = Math.max(total - importantTotal, 0)
+  const bucketedTotal = slices.reduce((acc, slice) => acc + slice.job_count, 0)
+  const otherCount = Math.max(total - bucketedTotal, 0)
   if (otherCount > 0) {
     slices.push({
       key: 'other',

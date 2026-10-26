@@ -35,7 +35,7 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
     │   └── Unknown-source listings
     ├── SourceDistributionChart (doughnut, top 5 + Other)
     ├── RecommendationChart (doughnut: Apply / Consider / Skip / No analysis)
-    ├── ApplicationStatusChart (doughnut: Applied / Interview / Offer / Accepted / Rejected / Other statuses)
+    ├── ApplicationStatusChart (doughnut: Not applied / Applied / Interview / Offer / Accepted / Rejected / Other statuses)
     └── SourcesTable
         ├── Toolbar (search)
         ├── Columns: Source | Website | Jobs | Last activity
@@ -66,12 +66,13 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
 │ ┌──────────────────────────────┐  ┌───────────────────────────────┐ │
 │ │ Applications by status       │  │ Sources                       │ │
 │ │  (doughnut)                  │  │ [ Search sources…        ]    │ │
-│ │   ● Applied      12  43%     │  │ ┌───────────────────────────┐ │ │
-│ │   ● Interview     4  14%     │  │ │ Source  │ Site  │Jobs│Seen │ │ │
-│ │   ● Offer         1   4%     │  │ ├───────────────────────────┤ │ │
-│ │   ● Accepted      2   7%     │  │ │indeed.com (link) 412  Oct │ │ │
-│ │   ● Rejected      3  11%     │  │ │linkedin.com (link) 284    │ │ │
-│ │   ● Other statuses 6 21%     │  │ │ …                         │ │ │
+│ │   ● Not applied   5 18%      │  │ ┌───────────────────────────┐ │ │
+│ │   ● Applied      12  43%     │  │ │ Source  │ Site  │Jobs│Seen │ │ │
+│ │   ● Interview     4  14%     │  │ ├───────────────────────────┤ │ │
+│ │   ● Offer         1   4%     │  │ │indeed.com (link) 412  Oct │ │ │
+│ │   ● Accepted      2   7%     │  │ │linkedin.com (link) 284    │ │ │
+│ │   ● Rejected      3  11%     │  │ │ …                         │ │ │
+│ │   ● Other statuses 1  4%     │  │ └───────────────────────────┘ │ │
 │ │   28 total applications      │  │ └───────────────────────────┘ │ │
 │ └──────────────────────────────┘  │ Page 1 of 2 • 14 sources      │ │
 │                                   │ [Prev] Page 1 [Next]          │ │
@@ -116,11 +117,14 @@ the full width on wide monitors.
 - Third doughnut ("Applications by status") beside the recommendation chart:
   counts the current user's application records by funnel status
   (`GET /api/applications/status-distribution`).
-- Shows the five most important outcomes in fixed order — **Applied**
+- **Not applied** (amber) leads the chart: one slice aggregating every
+  pre-submission status (`seen`, `preparing`, `ready_to_apply`), so the legend
+  answers "how many tracked applications have not been sent yet?" at a glance.
+- Then the five most important outcomes in fixed order — **Applied**
   (green), **Interview** (cyan), **Offer** (purple), **Accepted** (emerald),
-  **Rejected** (red). Every remaining status (`seen`, `preparing`,
-  `ready_to_apply`, `withdrawn`, `expired`) is folded into a single gray
-  **Other statuses** slice so no tracked application is lost.
+  **Rejected** (red). Every remaining terminal status (`withdrawn`, `expired`)
+  is folded into a single gray **Other statuses** slice so no tracked
+  application is lost.
 - Percentages use **all applications** as the denominator. Zero-count slices
   are hidden; empty dataset shows
   "No applications yet — track a job to populate this chart."

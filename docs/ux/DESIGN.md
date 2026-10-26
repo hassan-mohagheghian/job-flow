@@ -910,11 +910,11 @@ show `Evaluation pending` instead of invented scores.
 │ │ ● Indeed.com 412 • 36%  ● LinkedIn.com 284 • 25%  …       │ │ ● Apply (green)  ● Consider (amber)  │ │
 │ └────────────────────────────────────────────────────────────┘ │ ● Skip (red)  ● None (gray)          │ │
 │ ┌── Applications by status (doughnut) ───────────────────────┐ └──────────────────────────────────────┘ │
-│ │ ● Applied (green)  ● Interview (cyan)  ● Offer (purple)   │ ┌── Sources ───────────────────────────┐ │
-│ │ ● Accepted (emerald)  ● Rejected (red)  ● Other (gray)    │ │ Search sources…  Page 1 of 1 • 14     │ │
-│ │ 28 total applications                                     │ │ Source │ Website │ Jobs │ Last act  │ │
-│ └────────────────────────────────────────────────────────────┘ │ Indeed.com │ indeed.com │ 412 │ Oct │ │
-│                                                                │ [Prev] 10/page ▾ [Next]               │ │
+│ │ ● Not applied (amber)  ● Applied (green)  ● Interview     │ ┌── Sources ───────────────────────────┐ │
+│ │ (cyan)  ● Offer (purple)  ● Accepted (emerald)            │ │ Search sources…  Page 1 of 1 • 14     │ │
+│ │ ● Rejected (red)  ● Other statuses (gray)                 │ │ Source │ Website │ Jobs │ Last act  │ │
+│ │ 28 total applications                                     │ │ Indeed.com │ indeed.com │ 412 │ Oct │ │
+│ └────────────────────────────────────────────────────────────┘ │ [Prev] 10/page ▾ [Next]               │ │
 │                                                                └──────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -923,9 +923,10 @@ The source, recommendation and application-status doughnuts are backed by
 `/api/jobs/sources/*`, `/api/jobs/recommendations/distribution` and
 `/api/applications/status-distribution` aggregates (see
 `docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`,
-`docs/api/applications/README.md`). The application chart shows Applied,
-Interview, Offer, Accepted and Rejected individually; every other status is
-folded into **Other statuses**.
+`docs/api/applications/README.md`). The application chart leads with a
+**Not applied** slice (all pre-submission statuses), then shows Applied,
+Interview, Offer, Accepted and Rejected individually; every remaining terminal
+status is folded into **Other statuses**.
 
 ---
 

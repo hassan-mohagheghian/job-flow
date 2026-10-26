@@ -130,11 +130,12 @@ const applicationStatuses: ApplicationStatusDistribution = {
 }
 
 describe('buildApplicationStatusSlices', () => {
-  it('keeps the important funnel order and folds the rest into Other statuses', () => {
+  it('keeps the important funnel order and folds the terminal leftovers into Other statuses', () => {
     const { slices, total, pct } = buildApplicationStatusSlices(applicationStatuses)
 
     expect(total).toBe(28)
     expect(slices.map((slice) => slice.label)).toEqual([
+      'Not applied',
       'Applied',
       'Interview',
       'Offer',
@@ -142,8 +143,28 @@ describe('buildApplicationStatusSlices', () => {
       'Rejected',
       'Other statuses',
     ])
-    expect(slices.at(-1)?.job_count).toBe(6)
+    expect(slices[0]?.job_count).toBe(5)
+    expect(slices.at(-1)?.job_count).toBe(1)
     expect(pct(12)).toBe('43%')
+  })
+
+  it('aggregates every pre-application status into Not applied', () => {
+    const { slices } = buildApplicationStatusSlices({
+      items: [
+        { status: 'seen', count: 2 },
+        { status: 'preparing', count: 3 },
+        { status: 'ready_to_apply', count: 1 },
+        { status: 'applied', count: 4 },
+      ],
+      total: 10,
+    })
+
+    expect(slices[0]?.label).toBe('Not applied')
+    expect(slices[0]?.job_count).toBe(6)
+    expect(slices.map((slice) => slice.label)).toEqual([
+      'Not applied',
+      'Applied',
+    ])
   })
 
   it('hides zero-count slices and has no Other bucket when every status is important', () => {
@@ -170,6 +191,7 @@ describe('ApplicationStatusChart', () => {
     render(<ApplicationStatusChart distribution={applicationStatuses} />)
 
     expect(screen.getByTestId('application-status-chart')).toBeInTheDocument()
+    expect(screen.getByText('Not applied')).toBeInTheDocument()
     expect(screen.getByText('Applied')).toBeInTheDocument()
     expect(screen.getByText('Other statuses')).toBeInTheDocument()
     expect(

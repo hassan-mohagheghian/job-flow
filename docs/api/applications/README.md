@@ -59,7 +59,8 @@ filters them).
 ```
 
 Read-only, user-scoped aggregate used by the Dashboard "Applications by status"
-doughnut; it creates no timeline events.
+doughnut, where `seen` / `preparing` / `ready_to_apply` are grouped into its
+**Not applied** slice; it creates no timeline events.
 
 ## Create Application
 
