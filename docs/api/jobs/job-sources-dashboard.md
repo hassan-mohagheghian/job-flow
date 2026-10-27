@@ -147,6 +147,36 @@ non-deleted job count.
 "Jobs by recommendation" doughnut next to the source distribution
 (semantic colors: green / amber / red / gray).
 
+### GET /api/jobs/tracking-status/distribution
+
+Counts of the current user's **non-deleted** jobs by application/tracking
+status. A `LEFT JOIN` to the user's application row counts jobs with no
+application as `not_applied`; jobs with an application are grouped under the
+application's status. Only non-empty buckets are returned, ordered
+`not_applied` first and then the canonical funnel order. `total` is always the
+full non-deleted job count, so it doubles as the Dashboard chart denominator.
+
+```json
+{
+  "items": [
+    { "status": "not_applied", "count": 25 },
+    { "status": "seen", "count": 3 },
+    { "status": "applied", "count": 12 },
+    { "status": "interview", "count": 4 }
+  ],
+  "total": 48
+}
+```
+
+`status` ∈ `not_applied | seen | preparing | ready_to_apply | applied |
+interview | offer | accepted | rejected | withdrawn | expired`. The Dashboard
+"Applications by status" doughnut folds `not_applied` plus the pre-application
+statuses (`seen`, `preparing`, `ready_to_apply`) into its amber **Not applied**
+slice, so every job that has not reached `applied` is represented. The
+dashboard uses this aggregate instead of
+`GET /api/applications/status-distribution` (which remains the count of
+application records).
+
 ## Performance
 
 - All widgets rely on one indexed aggregation each: `idx_jobs_source_site_id`
@@ -166,3 +196,6 @@ non-deleted job count.
 - `tests/jobs/presentation/api/test_jobs_sources_api.py` — response shapes,
   404-ish/auth behavior, validation errors, user isolation
   (count only current user's rows).
+- `tests/jobs/presentation/api/test_jobs_tracking_distribution_api.py` —
+  `not_applied` for jobs without an application, funnel buckets, deleted and
+  other-user exclusion, empty payload.

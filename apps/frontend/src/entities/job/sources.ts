@@ -1,4 +1,5 @@
 import { api } from '@/shared/api'
+import type { TrackingStatus } from './types'
 
 export interface SourceStats {
   total_jobs: number
@@ -55,6 +56,16 @@ export interface RecommendationDistribution {
   total: number
 }
 
+export interface JobApplicationStatusItem {
+  status: TrackingStatus
+  count: number
+}
+
+export interface JobApplicationStatusDistribution {
+  items: JobApplicationStatusItem[]
+  total: number
+}
+
 export interface SourcesQuery extends SourceSortField {
   page: number
   page_size: number
@@ -67,6 +78,8 @@ export const sourceApi = {
     api.get<SourceDistribution>(`/jobs/sources/distribution?limit=${limit}`),
   recommendationDistribution: () =>
     api.get<RecommendationDistribution>('/jobs/recommendations/distribution'),
+  applicationStatusDistribution: () =>
+    api.get<JobApplicationStatusDistribution>('/jobs/tracking-status/distribution'),
   sources: (query: SourcesQuery) => {
     const params = new URLSearchParams({
       page: String(query.page),

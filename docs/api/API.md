@@ -155,10 +155,12 @@ filters.
 ### `GET /api/jobs/sources/*` (Dashboard)
 
 Job-source aggregates powering the Dashboard section (`docs/api/jobs/job-sources-dashboard.md`):
-`sources/stats`, `sources/distribution` (top-N + Other + Unknown) and
-`sources` (paginated table with search + sort). Sources are canonical hosts
-derived from each job's URL at ingestion (`job.job_sources`), user-scoped and
-counting only non-deleted listings.
+`sources/stats`, `sources/distribution` (top-N + Other + Unknown),
+`recommendations/distribution` and `tracking-status/distribution` (jobs by
+application/tracking status, including `not_applied`), plus `sources` (paginated
+table with search + sort). Sources are canonical hosts derived from each job's
+URL at ingestion (`job.job_sources`), user-scoped and counting only non-deleted
+listings.
 
 ### `PUT /api/jobs/{job_id}/pinned`
 
@@ -210,7 +212,7 @@ through the processing pipeline (see `docs/api/applications/README.md`,
 Endpoints:
 
 - `GET /api/applications/by-job/{job_id}` — application detail for a job.
-- `GET /api/applications/status-distribution` — current user's application counts by status (Dashboard).
+- `GET /api/applications/status-distribution` — current user's application-record counts by status (distinct from the Dashboard chart, which uses `GET /api/jobs/tracking-status/distribution` to count every job, including `not_applied`).
 - `POST /api/applications` — create an application (`{ "job_id" }`, default status `recommended`).
 - `PATCH /api/applications/{application_id}` — update `status` / `applied_at` (status change records a timeline node).
 - `PATCH` / `DELETE` `/api/applications/timeline/{timeline_id}` — edit `changed_at` / remove a status-timeline node.

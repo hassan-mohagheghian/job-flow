@@ -41,6 +41,7 @@ from jobs.presentation.api.schemas.jobs_v2 import (
     SourceDistributionSchema,
     SourceListItemSchema,
     SourceListResponseSchema,
+    TrackingStatusDistributionSchema,
 )
 from jobs.application.use_cases.list_jobs_v2 import ListJobsV2UseCase, ListJobsV2Request
 from jobs.infrastructure import SQLAlchemyJobRepository
@@ -625,6 +626,17 @@ def _iso_or_none(value: Any) -> str | None:
 def get_recommendation_distribution(repo: SQLAlchemyJobRepository = Depends(get_job_repo)):
     """Distribution of non-deleted jobs by analysis recommendation (apply/consider/skip/none)."""
     return repo.recommendation_distribution()
+
+
+@router.get(
+    "/tracking-status/distribution",
+    response_model=TrackingStatusDistributionSchema,
+)
+def get_tracking_status_distribution(
+    repo: SQLAlchemyJobRepository = Depends(get_job_repo),
+):
+    """Distribution of non-deleted jobs by tracking status (jobs without an application are `not_applied`)."""
+    return repo.application_status_distribution()
 
 
 @router.get("/sources/stats", response_model=SourceStatsSchema)

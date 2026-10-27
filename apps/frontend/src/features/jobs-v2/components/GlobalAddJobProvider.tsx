@@ -21,6 +21,7 @@ import { JobDetailDrawer } from '@/features/jobs-v2/components/JobDetailDrawer'
 import { JobEditDrawer } from '@/features/jobs-v2/components/JobEditDrawer'
 import { ProcessingDrawer } from '@/features/jobs-v2/components/ProcessingDrawer'
 import { jobApi } from '@/entities/job/api'
+import { applicationStatusDistributionKey } from '@/entities/application/hooks'
 import { readClipboardUrl } from '@/shared/lib/clipboard'
 import {
   extractUrlFromDataTransfer,
@@ -92,6 +93,7 @@ export function GlobalAddJobProvider({ children }: { children: ReactNode }) {
         toast.success(data.queue ? 'Job created and queued' : 'Job created successfully')
         setDrawerOpen(false)
         queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        queryClient.invalidateQueries({ queryKey: applicationStatusDistributionKey })
         if (data.queue) {
           setQueueReloadKey((k) => k + 1)
           setQueueOpen(true)

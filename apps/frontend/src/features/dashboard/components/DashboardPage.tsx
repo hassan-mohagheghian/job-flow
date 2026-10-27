@@ -5,8 +5,8 @@ import { MetricCard } from './MetricCard'
 import { RecommendationChart } from './RecommendationChart'
 import { SourceDistributionChart } from './SourceDistributionChart'
 import { SourcesTable } from './SourcesTable'
-import type { ApplicationStatusDistribution } from '@/entities/application/types'
 import type {
+  JobApplicationStatusDistribution,
   RecommendationDistribution,
   SourceDistribution,
   SourceListItem,
@@ -22,7 +22,7 @@ interface DashboardPageProps {
   recommendations: RecommendationDistribution | undefined
   recommendationsLoading: boolean
   recommendationsError?: unknown
-  applicationStatuses: ApplicationStatusDistribution | undefined
+  applicationStatuses: JobApplicationStatusDistribution | undefined
   applicationStatusesLoading: boolean
   applicationStatusesError?: unknown
   sources: SourceListItem[]

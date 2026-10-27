@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { jobApi } from '@/entities/job/api'
+import { applicationStatusDistributionKey } from '@/entities/application/hooks'
 import type { JobListItem, JobDetail, ProcessingStatus, ProcessingStatusFilter, RecommendationFilter, TrackingStatusFilter, CreatedDateFilter, InfiniteJobSearchResult } from '@/entities/job/types'
 import { PAGE_SIZE } from '@/shared/config/constants'
 const JOBS_KEY = 'jobs-v2-infinite'
@@ -179,6 +180,7 @@ export function useJobsInfiniteQuery() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [JOBS_KEY] })
+      queryClient.invalidateQueries({ queryKey: applicationStatusDistributionKey })
     },
   })
 

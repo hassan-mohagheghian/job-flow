@@ -3,12 +3,13 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useMemo } from 'react'
 import type {
-  ApplicationStatus,
-  ApplicationStatusDistribution,
-} from '@/entities/application/types'
+  JobApplicationStatusDistribution,
+  JobApplicationStatusItem,
+} from '@/entities/job/sources'
+import type { TrackingStatus } from '@/entities/job/types'
 
 interface ImportantStatus {
-  status: ApplicationStatus
+  status: TrackingStatus
   label: string
   color: string
 }
@@ -22,7 +23,7 @@ const IMPORTANT_STATUSES: ImportantStatus[] = [
 ]
 
 /** Statuses that precede the first application submission. */
-const PRE_APPLICATION_STATUSES: ApplicationStatus[] = [
+const PRE_APPLICATION_STATUSES: TrackingStatus[] = [
   'seen',
   'preparing',
   'ready_to_apply',
@@ -39,20 +40,24 @@ export interface ApplicationStatusSlice {
 }
 
 /**
- * Dashboard doughnut data: an amber "Not applied" slice for every
- * pre-application status, the five important outcomes in fixed order, plus a
- * single gray bucket for every remaining status. Percentages use all
- * applications as the denominator.
+ * Dashboard doughnut data: an amber "Not applied" slice for every job that has
+ * not reached `applied` (no application record plus every pre-application
+ * status), the five important outcomes in fixed order, plus a single gray
+ * bucket for every remaining status. Percentages use all jobs as the
+ * denominator.
  */
 export function buildApplicationStatusSlices(
-  distribution: ApplicationStatusDistribution,
+  distribution: JobApplicationStatusDistribution,
 ): {
   slices: ApplicationStatusSlice[]
   total: number
   pct: (count: number) => string
 } {
-  const byStatus = new Map(
-    distribution.items.map((item) => [item.status, item.count]),
+  const byStatus = new Map<TrackingStatus, number>(
+    distribution.items.map((item: JobApplicationStatusItem) => [
+      item.status,
+      item.count,
+    ]),
   )
   const itemsTotal = distribution.items.reduce((acc, item) => acc + item.count, 0)
   const total = Math.max(distribution.total || 0, itemsTotal)
@@ -60,10 +65,12 @@ export function buildApplicationStatusSlices(
 
   const slices: ApplicationStatusSlice[] = []
 
-  const notAppliedCount = PRE_APPLICATION_STATUSES.reduce(
-    (acc, status) => acc + (byStatus.get(status) ?? 0),
-    0,
-  )
+  const notAppliedCount =
+    (byStatus.get('not_applied') ?? 0) +
+    PRE_APPLICATION_STATUSES.reduce(
+      (acc, status) => acc + (byStatus.get(status) ?? 0),
+      0,
+    )
   if (notAppliedCount > 0) {
     slices.push({
       key: 'not_applied',
@@ -97,7 +104,7 @@ export function buildApplicationStatusSlices(
 }
 
 interface ApplicationStatusChartProps {
-  distribution: ApplicationStatusDistribution | undefined
+  distribution: JobApplicationStatusDistribution | undefined
   isLoading?: boolean
 }
 
@@ -115,7 +122,7 @@ export function ApplicationStatusChart({
   if (!distribution || slices.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        No applications yet — track a job to populate this chart.
+        No jobs yet — import jobs to populate this chart.
       </div>
     )
   }
@@ -168,7 +175,7 @@ export function ApplicationStatusChart({
           </div>
         ))}
         <div className="pt-1 text-xs text-muted-foreground">
-          {total.toLocaleString()} total applications
+          {total.toLocaleString()} total jobs
         </div>
       </dl>
     </div>

@@ -12,7 +12,7 @@ per-context routers (AGENTS.md rule 10).
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | GET | `/api/applications/by-job/{job_id}` | Application for a job (404 when none). |
-| GET | `/api/applications/status-distribution` | Current user's application counts by status (Dashboard). |
+| GET | `/api/applications/status-distribution` | Current user's application-record counts by status (not the Dashboard chart). |
 | POST | `/api/applications` | Create an application for a job (default status `recommended`). |
 | PATCH | `/api/applications/{application_id}` | Update `status` / `applied_at` (status change records a timeline node). |
 | PATCH | `/api/applications/timeline/{timeline_id}` | Edit a status-timeline node's `changed_at`. |
@@ -58,9 +58,12 @@ filters them).
 }
 ```
 
-Read-only, user-scoped aggregate used by the Dashboard "Applications by status"
-doughnut, where `seen` / `preparing` / `ready_to_apply` are grouped into its
-**Not applied** slice; it creates no timeline events.
+Read-only, user-scoped aggregate of **application records**. The Dashboard
+"Applications by status" doughnut now uses
+`GET /api/jobs/tracking-status/distribution` instead, because its **Not applied**
+slice must count every job without an application as well as the pre-application
+statuses. This endpoint remains the count of application rows only and creates no
+timeline events.
 
 ## Create Application
 

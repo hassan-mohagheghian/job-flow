@@ -913,7 +913,7 @@ show `Evaluation pending` instead of invented scores.
 │ │ ● Not applied (amber)  ● Applied (green)  ● Interview     │ ┌── Sources ───────────────────────────┐ │
 │ │ (cyan)  ● Offer (purple)  ● Accepted (emerald)            │ │ Search sources…  Page 1 of 1 • 14     │ │
 │ │ ● Rejected (red)  ● Other statuses (gray)                 │ │ Source │ Website │ Jobs │ Last act  │ │
-│ │ 28 total applications                                     │ │ Indeed.com │ indeed.com │ 412 │ Oct │ │
+│ │ 48 total jobs                                             │ │ Indeed.com │ indeed.com │ 412 │ Oct │ │
 │ └────────────────────────────────────────────────────────────┘ │ [Prev] 10/page ▾ [Next]               │ │
 │                                                                └──────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -921,12 +921,13 @@ show `Evaluation pending` instead of invented scores.
 
 The source, recommendation and application-status doughnuts are backed by
 `/api/jobs/sources/*`, `/api/jobs/recommendations/distribution` and
-`/api/applications/status-distribution` aggregates (see
+`/api/jobs/tracking-status/distribution` aggregates (see
 `docs/ux/features/dashboard/page.md`, `docs/api/jobs/job-sources-dashboard.md`,
-`docs/api/applications/README.md`). The application chart leads with a
-**Not applied** slice (all pre-submission statuses), then shows Applied,
-Interview, Offer, Accepted and Rejected individually; every remaining terminal
-status is folded into **Other statuses**.
+`docs/api/applications/README.md`). The application chart counts every
+non-deleted job: **Not applied** aggregates jobs without an application plus the
+pre-submission statuses, then Applied, Interview, Offer, Accepted and Rejected
+appear individually; every remaining terminal status is folded into **Other
+statuses**. Percentages and the legend total use all jobs as the denominator.
 
 ---
 

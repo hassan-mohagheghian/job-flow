@@ -334,6 +334,56 @@ class SQLAlchemyJobRepository(IJobRepository):
             "total": int(self._base_query().count()),
         }
 
+    def application_status_distribution(self) -> dict[str, Any]:
+        """Count of non-deleted jobs per tracking/application status.
+
+        A left join to the user's application row means jobs with no
+        application land in ``not_applied``; jobs with an application are
+        grouped under its status. Only non-empty buckets are returned,
+        ``not_applied`` first and then the canonical funnel order. ``total`` is
+        every non-deleted job for the user, which the Dashboard chart uses as
+        its percentage denominator.
+        """
+        from applications.domain.entities.application import ApplicationStatus
+        from applications.infrastructure.models.application_model import (
+            ApplicationModel,
+        )
+
+        application_join = ApplicationModel.job_id == JobModel.id
+        if self._user_id:
+            application_join = application_join & (
+                ApplicationModel.user_id == JobModel.user_id
+            )
+        rows = (
+            self._base_query()
+            .outerjoin(ApplicationModel, application_join)
+            .with_entities(
+                ApplicationModel.status,
+                func.count(func.distinct(JobModel.id)).label("count"),
+            )
+            .group_by(ApplicationModel.status)
+            .all()
+        )
+
+        counts: dict[str, int] = {}
+        for status, count in rows:
+            key = str(status) if status else "not_applied"
+            counts[key] = counts.get(key, 0) + int(count)
+
+        items = []
+        if counts.get("not_applied"):
+            items.append({"status": "not_applied", "count": counts["not_applied"]})
+        known = [s for s in ApplicationStatus.ALL if counts.get(s)]
+        unknown = sorted(
+            s for s in counts if s not in ApplicationStatus.ALL and s != "not_applied"
+        )
+        items.extend(
+            {"status": status, "count": counts[status]}
+            for status in (*known, *unknown)
+            if counts[status] > 0
+        )
+        return {"items": items, "total": int(self._base_query().count())}
+
     def list_sources(
         self,
         page: int = 1,

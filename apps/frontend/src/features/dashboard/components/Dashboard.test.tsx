@@ -10,8 +10,8 @@ import {
 import { MetricCard } from './MetricCard'
 import { SourcesTable } from './SourcesTable'
 import { DashboardPage } from './DashboardPage'
-import type { ApplicationStatusDistribution } from '@/entities/application/types'
 import type {
+  JobApplicationStatusDistribution,
   RecommendationDistribution,
   SourceDistribution,
   SourceListItem,
@@ -116,24 +116,25 @@ describe('RecommendationChart', () => {
   })
 })
 
-const applicationStatuses: ApplicationStatusDistribution = {
+const applicationStatuses: JobApplicationStatusDistribution = {
   items: [
+    { status: 'not_applied', count: 20 },
+    { status: 'seen', count: 5 },
     { status: 'applied', count: 12 },
     { status: 'interview', count: 4 },
     { status: 'offer', count: 1 },
     { status: 'accepted', count: 2 },
     { status: 'rejected', count: 3 },
-    { status: 'seen', count: 5 },
     { status: 'withdrawn', count: 1 },
   ],
-  total: 28,
+  total: 48,
 }
 
 describe('buildApplicationStatusSlices', () => {
   it('keeps the important funnel order and folds the terminal leftovers into Other statuses', () => {
     const { slices, total, pct } = buildApplicationStatusSlices(applicationStatuses)
 
-    expect(total).toBe(28)
+    expect(total).toBe(48)
     expect(slices.map((slice) => slice.label)).toEqual([
       'Not applied',
       'Applied',
@@ -143,27 +144,40 @@ describe('buildApplicationStatusSlices', () => {
       'Rejected',
       'Other statuses',
     ])
-    expect(slices[0]?.job_count).toBe(5)
+    expect(slices[0]?.job_count).toBe(25)
     expect(slices.at(-1)?.job_count).toBe(1)
-    expect(pct(12)).toBe('43%')
+    expect(pct(12)).toBe('25%')
   })
 
-  it('aggregates every pre-application status into Not applied', () => {
+  it('counts jobs without an application and pre-application statuses as Not applied', () => {
     const { slices } = buildApplicationStatusSlices({
       items: [
+        { status: 'not_applied', count: 4 },
         { status: 'seen', count: 2 },
         { status: 'preparing', count: 3 },
         { status: 'ready_to_apply', count: 1 },
         { status: 'applied', count: 4 },
       ],
-      total: 10,
+      total: 14,
     })
 
     expect(slices[0]?.label).toBe('Not applied')
-    expect(slices[0]?.job_count).toBe(6)
+    expect(slices[0]?.job_count).toBe(10)
     expect(slices.map((slice) => slice.label)).toEqual([
       'Not applied',
       'Applied',
+    ])
+  })
+
+  it('shows every job as Not applied when no application exists yet', () => {
+    const { slices, total } = buildApplicationStatusSlices({
+      items: [{ status: 'not_applied', count: 9 }],
+      total: 9,
+    })
+
+    expect(total).toBe(9)
+    expect(slices).toEqual([
+      expect.objectContaining({ key: 'not_applied', job_count: 9 }),
     ])
   })
 
@@ -197,14 +211,14 @@ describe('ApplicationStatusChart', () => {
     expect(
       screen.getByRole('img', { name: /applications per status/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/28 total applications/)).toBeInTheDocument()
+    expect(screen.getByText(/48 total jobs/)).toBeInTheDocument()
   })
 
   it('empty and loading states', () => {
     const { unmount } = render(
       <ApplicationStatusChart distribution={{ items: [], total: 0 }} />,
     )
-    expect(screen.getByText(/No applications yet/i)).toBeInTheDocument()
+    expect(screen.getByText(/No jobs yet/i)).toBeInTheDocument()
     unmount()
     const { container } = render(
       <ApplicationStatusChart distribution={applicationStatuses} isLoading />,

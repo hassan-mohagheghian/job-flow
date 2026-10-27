@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { applicationApi } from '@/entities/application/api'
 import { applicationStatusDistributionKey } from '@/entities/application/hooks'
 import { sourceApi, type SourcesQuery } from '@/entities/job/sources'
 import { DEFAULT_STALE_TIME, PAGE_SIZE_SMALL } from '@/shared/config/constants'
@@ -34,7 +33,7 @@ export function useRecommendationDistribution() {
 export function useApplicationStatusDistribution() {
   return useQuery({
     queryKey: applicationStatusDistributionKey,
-    queryFn: applicationApi.statusDistribution,
+    queryFn: sourceApi.applicationStatusDistribution,
     staleTime: DEFAULT_STALE_TIME,
   })
 }

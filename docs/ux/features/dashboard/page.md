@@ -8,10 +8,11 @@ searchable paginated source table. Entry point in the sidebar as
 **Dashboard** (`/dashboard`).
 
 Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
-`GET /api/jobs/sources`, `GET /api/jobs/recommendations/distribution` (see
-`docs/api/jobs/job-sources-dashboard.md`) and
-`GET /api/applications/status-distribution` (see
-`docs/api/applications/README.md`).
+`GET /api/jobs/sources`, `GET /api/jobs/recommendations/distribution` and
+`GET /api/jobs/tracking-status/distribution` (see
+`docs/api/jobs/job-sources-dashboard.md`). The applications
+`status-distribution` endpoint still exists for application-record counts but no
+longer feeds this page.
 
 ## Design principles
 
@@ -66,14 +67,14 @@ Backend: `GET /api/jobs/sources/stats`, `GET /api/jobs/sources/distribution`,
 │ ┌──────────────────────────────┐  ┌───────────────────────────────┐ │
 │ │ Applications by status       │  │ Sources                       │ │
 │ │  (doughnut)                  │  │ [ Search sources…        ]    │ │
-│ │   ● Not applied   5 18%      │  │ ┌───────────────────────────┐ │ │
-│ │   ● Applied      12  43%     │  │ │ Source  │ Site  │Jobs│Seen │ │ │
-│ │   ● Interview     4  14%     │  │ ├───────────────────────────┤ │ │
-│ │   ● Offer         1   4%     │  │ │indeed.com (link) 412  Oct │ │ │
-│ │   ● Accepted      2   7%     │  │ │linkedin.com (link) 284    │ │ │
-│ │   ● Rejected      3  11%     │  │ │ …                         │ │ │
-│ │   ● Other statuses 1  4%     │  │ └───────────────────────────┘ │ │
-│ │   28 total applications      │  │ └───────────────────────────┘ │ │
+│ │   ● Not applied  25  52%     │  │ ┌───────────────────────────┐ │ │
+│ │   ● Applied      12  25%     │  │ │ Source  │ Site  │Jobs│Seen │ │ │
+│ │   ● Interview     4   8%     │  │ ├───────────────────────────┤ │ │
+│ │   ● Offer         1   2%     │  │ │indeed.com (link) 412  Oct │ │ │
+│ │   ● Accepted      2   4%     │  │ │linkedin.com (link) 284    │ │ │
+│ │   ● Rejected      3   6%     │  │ │ …                         │ │ │
+│ │   ● Other statuses 1  2%     │  │ └───────────────────────────┘ │ │
+│ │   48 total jobs              │  │ └───────────────────────────┘ │ │
 │ └──────────────────────────────┘  │ Page 1 of 2 • 14 sources      │ │
 │                                   │ [Prev] Page 1 [Next]          │ │
 │                                   └───────────────────────────────┘ │
@@ -90,7 +91,7 @@ the full width on wide monitors.
 | State  | Behavior |
 | ------ | -------- |
 | Loading | Metric cards show pulse placeholders; charts/table show pulse or "Loading…" rows. |
-| Empty  | Source/table charts say "No sources yet — import jobs to populate the dashboard."; the application chart says "No applications yet — track a job to populate this chart." |
+| Empty  | Source/table charts say "No sources yet — import jobs to populate the dashboard."; the application chart says "No jobs yet — import jobs to populate this chart." |
 | Error  | Section shows the error message with a Retry button (per-widget retry, not page reload). |
 | Chart zero dataset | Doughnut hidden; textual summary says no data. |
 
@@ -115,19 +116,21 @@ the full width on wide monitors.
 ## Application status chart
 
 - Third doughnut ("Applications by status") beside the recommendation chart:
-  counts the current user's application records by funnel status
-  (`GET /api/applications/status-distribution`).
-- **Not applied** (amber) leads the chart: one slice aggregating every
-  pre-submission status (`seen`, `preparing`, `ready_to_apply`), so the legend
-  answers "how many tracked applications have not been sent yet?" at a glance.
+  counts the current user's **non-deleted jobs** by application/tracking status
+  (`GET /api/jobs/tracking-status/distribution`).
+- **Not applied** (amber) leads the chart: one slice aggregating **every job that
+  has not reached `applied` yet** — jobs with no application record
+  (`not_applied`) plus the pre-submission statuses (`seen`, `preparing`,
+  `ready_to_apply`). The legend therefore answers "how many jobs have I not
+  applied to yet?", covering the whole pipeline rather than only tracked records.
 - Then the five most important outcomes in fixed order — **Applied**
   (green), **Interview** (cyan), **Offer** (purple), **Accepted** (emerald),
   **Rejected** (red). Every remaining terminal status (`withdrawn`, `expired`)
-  is folded into a single gray **Other statuses** slice so no tracked
-  application is lost.
-- Percentages use **all applications** as the denominator. Zero-count slices
-  are hidden; empty dataset shows
-  "No applications yet — track a job to populate this chart."
+  is folded into a single gray **Other statuses** slice so no tracked job is
+  lost.
+- Percentages use **all non-deleted jobs** as the denominator and the legend
+  total reads "N total jobs". Zero-count slices are hidden; empty dataset shows
+  "No jobs yet — import jobs to populate this chart."
 - Counts are user-scoped and read-only; the endpoint creates no events.
 
 ## Sources table
@@ -147,7 +150,7 @@ flowchart LR
   A[useSourceStats] --> B[GET /api/jobs/sources/stats]
   C[useSourceDistribution] --> D[GET /api/jobs/sources/distribution]
   R[useRecommendationDistribution] --> P[GET /api/jobs/recommendations/distribution]
-  S[useApplicationStatusDistribution] --> T[GET /api/applications/status-distribution]
+  S[useApplicationStatusDistribution] --> T[GET /api/jobs/tracking-status/distribution]
   E[useSourcesList page/query/sort/page-size] --> F[GET /api/jobs/sources]
   B & D & P & T & F --> G[Dashboard widgets]
 ```

@@ -224,6 +224,18 @@ class RecommendationDistributionSchema(BaseModel):
     total: int = 0
 
 
+class TrackingStatusItemSchema(BaseModel):
+    status: str
+    count: int
+
+
+class TrackingStatusDistributionSchema(BaseModel):
+    """Counts of non-deleted jobs per application/tracking status."""
+
+    items: list[TrackingStatusItemSchema] = Field(default_factory=list)
+    total: int = 0
+
+
 class JobDetailWorkflowStepSchema(BaseModel):
     id: str
     title: str
