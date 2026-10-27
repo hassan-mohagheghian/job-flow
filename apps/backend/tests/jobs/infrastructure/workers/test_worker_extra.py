@@ -242,6 +242,7 @@ class TestDbHelpers:
 
     def test_insert_summary(self, mock_get_session_worker):
         from jobs.infrastructure.workers.worker import _insert_summary
+        _seed_job(mock_get_session_worker, id='job-7')
         _insert_summary({'job_id': 'job-7', 'company': 'Acme', 'match': 'High', 'score': 'A',
                          'summary': 'sum', 'stack': 'py', 'resumeFit': 'rf', 'note': 'n', 'url': 'u'})
         row = mock_get_session_worker.query(SummaryModel).filter(SummaryModel.job_id == 'job-7').first()
