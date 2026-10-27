@@ -1,4 +1,4 @@
-"""Normalize job locations - extract cities into locations array."""
+"""Normalize job work types from the job's location and notes text."""
 import os
 import re
 
@@ -12,7 +12,6 @@ DB_PATH = _db_path if os.path.isabs(_db_path) else os.path.join(_file_dir, _db_p
 import sys
 sys.path.insert(0, os.path.join(_file_dir, '..'))
 from shared.infrastructure.process.logging_config import get_logger
-from shared.infrastructure.database.sqlalchemy_config import Base
 
 log = get_logger('jobs.commands.normalize_locs')
 import jobs.infrastructure.models.job_model
@@ -51,7 +50,7 @@ def normalize_locations():
                 job.work_types = work_types
                 updated += 1
         session.commit()
-        log.info("Normalized locations", updated=updated)
+        log.info("Normalized work types", updated=updated)
     finally:
         session.close()
         engine.dispose()
