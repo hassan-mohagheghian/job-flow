@@ -6,6 +6,7 @@ import uuid
 
 import sqlalchemy as sa
 from sqlalchemy import Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.infrastructure.database.sqlalchemy_config import Base
@@ -18,15 +19,18 @@ class JobModel(Base):
     """SQLAlchemy model for the jobs table."""
 
     __tablename__ = "jobs"
-    __table_args__ = {"schema": "job"}
+    __table_args__ = (
+        sa.Index("ix_job_jobs_user_deleted_created", "user_id", "deleted", "created_at"),
+        sa.Index("ix_job_jobs_work_types_gin", "work_types", postgresql_using="gin"),
+        sa.Index("ix_job_jobs_employment_types_gin", "employment_types", postgresql_using="gin"),
+        sa.Index("ix_job_jobs_tags_gin", "tags", postgresql_using="gin"),
+        {"schema": "job"},
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid7()))
     company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    match: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    score: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    success: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     salary: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     stack: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     visa: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -38,10 +42,16 @@ class JobModel(Base):
     action: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     workflow_log: Mapped[str] = mapped_column(Text, default="[]")
-    locations: Mapped[str] = mapped_column(Text, default="[]")
     deleted: Mapped[int] = mapped_column(Integer, default=0)
-    work_types: Mapped[str] = mapped_column(Text, default="[]")
-    employment_types: Mapped[str] = mapped_column(Text, default='["Full-time"]')
+    work_types: Mapped[list[str]] = mapped_column(
+        JSONB, default=list, server_default=sa.text("'[]'::jsonb"), nullable=False
+    )
+    employment_types: Mapped[list[str]] = mapped_column(
+        JSONB,
+        default=lambda: ["Full-time"],
+        server_default=sa.text("""'["Full-time"]'::jsonb"""),
+        nullable=False,
+    )
     raw_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     structured_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     adv_at: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -64,7 +74,9 @@ class JobModel(Base):
     rescoring: Mapped[int] = mapped_column(Integer, default=0)
     pinned: Mapped[int] = mapped_column("favorite", Integer, default=0)
     dismissed: Mapped[int] = mapped_column("dismissed", Integer, default=0)
-    tags: Mapped[str] = mapped_column("tags", Text, server_default="[]", nullable=False)
+    tags: Mapped[list[str]] = mapped_column(
+        "tags", JSONB, default=list, server_default=sa.text("'[]'::jsonb"), nullable=False
+    )
     links: Mapped[str] = mapped_column(Text, default="[]")
     source: Mapped[Optional[str]] = mapped_column(String, default="web")
     status: Mapped[str] = mapped_column(String, default="imported")

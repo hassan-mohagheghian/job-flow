@@ -17,7 +17,7 @@ from rules.infrastructure.models.rule_model import RuleModel
 def _seed_job(sa_session, id=None, url='https://example.com/job', **kw):
     data = dict(
         id=id or str(uuid.uuid7()), company='Acme', role='Engineer', location='Berlin',
-        match='High', score='A', url=url, status='processing',
+        url=url, status='processing',
         raw_description='Engineer role responsibilities requirements python',
         rescoring=0, user_id='test-user',
     )
@@ -32,11 +32,11 @@ def _seed_job(sa_session, id=None, url='https://example.com/job', **kw):
 def _full_job_dict(num=100):
     return {
         'id': f'job-{num}', 'company': 'Acme', 'role': 'Engineer', 'location': 'Munich, Germany',
-        'match': 'High', 'score': 'A', 'salary': '120k', 'stack': 'Python, Go',
+        'salary': '120k', 'stack': 'Python, Go',
         'visa': 'Yes', 'applicants': '10', 'posted': '2 weeks ago',
         'industry': 'Tech', 'domain': 'job', 'notes': 'note', 'action': 'Apply Now',
         'url': f'https://example.com/{num}', 'work_type': 'remote',
-        'locations': '["Berlin"]', 'posted_at': None, 'adv_at': None,
+        'posted_at': None, 'adv_at': None,
         'employment_type': 'full-time', 'work_types': ['Remote Work', 'Hybrid'],
         'raw_description': 'desc', 'structured_description': '{}',
     }
@@ -124,7 +124,7 @@ class TestInsertJob:
         d['employment_types'] = []
         _insert_job(d)
         row = mock_get_session_worker.query(JobModel).filter(JobModel.id == d['id']).first()
-        assert json.loads(row.employment_types) == [expected]
+        assert row.employment_types == [expected]
 
     def test_work_types_from_string(self, mock_get_session_worker):
         from jobs.infrastructure.workers.worker import _insert_job
@@ -132,7 +132,7 @@ class TestInsertJob:
         d['work_types'] = json.dumps(['Remote', 'On-site'])
         _insert_job(d)
         row = mock_get_session_worker.query(JobModel).filter(JobModel.id == d['id']).first()
-        assert json.loads(row.work_types) == ['Remote', 'On-site']
+        assert row.work_types == ['Remote', 'On-site']
 
     def test_work_types_invalid_string_falls_back(self, mock_get_session_worker):
         from jobs.infrastructure.workers.worker import _insert_job
@@ -141,7 +141,7 @@ class TestInsertJob:
         d['work_type'] = ''
         _insert_job(d)
         row = mock_get_session_worker.query(JobModel).filter(JobModel.id == d['id']).first()
-        assert json.loads(row.work_types) == ['On-site']
+        assert row.work_types == ['On-site']
 
     def test_work_types_from_single_work_type(self, mock_get_session_worker):
         from jobs.infrastructure.workers.worker import _insert_job
@@ -150,15 +150,8 @@ class TestInsertJob:
         d['work_type'] = 'hybrid'
         _insert_job(d)
         row = mock_get_session_worker.query(JobModel).filter(JobModel.id == d['id']).first()
-        assert json.loads(row.work_types) == ['Hybrid']
+        assert row.work_types == ['Hybrid']
 
-    def test_locations_as_string(self, mock_get_session_worker):
-        from jobs.infrastructure.workers.worker import _insert_job
-        d = _full_job_dict()
-        d['locations'] = 'Berlin'
-        _insert_job(d)
-        row = mock_get_session_worker.query(JobModel).filter(JobModel.id == d['id']).first()
-        assert json.loads(row.locations) == ['Munich']
 
     def test_upsert_existing(self, mock_get_session_worker):
         from jobs.infrastructure.workers.worker import _insert_job
@@ -283,27 +276,6 @@ class TestNormalizeJobDataExtra:
         d = {'location': 'Munich (Germany)'}
         result = _normalize_job_data(d)
         assert result['location'] == 'Munich'
-
-    def test_unknown_city_in_locations_array_kept(self):
-        from jobs.infrastructure.workers.worker import _normalize_job_data
-        d = {'location': 'Berlin', 'locations': ['Springfield', 'Berlin']}
-        result = _normalize_job_data(d)
-        assert 'Springfield' in result['locations']
-        assert 'Berlin' in result['locations']
-
-    def test_locations_string_invalid_json(self):
-        from jobs.infrastructure.workers.worker import _normalize_job_data
-        d = {'location': 'Berlin', 'locations': 'not json {{'}
-        result = _normalize_job_data(d)
-        assert isinstance(result['locations'], list)
-        assert 'Berlin' in result['locations']
-
-    def test_empty_entry_in_locations_array(self):
-        from jobs.infrastructure.workers.worker import _normalize_job_data
-        d = {'location': '', 'locations': ['', 'Berlin']}
-        result = _normalize_job_data(d)
-        assert result['locations'] == ['Berlin']
-
 
 class TestFailAndLog:
     def test_fail_with_step(self, mock_get_session_worker):

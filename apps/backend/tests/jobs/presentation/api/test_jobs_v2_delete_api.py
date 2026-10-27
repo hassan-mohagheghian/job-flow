@@ -20,12 +20,11 @@ def _create_job(test_db, **kwargs) -> JobModel:
         role="SWE",
         company="Tech Corp",
         location="Berlin",
-        work_types='["Remote"]',
-        employment_types='["Full-time"]',
+        work_types=["Remote"],
+        employment_types=["Full-time"],
         status="imported",
         deleted=0,
         workflow_log="[]",
-        locations="[]",
         rescoring=0,
         user_id="test-user",
     )
@@ -62,6 +61,25 @@ class TestDeleteJobAPI:
         assert test_db.query(JobModel).filter(JobModel.id == job.id).first() is None
         assert test_db.query(ProcessingExecutionModel).filter(
             ProcessingExecutionModel.target_id == job.id
+        ).count() == 0
+
+    def test_delete_job_cascades_analysis_and_summary(self, client, test_db):
+        from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
+        from jobs.infrastructure.models.misc_models import SummaryModel
+
+        job = _create_job(test_db, title="Doomed")
+        test_db.add(JobAnalysisModel(job_id=job.id, user_id="test-user", recommendation="apply"))
+        test_db.add(SummaryModel(job_id=job.id, user_id="test-user", summary="s"))
+        test_db.commit()
+
+        resp = client.delete(f"/api/jobs/{job.id}")
+
+        assert resp.status_code == 204
+        assert test_db.query(JobAnalysisModel).filter(
+            JobAnalysisModel.job_id == job.id
+        ).count() == 0
+        assert test_db.query(SummaryModel).filter(
+            SummaryModel.job_id == job.id
         ).count() == 0
 
     def test_delete_non_existent_returns_404(self, client):

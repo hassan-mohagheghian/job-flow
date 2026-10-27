@@ -32,8 +32,7 @@ def _create_job(test_db, url: str, source_site, user_id: str = "test-user", dele
         user_id=user_id,
         source_site_id=source_site.id if source_site else None,
         workflow_log="[]",
-        locations="[]",
-        employment_types='["Full-time"]',
+        employment_types=["Full-time"],
         rescoring=0,
     )
     test_db.add(model)

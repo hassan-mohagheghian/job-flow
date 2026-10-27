@@ -111,20 +111,11 @@ class TestSAJobRepository:
         jobs, total = repo.list_jobs(filters={"filter_tech": "Python"})
         assert total == 1
 
-    def test_list_jobs_filter_matches(self, session):
-        from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
-        from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", match="High")
-        self._job(session, url="https://ex.com/2", match="Low")
-        repo = SQLAlchemyJobRepository(session, user_id="test-user")
-        jobs, total = repo.list_jobs(filters={"filter_matches": "High"})
-        assert total == 1
-
     def test_list_jobs_filter_work_types(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
         from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", work_types='["Remote"]')
-        self._job(session, url="https://ex.com/2", work_types='["On-site"]')
+        self._job(session, url="https://ex.com/1", work_types=["Remote"])
+        self._job(session, url="https://ex.com/2", work_types=["On-site"])
         repo = SQLAlchemyJobRepository(session, user_id="test-user")
         jobs, total = repo.list_jobs(filters={"filter_work_types": "Remote"})
         assert total == 1
@@ -132,8 +123,8 @@ class TestSAJobRepository:
     def test_list_jobs_filter_employment_types(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
         from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", employment_types='["Full-time"]')
-        self._job(session, url="https://ex.com/2", employment_types='["Part-time"]')
+        self._job(session, url="https://ex.com/1", employment_types=["Full-time"])
+        self._job(session, url="https://ex.com/2", employment_types=["Part-time"])
         repo = SQLAlchemyJobRepository(session, user_id="test-user")
         jobs, total = repo.list_jobs(filters={"filter_employment_types": "Full-time"})
         assert total == 1
@@ -156,15 +147,6 @@ class TestSAJobRepository:
         jobs, total = repo.list_jobs(filters={"filter_applied": "true"})
         assert total == 1
 
-    def test_list_jobs_filter_scores(self, session):
-        from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
-        from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", score="A")
-        self._job(session, url="https://ex.com/2", score="B")
-        repo = SQLAlchemyJobRepository(session, user_id="test-user")
-        jobs, total = repo.list_jobs(filters={"filter_scores": "A"})
-        assert total == 1
-
     def test_list_jobs_sorting(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
         from jobs.infrastructure.models.job_model import JobModel
@@ -181,18 +163,6 @@ class TestSAJobRepository:
         repo = SQLAlchemyJobRepository(session, user_id="test-user")
         jobs, total = repo.list_jobs(sort_by="invalid_field", sort_dir="invalid")
         assert len(jobs) == 1
-
-    def test_get_stats(self, session):
-        from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
-        from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", match="High", score="A", work_types='["Remote"]')
-        self._job(session, url="https://ex.com/2", match="Low", score="B")
-        repo = SQLAlchemyJobRepository(session, user_id="test-user")
-        stats = repo.get_stats()
-        assert stats["total"] == 2
-        assert stats["high_match"] == 1
-        assert stats["apply_now"] == 1
-        assert stats["remote"] == 1
 
     def test_update(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
@@ -337,17 +307,18 @@ class TestSAJobRepository:
     def test_get_dashboard_counts(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
         from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", match="High")
-        self._job(session, url="https://ex.com/2", match="Low")
+        self._job(session, url="https://ex.com/1", overall_score=90)
+        self._job(session, url="https://ex.com/2", overall_score=40)
+        self._job(session, url="https://ex.com/3", overall_score=80)
         repo = SQLAlchemyJobRepository(session, user_id="test-user")
         counts = repo.get_dashboard_counts()
-        assert counts["jobs_total"] == 2
-        assert counts["jobs_high_match"] == 1
+        assert counts["jobs_total"] == 3
+        assert counts["jobs_high_match"] == 2
 
     def test_get_location_data(self, session):
         from jobs.infrastructure.repositories.sa_job_repository import SQLAlchemyJobRepository
         from jobs.infrastructure.models.job_model import JobModel
-        self._job(session, url="https://ex.com/1", location="Berlin", locations='["Berlin"]')
+        self._job(session, url="https://ex.com/1", location="Berlin")
         repo = SQLAlchemyJobRepository(session, user_id="test-user")
         result = repo.get_location_data()
         assert len(result) == 1

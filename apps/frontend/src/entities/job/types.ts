@@ -2,8 +2,6 @@ export interface Job {
   company: string
   role: string
   location: string
-  score: string
-  match: string
   overall_score: number | null
   fit_score: number | null
   success_score: number | null
@@ -14,7 +12,6 @@ export interface Job {
   posted_at: string | null
   created_at: string
   applicants: string | null
-  locations: string | null
   linked_company: string | null
   status: string
   current_node: string | null

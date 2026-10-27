@@ -67,10 +67,10 @@ class PersistNode:
                 updates[key] = value
         work_types = fields.get("work_types") or []
         if work_types:
-            updates["work_types"] = json.dumps(work_types, ensure_ascii=False)
+            updates["work_types"] = work_types
         employment_types = fields.get("employment_types") or []
         if employment_types:
-            updates["employment_types"] = json.dumps(employment_types, ensure_ascii=False)
+            updates["employment_types"] = employment_types
         if result.get("apply_reason"):
             updates["apply_reason"] = result["apply_reason"]
         for key, score in (

@@ -28,9 +28,6 @@ class Job(BaseEntity):
         company: str | None = None,
         role: str | None = None,
         location: str | None = None,
-        match: str | None = None,
-        score: str | None = None,
-        success: str | None = None,
         salary: str | None = None,
         stack: str | None = None,
         visa: str | None = None,
@@ -42,10 +39,9 @@ class Job(BaseEntity):
         action: str | None = None,
         url: str | None = None,
         workflow_log: str = "[]",
-        locations: str = "[]",
         deleted: int = 0,
-        work_types: str = "[]",
-        employment_types: str = '["Full-time"]',
+        work_types: list[str] | None = None,
+        employment_types: list[str] | None = None,
         raw_description: str | None = None,
         structured_description: str | None = None,
         adv_at: str | None = None,
@@ -81,9 +77,6 @@ class Job(BaseEntity):
         self.company = company
         self.role = role
         self.location = location
-        self.match = match
-        self.score = score
-        self.success = success
         self.salary = salary
         self.stack = stack
         self.visa = visa
@@ -95,10 +88,9 @@ class Job(BaseEntity):
         self.action = action
         self.url = url
         self.workflow_log = workflow_log
-        self.locations = locations
         self.deleted = deleted
-        self.work_types = work_types
-        self.employment_types = employment_types
+        self.work_types = work_types or []
+        self.employment_types = employment_types or ["Full-time"]
         self.raw_description = raw_description
         self.structured_description = structured_description
         self.adv_at = adv_at
@@ -148,9 +140,6 @@ class Job(BaseEntity):
             "company": self.company,
             "role": self.role,
             "location": self.location,
-            "match": self.match,
-            "score": self.score,
-            "success": self.success,
             "salary": self.salary,
             "stack": self.stack,
             "visa": self.visa,
@@ -162,7 +151,6 @@ class Job(BaseEntity):
             "action": self.action,
             "url": self.url,
             "workflow_log": self.workflow_log,
-            "locations": self.locations,
             "deleted": self.deleted,
             "work_types": self.work_types,
             "employment_types": self.employment_types,
@@ -205,9 +193,6 @@ class Job(BaseEntity):
             company=data.get("company"),
             role=data.get("role"),
             location=data.get("location"),
-            match=data.get("match"),
-            score=data.get("score"),
-            success=data.get("success"),
             salary=data.get("salary"),
             stack=data.get("stack"),
             visa=data.get("visa"),
@@ -219,10 +204,9 @@ class Job(BaseEntity):
             action=data.get("action"),
             url=data.get("url"),
             workflow_log=data.get("workflow_log", "[]"),
-            locations=data.get("locations", "[]"),
             deleted=data.get("deleted", 0),
-            work_types=data.get("work_types", "[]"),
-            employment_types=data.get("employment_types", '["Full-time"]'),
+            work_types=data.get("work_types") or [],
+            employment_types=data.get("employment_types") or ["Full-time"],
             raw_description=data.get("raw_description"),
             structured_description=data.get("structured_description"),
             adv_at=data.get("adv_at"),

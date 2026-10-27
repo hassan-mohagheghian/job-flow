@@ -157,10 +157,6 @@ def _insert_job(d):
     posted_at = d.get('posted_at') or _parse_posted_date(d.get('posted', ''))
     adv_at = d.get('adv_at') or _parse_adv_at(d.get('posted', ''))
     see_at = d.get('see_at') or now
-    locations = d.get('locations', [])
-    if isinstance(locations, str):
-        locations = [locations] if locations else []
-
     employment_types = d.get('employment_types', [])
     if isinstance(employment_types, str):
         try:
@@ -218,8 +214,6 @@ def _insert_job(d):
         'company': d['company'],
         'role': d['role'],
         'location': d['location'],
-        'match': d['match'],
-        'score': d['score'],
         'salary': d['salary'],
         'stack': d['stack'],
         'visa': d['visa'],
@@ -233,16 +227,14 @@ def _insert_job(d):
         'workflow_log': d.get('workflow_log', '[]'),
         'created_at': d.get('created_at', now),
         'posted_at': posted_at,
-        'locations': json.dumps(locations),
         'deleted': 0,
-        'work_types': json.dumps(normalized_wt),
-        'employment_types': json.dumps(normalized_et),
+        'work_types': normalized_wt,
+        'employment_types': normalized_et,
         'raw_description': d.get('raw_description'),
         'structured_description': d.get('structured_description'),
         'raw_file_path': d.get('raw_file_path'),
         'structured_file_path': d.get('structured_file_path'),
         'rescoring': d.get('rescoring', 0),
-        'success': d.get('success'),
         'adv_at': adv_at,
         'see_at': see_at,
         'apply_reason': d.get('apply_reason', ''),
@@ -467,16 +459,21 @@ def rescore(job_id):
         if fit_score is not None and success_score is not None:
             overall_score = int(round(fit_score * SCORING_FIT_WEIGHT + success_score * SCORING_SUCCESS_WEIGHT))
 
+        # Legacy summary grade fields (the summaries table keeps them).
+        score_grade = normalize_score(analyzed_data.get('score', overall_score))
+        success_grade = normalize_score(analyzed_data.get('success', success_score))
+        match_grade = analyzed_data.get('match') or (
+            'High' if overall_score is not None and overall_score >= 80
+            else 'Medium' if overall_score is not None and overall_score >= 60
+            else 'Low'
+        )
+
         # Update the existing job with new scores
         job_data = {
             'id': job_id,
             'company': analyzed_data.get('company', j['company']),
             'role': analyzed_data.get('role', j['role']),
             'location': analyzed_data.get('location', j.get('location', 'Not specified')),
-            'locations': analyzed_data.get('locations', []),
-            'match': analyzed_data.get('match', j.get('match', 'Medium')),
-            'score': normalize_score(analyzed_data.get('score', j.get('score', 'P'))),
-            'success': normalize_score(analyzed_data.get('success', j.get('success', 'P'))),
             'fit_score': fit_score,
             'success_score': success_score,
             'overall_score': overall_score,
@@ -505,7 +502,7 @@ def rescore(job_id):
         _insert_job(job_data)
         _insert_summary({
             'job_id': job_id, 'company': job_data['company'],
-            'match': job_data['match'], 'score': job_data['score'],
+            'match': match_grade, 'score': score_grade,
             'summary': data.get('summary', {}).get('summary', ''),
             'stack': job_data['stack'],
             'resumeFit': data.get('summary', {}).get('resumeFit', ''),
@@ -522,7 +519,7 @@ def rescore(job_id):
         finally:
             session.close()
 
-        log.info("worker.rescore_done", job_id=job_id, company=job_data['company'], score=job_data['score'])
+        log.info("worker.rescore_done", job_id=job_id, company=job_data['company'], score=score_grade)
 
     except Exception as e:
         log.error("worker.rescore_failed", job_id=job_id, error=str(e))
@@ -647,7 +644,7 @@ def _mark_old_job_deleted(url, exclude_id=None):
         session.close()
 
 def _normalize_job_data(d):
-    """Normalize job location and work_types fields."""
+    """Normalize the job location field."""
     import re
     from cities.domain.entities.city import CityNormalizer
 
@@ -673,35 +670,6 @@ def _normalize_job_data(d):
         cities = extract_cities(location)
         if cities:
             d['location'] = cities[0]
-
-    # Normalize locations array
-    locations = d.get('locations', [])
-    if isinstance(locations, str):
-        try:
-            locations = json.loads(locations)
-        except:
-            locations = []
-
-    # Add cities from primary location if not in array
-    if location:
-        for city in extract_cities(location):
-            if city not in locations:
-                locations.append(city)
-
-    # Normalize each location in array
-    normalized = []
-    for loc in locations:
-        if isinstance(loc, str):
-            cities = extract_cities(loc)
-            for c in cities:
-                if c not in normalized:
-                    normalized.append(c)
-            if not cities and loc.strip():
-                # Keep as-is if not a known city but not empty
-                if loc.strip() not in normalized:
-                    normalized.append(loc.strip())
-
-    d['locations'] = normalized if normalized else [d.get('location', 'Not specified')]
 
     return d
 

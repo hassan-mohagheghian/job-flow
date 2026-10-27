@@ -781,9 +781,6 @@ def update_job(
         data["notes"] = json.dumps(data["notes"], ensure_ascii=False)
     if "links" in data and data["links"] is not None:
         data["links"] = json.dumps(data["links"], ensure_ascii=False)
-    for key in ("work_types", "employment_types"):
-        if key in data and data[key] is not None:
-            data[key] = json.dumps(data[key], ensure_ascii=False)
     job_dict = repo.update_by_id(job_id, data)
     if not job_dict:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")

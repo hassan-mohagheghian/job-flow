@@ -41,6 +41,7 @@ def _seed_company(sa_session, name="Co"):
 
 
 def test_summaries_compat(client, sa_session):
+    sa_session.add(JobModel(id="job-901", company="SummaryCo", user_id="test-user"))
     sa_session.add(SummaryModel(job_id="job-901", company="SummaryCo", score="A"))
     sa_session.commit()
     resp = client.get("/api/summaries")

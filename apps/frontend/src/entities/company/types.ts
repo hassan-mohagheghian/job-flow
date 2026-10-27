@@ -107,8 +107,6 @@ export interface CompanyLinkedJob {
   id: string
   role: string | null
   location: string | null
-  match: string | null
-  score: string | null
   fit_score: number | null
   success_score: number | null
   overall_score: number | null

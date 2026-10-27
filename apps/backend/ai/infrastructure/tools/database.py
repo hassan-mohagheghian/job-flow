@@ -111,9 +111,9 @@ class DatabaseTool(BaseTool):
         if "company" in params:
             query = query.where(JobModel.company.ilike(f"%{params['company']}%"))
         if "min_score" in params:
-            query = query.where(JobModel.score >= params["min_score"])
+            query = query.where(JobModel.overall_score >= params["min_score"])
         if "max_score" in params:
-            query = query.where(JobModel.score <= params["max_score"])
+            query = query.where(JobModel.overall_score <= params["max_score"])
         if "location" in params:
             query = query.where(JobModel.location.ilike(f"%{params['location']}%"))
         if "limit" in params:
@@ -146,7 +146,7 @@ class DatabaseTool(BaseTool):
             select(func.count()).select_from(JobModel).where(JobModel.deleted == 0)
         ).scalar()
         avg_score = session.execute(
-            select(func.avg(JobModel.score)).where(JobModel.deleted == 0)
+            select(func.avg(JobModel.overall_score)).where(JobModel.deleted == 0)
         ).scalar()
         companies = session.execute(
             select(func.count(func.distinct(JobModel.company))).where(JobModel.deleted == 0)
@@ -396,7 +396,6 @@ class DatabaseTool(BaseTool):
             "company": job.company,
             "title": job.title,
             "location": job.location,
-            "score": job.score,
             "fit_score": job.fit_score,
             "success_score": job.success_score,
             "overall_score": job.overall_score,

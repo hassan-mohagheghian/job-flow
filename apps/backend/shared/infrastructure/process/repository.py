@@ -290,7 +290,6 @@ class JobRepository(IJobRepository):
             return None
         return {
             'id': m.id, 'company': m.company, 'url': m.url,
-            'score': m.score, 'match': m.match,
         }
 
     def insert(self, job_data: dict) -> str:
@@ -307,8 +306,6 @@ class JobRepository(IJobRepository):
                 company=job_data.get('company'),
                 role=job_data.get('role'),
                 location=job_data.get('location'),
-                match=job_data.get('match'),
-                score=job_data.get('score'),
                 salary=job_data.get('salary'),
                 stack=job_data.get('stack'),
                 visa=job_data.get('visa'),
@@ -322,16 +319,14 @@ class JobRepository(IJobRepository):
                 workflow_log=job_data.get('workflow_log', '[]'),
                 created_at=job_data.get('created_at', now),
                 posted_at=job_data.get('posted_at'),
-                locations=json.dumps(job_data.get('locations', []), ensure_ascii=False),
                 deleted=job_data.get('deleted', 0),
-                work_types=json.dumps(job_data.get('work_types', []), ensure_ascii=False),
-                employment_types=json.dumps(job_data.get('employment_types', ['Full-time']), ensure_ascii=False),
+                work_types=job_data.get('work_types', []),
+                employment_types=job_data.get('employment_types', ['Full-time']),
                 raw_description=job_data.get('raw_description'),
                 structured_description=job_data.get('structured_description'),
                 raw_file_path=job_data.get('raw_file_path'),
                 structured_file_path=job_data.get('structured_file_path'),
                 rescoring=job_data.get('rescoring', 0),
-                success=job_data.get('success'),
                 adv_at=job_data.get('adv_at'),
                 see_at=job_data.get('see_at'),
                 apply_reason=job_data.get('apply_reason'),

@@ -25,9 +25,6 @@ def job_model_to_dict(model: JobModel) -> dict[str, Any]:
         "company": model.company,
         "role": model.role,
         "location": model.location,
-        "match": model.match,
-        "score": model.score,
-        "success": model.success,
         "salary": model.salary,
         "stack": model.stack,
         "visa": model.visa,
@@ -40,7 +37,6 @@ def job_model_to_dict(model: JobModel) -> dict[str, Any]:
         "action": model.action,
         "url": model.url,
         "workflow_log": model.workflow_log,
-        "locations": model.locations,
         "deleted": model.deleted,
         "work_types": model.work_types,
         "employment_types": model.employment_types,
@@ -81,3 +77,53 @@ def job_model_to_dict(model: JobModel) -> dict[str, Any]:
 def dict_to_job_model(data: dict[str, Any]) -> JobModel:
     """Convert a domain dictionary to a JobModel."""
     return JobModel(**{k: v for k, v in data.items() if hasattr(JobModel, k)})
+
+
+# Columns the Jobs list needs. Used with ``load_only`` so list queries never
+# fetch the multi-KB description / workflow columns.
+JOB_LIST_FIELDS = (
+    "id",
+    "title",
+    "role",
+    "company",
+    "location",
+    "work_types",
+    "visa",
+    "pinned",
+    "dismissed",
+    "tags",
+    "easy_apply",
+    "status",
+    "overall_score",
+    "fit_score",
+    "success_score",
+    "updated_at",
+    "created_at",
+)
+
+
+def job_model_to_list_dict(model: JobModel) -> dict[str, Any]:
+    """Convert a partially-loaded JobModel into the Jobs list projection.
+
+    Only reads the fields in ``JOB_LIST_FIELDS``; pair with
+    ``load_only(*JOB_LIST_FIELDS)`` to avoid loading text payloads.
+    """
+    return {
+        "id": model.id,
+        "title": model.title,
+        "role": model.role,
+        "company": model.company,
+        "location": model.location,
+        "work_types": model.work_types,
+        "visa": model.visa,
+        "pinned": model.pinned,
+        "dismissed": model.dismissed,
+        "tags": model.tags,
+        "easy_apply": model.easy_apply,
+        "status": model.status,
+        "overall_score": model.overall_score,
+        "fit_score": model.fit_score,
+        "success_score": model.success_score,
+        "updated_at": _to_str(model.updated_at),
+        "created_at": _to_str(model.created_at),
+    }

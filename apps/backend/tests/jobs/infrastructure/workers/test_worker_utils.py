@@ -117,21 +117,6 @@ class TestNormalizeJobData:
         result = _normalize_job_data(d)
         assert 'Springfield' in result['location']
 
-    def test_locations_array_normalized(self):
-        from jobs.infrastructure.workers.worker import _normalize_job_data
-        d = {'location': 'Berlin', 'locations': ['Munich', 'Hamburg']}
-        result = _normalize_job_data(d)
-        assert 'Berlin' in result['locations']
-        assert 'Munich' in result['locations']
-        assert 'Hamburg' in result['locations']
-
-    def test_empty_location(self):
-        from jobs.infrastructure.workers.worker import _normalize_job_data
-        d = {'location': ''}
-        result = _normalize_job_data(d)
-        assert isinstance(result['locations'], list)
-
-
 class TestFetchUrl:
     @patch('jobs.infrastructure.workers.worker.fetch_page')
     def test_fetch_invalid_url_raises(self, mock_fetch_page):

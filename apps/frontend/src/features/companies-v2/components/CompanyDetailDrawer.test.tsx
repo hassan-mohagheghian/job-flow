@@ -236,9 +236,9 @@ describe('CompanyDetailDrawer recruiter jobs', () => {
       company_type: 'RECRUITING_AGENCY',
       recruiter_job_count: 3,
       recruiter_jobs: [
-        { id: 'job-1', role: 'Senior Backend Engineer', location: 'Berlin', match: null, score: null, fit_score: 84, success_score: 63, overall_score: 76, rank: 1 },
-        { id: 'job-2', role: 'Platform Engineer', location: 'Munich', match: null, score: null, fit_score: 90, success_score: 70, overall_score: 82, rank: 2 },
-        { id: 'job-3', role: 'Data Engineer', location: 'Berlin', match: null, score: null, fit_score: 70, success_score: 55, overall_score: 64, rank: 3 },
+        { id: 'job-1', role: 'Senior Backend Engineer', location: 'Berlin', fit_score: 84, success_score: 63, overall_score: 76, rank: 1 },
+        { id: 'job-2', role: 'Platform Engineer', location: 'Munich', fit_score: 90, success_score: 70, overall_score: 82, rank: 2 },
+        { id: 'job-3', role: 'Data Engineer', location: 'Berlin', fit_score: 70, success_score: 55, overall_score: 64, rank: 3 },
       ],
     }))
     renderDrawer('company-1', vi.fn(), vi.fn(), onOpenJob)

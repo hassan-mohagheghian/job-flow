@@ -1,17 +1,20 @@
 """SQLAlchemy-based job repository implementation."""
 
-import json
 from typing import Any
 from datetime import datetime, UTC, timedelta
 
 from sqlalchemy import func, or_, and_, case, cast, select, DateTime, asc as sa_asc, desc as sa_desc, true as sa_true, exc as sa_exc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 
 from jobs.domain.repositories.job_repository import IJobRepository
 from jobs.domain.services.job_source_rules import display_name_for_domain, resolve_source
 from jobs.infrastructure.models.job_model import JobModel, JobSourceModel
 from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
-from jobs.infrastructure.mappers import job_model_to_dict
+from jobs.infrastructure.mappers import (
+    JOB_LIST_FIELDS,
+    job_model_to_dict,
+    job_model_to_list_dict,
+)
 
 IntegrityError = sa_exc.IntegrityError
 
@@ -107,37 +110,26 @@ class SQLAlchemyJobRepository(IJobRepository):
             if filters.get("filter_cities"):
                 cities = [c.strip() for c in filters["filter_cities"].split(",") if c.strip()]
                 if cities:
-                    city_conditions = []
-                    for city in cities:
-                        city_conditions.append(JobModel.locations.contains(f'"{city}"'))
-                        city_conditions.append(JobModel.location == city)
-                    query = query.filter(or_(*city_conditions))
+                    query = query.filter(JobModel.location.in_(cities))
 
             if filters.get("filter_companies"):
                 companies = [c.strip() for c in filters["filter_companies"].split(",") if c.strip()]
                 if companies:
                     query = query.filter(JobModel.company.in_(companies))
 
-            if filters.get("filter_matches"):
-                matches = [m.strip() for m in filters["filter_matches"].split(",") if m.strip()]
-                if matches:
-                    query = query.filter(JobModel.match.in_(matches))
-
             if filters.get("filter_work_types"):
                 wtypes = [w.strip() for w in filters["filter_work_types"].split(",") if w.strip()]
                 if wtypes:
-                    wt_conditions = []
-                    for wt in wtypes:
-                        wt_conditions.append(JobModel.work_types.contains(f'"{wt}"'))
-                    query = query.filter(or_(*wt_conditions))
+                    query = query.filter(
+                        or_(*(JobModel.work_types.contains([wt]) for wt in wtypes))
+                    )
 
             if filters.get("filter_employment_types"):
                 etypes = [e.strip() for e in filters["filter_employment_types"].split(",") if e.strip()]
                 if etypes:
-                    et_conditions = []
-                    for et in etypes:
-                        et_conditions.append(JobModel.employment_types.contains(f'"{et}"'))
-                    query = query.filter(or_(*et_conditions))
+                    query = query.filter(
+                        or_(*(JobModel.employment_types.contains([et]) for et in etypes))
+                    )
 
             if filters.get("filter_tech"):
                 like_param = f'%{filters["filter_tech"]}%'
@@ -158,11 +150,6 @@ class SQLAlchemyJobRepository(IJobRepository):
             if filters.get("filter_applied") == "true":
                 query = query.filter(JobModel.apply_time.isnot(None))
 
-            if filters.get("filter_scores"):
-                scores = [s.strip() for s in filters["filter_scores"].split(",") if s.strip()]
-                if scores:
-                    query = query.filter(JobModel.score.in_(scores))
-
             if filters.get("filter_status"):
                 statuses = [s.strip() for s in filters["filter_status"].split(",") if s.strip()]
                 if statuses:
@@ -172,8 +159,8 @@ class SQLAlchemyJobRepository(IJobRepository):
 
         # Build ORDER BY
         allowed_sorts = {
-            "created_at", "overall_score", "fit_score", "success_score", "score",
-            "score_success", "score_combined", "company", "location",
+            "created_at", "overall_score", "fit_score", "success_score",
+            "company", "location",
             "posted_at", "applicants", "adv_at", "see_at", "apply_time", "response_time",
         }
         if sort_by not in allowed_sorts:
@@ -196,14 +183,13 @@ class SQLAlchemyJobRepository(IJobRepository):
     def get_stats(self) -> dict[str, int]:
         q = self._base_query()
         total = q.count()
-        high_match = q.filter(JobModel.match == "High").count()
-        apply_now = q.filter(JobModel.score.in_(["A", "A+", "A++"])).count()
-        remote = q.filter(JobModel.work_types.contains('"Remote"')).count()
+        high_match = q.filter(JobModel.overall_score >= 80).count()
+        remote = q.filter(JobModel.work_types.contains(["Remote"])).count()
 
         return {
             "total": total,
             "high_match": high_match,
-            "apply_now": apply_now,
+            "apply_now": high_match,
             "remote": remote,
         }
 
@@ -434,23 +420,20 @@ class SQLAlchemyJobRepository(IJobRepository):
         return JobModel.user_id == self._user_id if self._user_id else sa_true()
 
     def delete_by_id(self, uuid: str) -> bool:
-        """Hard-delete a job by UUID and its related tables.
+        """Hard-delete a job by UUID.
 
-        Deletes the job row plus related records that reference it (summaries).
-        Processing executions are handled by the caller via the processing
-        execution repository.
+        Child rows in the same schema (``job_analysis``, ``summaries``,
+        ``job_companies``) are removed by the database through
+        ``ON DELETE CASCADE`` FKs. Processing executions are handled by the
+        caller via the processing execution repository.
         """
-        from jobs.infrastructure.models.misc_models import SummaryModel
-        from jobs.infrastructure.models.job_analysis_model import JobAnalysisModel
         q = self._session.query(JobModel).filter(JobModel.id == uuid)
         if self._user_id:
             q = q.filter(JobModel.user_id == self._user_id)
         model = q.first()
         if not model:
             return False
-        self._session.query(JobModel).filter(JobModel.id == uuid).delete()
-        self._session.query(JobAnalysisModel).filter(JobAnalysisModel.job_id == uuid).delete(synchronize_session=False)
-        self._session.query(SummaryModel).filter(SummaryModel.job_id == uuid).delete(synchronize_session=False)
+        self._session.delete(model)
         self._session.commit()
         return True
 
@@ -803,12 +786,12 @@ class SQLAlchemyJobRepository(IJobRepository):
     def get_dashboard_counts(self) -> dict[str, int]:
         base = self._base_query()
         total = base.count() or 0
-        high = base.filter(JobModel.match == "High").count() or 0
+        high = base.filter(JobModel.overall_score >= 80).count() or 0
         return {"jobs_total": total, "jobs_high_match": high}
 
     def get_location_data(self) -> list[dict[str, Any]]:
-        rows = self._base_query().with_entities(JobModel.location, JobModel.locations).all()
-        return [{"location": r[0], "locations": r[1]} for r in rows]
+        rows = self._base_query().with_entities(JobModel.location).all()
+        return [{"location": r[0]} for r in rows]
 
     def get_company_id_by_id(self, job_id: str) -> str | None:
         q = self._session.query(JobModel.company_id).filter(JobModel.id == job_id)
@@ -872,9 +855,9 @@ class SQLAlchemyJobRepository(IJobRepository):
 
         if remote is not None:
             if remote:
-                q = q.filter(JobModel.work_types.contains('"Remote"'))
+                q = q.filter(JobModel.work_types.contains(["Remote"]))
             else:
-                q = q.filter(~JobModel.work_types.contains('"Remote"'))
+                q = q.filter(~JobModel.work_types.contains(["Remote"]))
 
         if visa is not None:
             if visa:
@@ -949,7 +932,9 @@ class SQLAlchemyJobRepository(IJobRepository):
         recommendation: list[str] | None = None,
         created_date: str | None = None,
     ) -> tuple[list[dict[str, Any]], int, str | None, bool]:
-        q = self._base_query()
+        q = self._base_query().options(
+            load_only(*(getattr(JobModel, field) for field in JOB_LIST_FIELDS))
+        )
 
         if query:
             like = f"%{query}%"
@@ -977,9 +962,9 @@ class SQLAlchemyJobRepository(IJobRepository):
 
         if remote is not None:
             if remote:
-                q = q.filter(JobModel.work_types.contains('"Remote"'))
+                q = q.filter(JobModel.work_types.contains(["Remote"]))
             else:
-                q = q.filter(~JobModel.work_types.contains('"Remote"'))
+                q = q.filter(~JobModel.work_types.contains(["Remote"]))
 
         if visa is not None:
             if visa:
@@ -1009,9 +994,8 @@ class SQLAlchemyJobRepository(IJobRepository):
             q = q.filter(JobModel.dismissed == (1 if dismissed else 0))
 
         if tags:
-            import json as _json
             for tag in tags:
-                q = q.filter(JobModel.tags.contains(f'"{tag}"'))
+                q = q.filter(JobModel.tags.contains([tag]))
 
         if recommendation:
             q = q.filter(JobModel.id.in_(
@@ -1177,7 +1161,7 @@ class SQLAlchemyJobRepository(IJobRepository):
 
         rows = q.all()
         has_more = len(rows) > page_size
-        items = [job_model_to_dict(r) for r in rows[:page_size]]
+        items = [job_model_to_list_dict(r) for r in rows[:page_size]]
         if len(rows) >= page_size:
             boundary = rows[page_size - 1]
             if status_mode:
@@ -1238,7 +1222,7 @@ class SQLAlchemyJobRepository(IJobRepository):
         model = q.first()
         if not model:
             return False
-        model.tags = json.dumps(tags, ensure_ascii=False)
+        model.tags = tags
         model.updated_at = datetime.now(UTC).replace(tzinfo=None)
         self._session.commit()
         return True

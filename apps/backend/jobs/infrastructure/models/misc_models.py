@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.infrastructure.database.sqlalchemy_config import Base
@@ -13,7 +13,9 @@ class SummaryModel(Base):
     __table_args__ = {"schema": "job"}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    job_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    job_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("job.jobs.id", ondelete="CASCADE"), nullable=True
+    )
     company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     match: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     score: Mapped[Optional[str]] = mapped_column(String, nullable=True)

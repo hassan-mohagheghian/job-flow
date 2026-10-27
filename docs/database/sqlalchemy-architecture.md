@@ -61,7 +61,7 @@ All ORM models inherit from this base. The naming convention ensures consistent 
 
 | Schema | Context | Tables |
 |--------|---------|--------|
-| `job` | Job Processing | `jobs`, `summaries`, `generation_history`, `job_analysis` |
+| `job` | Job Processing | `jobs`, `job_analysis`, `job_companies`, `job_sources`, `summaries`, `generation_history` |
 | `company` | Company Intelligence | `companies`, `company_intelligence`, `company_links` |
 | `skill` | Skills Management | `skills`, `skill_aliases`, `skill_relationships` |
 | `candidate` | Candidate Profile | `candidates`, `candidate_profiles`, `candidate_sources`, `candidate_skills`, `candidate_experiences`, `candidate_projects`, `candidate_educations`, `candidate_certificates`, `candidate_interests`, `candidate_languages`, `candidate_profile_versions` |
@@ -85,6 +85,28 @@ profile_id = Column(UUID, ForeignKey("candidate.candidate_profiles.id"), nullabl
 Cross-context links are **plain columns without** `ForeignKey(...)` — e.g.
 `candidate_skills.skill_id` references `skill.skills.id` logically only, with
 integrity enforced at the repository layer (AGENTS.md rule 15).
+
+### Jobs storage decisions (phase 0)
+
+`job.jobs` is intentionally a single wide table. It is the read model for the
+Jobs list (scores, sort keys, status flags), so splitting it into child tables
+would add joins to every page request without improving integrity. The
+following choices are deliberate:
+
+| Concern | Storage | Rationale |
+|---------|---------|-----------|
+| Identity / scalars (`title`, `company`, `location`, `url`, `status`, dates, flags) | Columns | 1:1 with the job; filtered and sorted directly |
+| Scores (`fit_score`, `success_score`, `overall_score`) | Columns (denormalized) | The list sorts/filters without joining `job_analysis`; written by one place (`PersistNode`) |
+| `work_types`, `employment_types` | `jsonb` arrays + GIN | Small closed vocabularies (1–3 values); containment filters (`@>`) are indexable |
+| `tags` | `jsonb` array + GIN | User-managed free-form labels; still no separate tags table in this phase |
+| `stack` | `text` | Free-text prose extracted by the analysis; job↔skill links already live in `skill.skill_mentions` (cross-context, logical) |
+| `notes`, `links`, `workflow_log` | `text` (JSON) | Not filtered; editors own the shape |
+| `raw_description`, `structured_description`, `description` | `text` | Multi-KB payloads, TOASTed; the list query loads only its projection |
+
+Same-context integrity is enforced by FKs: `job_analysis.job_id` and
+`summaries.job_id` cascade on job delete, and `job_companies.job_id` already
+did. Company, city and skill references stay logical (cross-context).
+
 
 ### ORM Models
 

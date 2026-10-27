@@ -29,13 +29,12 @@ def _create_job(test_db, **kwargs) -> JobModel:
         title="Software Engineer",
         company="Tech Corp",
         location="Berlin",
-        work_types='["Remote"]',
+        work_types=["Remote"],
         visa="Yes",
         status="imported",
         deleted=0,
         workflow_log="[]",
-        locations="[]",
-        employment_types='["Full-time"]',
+        employment_types=["Full-time"],
         rescoring=0,
         overall_score=85,
         fit_score=80,
@@ -289,8 +288,8 @@ class TestJobListV2API:
         assert data2["items"][0]["title"] == "Fresh"
 
     def test_filter_by_remote(self, client, test_db):
-        _create_job(test_db, id=1, title="Remote", work_types='["Remote"]')
-        _create_job(test_db, id=2, title="Onsite", work_types='["On-site"]')
+        _create_job(test_db, id=1, title="Remote", work_types=["Remote"])
+        _create_job(test_db, id=2, title="Onsite", work_types=["On-site"])
 
         resp = client.get("/api/jobs/list?remote=true")
         data = resp.json()
@@ -341,7 +340,7 @@ class TestJobListV2API:
     def test_response_shape(self, client, test_db):
         job = _create_job(
             test_db, id=1, title="Engineer", company="Corp", location="Berlin",
-            work_types='["Remote"]', visa="Yes", overall_score=85, fit_score=80,
+            work_types=["Remote"], visa="Yes", overall_score=85, fit_score=80,
             success_score=90,
         )
         _create_execution(test_db, job.id, status="completed", execution_id="exec-1")
@@ -607,6 +606,15 @@ class TestJobTagsV2API:
         assert "A" in titles
         assert "B" not in titles
         assert "C" not in titles
+
+    def test_filter_by_tag_is_exact_token(self, client, test_db):
+        j1 = _create_job(test_db, id=1, title="Exact")
+        j2 = _create_job(test_db, id=2, title="Prefix")
+        client.put(f"/api/jobs/{j1.id}/tags", json={"tags": ["python"]})
+        client.put(f"/api/jobs/{j2.id}/tags", json={"tags": ["python3"]})
+
+        data = client.get("/api/jobs/list?tags=python").json()
+        assert [i["title"] for i in data["items"]] == ["Exact"]
 
     def test_set_tags_missing_job_returns_404(self, client, test_db):
         resp = client.put("/api/jobs/does-not-exist/tags", json={"tags": ["x"]})

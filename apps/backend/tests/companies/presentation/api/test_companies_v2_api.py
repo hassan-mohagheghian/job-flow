@@ -697,8 +697,6 @@ class TestCompanyRecruiterForAPI:
             "id": job.id,
             "role": "Senior Python Software Engineer",
             "location": None,
-            "match": None,
-            "score": None,
             "fit_score": None,
             "success_score": None,
             "overall_score": None,

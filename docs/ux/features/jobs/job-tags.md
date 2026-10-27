@@ -85,8 +85,9 @@ visa, easy_apply) have their own dedicated filters in the toolbar.
 
 # Data Model
 
-Tags are stored as a JSON-serialized `Text` column (`tags`) on the `jobs`
-table. The column default is `"[]"`.
+Tags are stored in a `jsonb` array column (`tags`) on the `jobs` table. The
+column default is `'[]'::jsonb` and it has a GIN index, so tag filters use
+JSONB containment (`@>`) instead of substring matching.
 
 ```json
 ["python", "remote", "senior"]

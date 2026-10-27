@@ -1,7 +1,7 @@
 """Extra tests for SQLAlchemyJobRepository (jobs.infrastructure.repositories).
 
 Covers branches not exercised by the legacy suite:
-list_jobs filter variants (locations/work_types JSON, filter_status),
+list_jobs filter variants (location/work_types JSONB, filter_status),
 sort directions and fields, create_job, get_by_id, set_deleted_by_url
 without exclude, lifecycle counts, pick_queued_item, search_jobs and
 search_jobs_cursor.
@@ -118,9 +118,9 @@ class TestGetJobsByIds:
 # ── list_jobs ────────────────────────────────────────────────────
 
 class TestListJobs:
-    def test_filter_cities_json_locations(self, sa_session, repo):
-        m1 = _add(sa_session, id="job-a", locations='["Berlin", "Munich"]', location="X")
-        _add(sa_session, id="job-b", locations="[]", location="Paris")
+    def test_filter_cities_uses_location(self, sa_session, repo):
+        m1 = _add(sa_session, id="job-a", location="Berlin")
+        _add(sa_session, id="job-b", location="Paris")
         jobs, total = repo.list_jobs(filters={"filter_cities": "Berlin"})
         assert total == 1
         assert jobs[0]["id"] == m1.id
@@ -130,12 +130,19 @@ class TestListJobs:
         jobs, total = repo.list_jobs(filters={"filter_cities": "  "})
         assert total == 1
 
-    def test_filter_work_types_json(self, sa_session, repo):
-        m1 = _add(sa_session, id="job-a", work_types='["Hybrid"]')
-        _add(sa_session, id="job-b", work_types="[]")
+    def test_filter_work_types_jsonb(self, sa_session, repo):
+        m1 = _add(sa_session, id="job-a", work_types=["Hybrid"])
+        _add(sa_session, id="job-b", work_types=[])
         jobs, total = repo.list_jobs(filters={"filter_work_types": "Hybrid"})
         assert total == 1
         assert jobs[0]["id"] == m1.id
+
+    def test_filter_work_types_is_exact_token(self, sa_session, repo):
+        _add(sa_session, id="job-a", work_types=["Remote Work"])
+        _add(sa_session, id="job-b", work_types=["Remote"])
+        jobs, total = repo.list_jobs(filters={"filter_work_types": "Remote"})
+        assert total == 1
+        assert jobs[0]["id"] == "job-b"
 
     def test_filter_status(self, sa_session, repo):
         _add(sa_session, id="job-a", status="imported")
@@ -404,18 +411,25 @@ class TestSearchJobs:
         assert rows[0]["id"] == m1.id
 
     def test_remote_true(self, sa_session, repo):
-        _add(sa_session, id="job-a", work_types='["Remote"]')
-        _add(sa_session, id="job-b", work_types='["On-site"]')
+        _add(sa_session, id="job-a", work_types=["Remote"])
+        _add(sa_session, id="job-b", work_types=["On-site"])
         rows, total = repo.search_jobs(remote=True)
         assert total == 1
-        assert rows[0]["work_types"] == '["Remote"]'
+        assert rows[0]["work_types"] == ["Remote"]
 
     def test_remote_false(self, sa_session, repo):
-        _add(sa_session, id="job-a", work_types='["Remote"]')
-        _add(sa_session, id="job-b", work_types='["On-site"]')
+        _add(sa_session, id="job-a", work_types=["Remote"])
+        _add(sa_session, id="job-b", work_types=["On-site"])
         rows, total = repo.search_jobs(remote=False)
         assert total == 1
-        assert rows[0]["work_types"] == '["On-site"]'
+        assert rows[0]["work_types"] == ["On-site"]
+
+    def test_remote_true_is_exact_token(self, sa_session, repo):
+        _add(sa_session, id="job-a", work_types=["Remote Work"])
+        _add(sa_session, id="job-b", work_types=["Remote"])
+        rows, total = repo.search_jobs(remote=True)
+        assert total == 1
+        assert rows[0]["id"] == "job-b"
 
     def test_visa_true(self, sa_session, repo):
         m1 = _add(sa_session, id="job-a", visa="US")
@@ -665,10 +679,10 @@ class TestSearchJobsCursor:
 
     def test_all_branches(self, sa_session, repo):
         m1 = _add(sa_session, id="job-a", title="Engineer", company="Alpha", company_id="00000000-0000-0000-0000-000000000007",
-                  work_types='["Remote"]', visa="US", overall_score=85, fit_score=80,
+                  work_types=["Remote"], visa="US", overall_score=85, fit_score=80,
                   success_score=70, updated_at="2026-07-27T10:00:01")
         _add(sa_session, id="job-b", title="Other", company="Beta", company_id="00000000-0000-0000-0000-000000000008",
-             work_types='["On-site"]', visa="", overall_score=40, fit_score=30,
+             work_types=["On-site"], visa="", overall_score=40, fit_score=30,
              success_score=20, updated_at="2026-07-27T10:00:02")
         items, total, _, has_more = repo.search_jobs_cursor(
             query="engineer", job_ids=[m1.id], company_id="00000000-0000-0000-0000-000000000007",
@@ -695,11 +709,11 @@ class TestSearchJobsCursor:
         assert items[0]["id"] == m1.id
 
     def test_visa_false_and_remote_false(self, sa_session, repo):
-        _add(sa_session, id="job-a", visa="US", work_types='["Remote"]',
+        _add(sa_session, id="job-a", visa="US", work_types=["Remote"],
              updated_at="2026-07-27T10:00:01")
-        m2 = _add(sa_session, id="job-b", visa="", work_types='["On-site"]',
+        m2 = _add(sa_session, id="job-b", visa="", work_types=["On-site"],
                   updated_at="2026-07-27T10:00:02")
-        m3 = _add(sa_session, id="job-c", visa=None, work_types='["On-site"]',
+        m3 = _add(sa_session, id="job-c", visa=None, work_types=["On-site"],
                   updated_at="2026-07-27T10:00:03")
         items, total, _, _ = repo.search_jobs_cursor(visa=False, remote=False)
         assert total == 2
@@ -741,9 +755,9 @@ class TestSearchJobsCursorLocation:
         assert items == []
 
     def test_combines_with_other_filters(self, sa_session, repo):
-        _add(sa_session, id="job-a", location="Berlin", work_types='["Remote"]')
-        _add(sa_session, id="job-b", location="Berlin", work_types='["On-site"]')
-        _add(sa_session, id="job-c", location="Amsterdam", work_types='["Remote"]')
+        _add(sa_session, id="job-a", location="Berlin", work_types=["Remote"])
+        _add(sa_session, id="job-b", location="Berlin", work_types=["On-site"])
+        _add(sa_session, id="job-c", location="Amsterdam", work_types=["Remote"])
 
         items, total, _, _ = repo.search_jobs_cursor(location="berlin", remote=True)
 

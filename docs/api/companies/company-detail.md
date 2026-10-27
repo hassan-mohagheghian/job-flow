@@ -119,8 +119,6 @@ for the same path.
       "id": "job-1",
       "role": "Senior Backend Engineer",
       "location": "Berlin",
-      "match": "...",
-      "score": "A",
       "fit_score": 84,
       "success_score": 63,
       "overall_score": 76
@@ -131,8 +129,6 @@ for the same path.
       "id": "019fd122-...",
       "role": "Principal Python Engineer",
       "location": "Berlin",
-      "match": "...",
-      "score": "A",
       "fit_score": 90,
       "success_score": 85,
       "overall_score": 88
@@ -180,7 +176,7 @@ its hiring-client portfolio via the `job_companies` table:
 | --------------------- | ------------------- | -------------------------------------------------------- |
 | `recruiter_job_count` | number              | Jobs this company publishes as a recruiter for clients, excluding jobs where it is also the hiring company |
 | `recruiter_for`       | array of `{ company_id, name, job_count, jobs }` | Distinct hiring companies this recruiter publishes for, sorted by job count descending; `jobs` lists the `{ id, title, location }` of the jobs published for that company, sorted by title |
-| `recruiter_jobs`      | array of `{ id, role, location, match, score, fit_score, success_score, overall_score }` | Flat, role-sorted list of every job this recruiter publishes for other companies (client jobs), carrying full scores |
+| `recruiter_jobs`      | array of `{ id, role, location, fit_score, success_score, overall_score }` | Flat, role-sorted list of every job this recruiter publishes for other companies (client jobs), carrying full scores |
 
 A recruiter's job is counted and listed whenever the company appears as
 `role="recruiter"` on it — **even when the hiring company is unknown** (the

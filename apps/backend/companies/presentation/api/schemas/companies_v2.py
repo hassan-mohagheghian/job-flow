@@ -108,8 +108,6 @@ class CompanyJobRefSchema(BaseModel):
     id: str
     role: str | None = None
     location: str | None = None
-    match: str | None = None
-    score: str | None = None
     fit_score: int | None = None
     success_score: int | None = None
     overall_score: int | None = None
