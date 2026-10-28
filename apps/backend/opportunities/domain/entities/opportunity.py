@@ -7,7 +7,9 @@ the candidate profile and rules → track a funnel status and next action.
 
 Cross-context references (``company_id``, ``job_id``) are logical references
 only — there are no FKs into other schemas (AGENTS.md rule 15). The context
-never creates jobs, companies, or skills.
+never creates companies or skills; its ``move_to_job`` action is the one
+deliberate exception for jobs (explicit user conversion, see
+``OpportunityService.move_to_job``).
 """
 
 from __future__ import annotations
@@ -114,6 +116,7 @@ class Opportunity:
     subject: str | None = None
     raw_content: str = ""
     content_hash: str = ""
+    base_url: str | None = None
     extracted_urls: list[str] = field(default_factory=list)
     extracted: dict[str, Any] = field(default_factory=dict)
     company_id: str | None = None
@@ -155,6 +158,7 @@ class Opportunity:
             "subject": self.subject,
             "raw_content": self.raw_content,
             "content_hash": self.content_hash,
+            "base_url": self.base_url,
             "extracted_urls": list(self.extracted_urls),
             "extracted": dict(self.extracted),
             "company_id": self.company_id,

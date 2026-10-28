@@ -41,6 +41,7 @@ class OpportunityModel(Base):
     subject: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     raw_content: Mapped[str] = mapped_column(Text, default="")
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True, default="")
+    base_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     extracted_urls: Mapped[str] = mapped_column(Text, default="[]")
     extracted: Mapped[str] = mapped_column(Text, default="{}")
     company_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
@@ -98,6 +99,27 @@ class OpportunityNoteModel(Base):
     title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     content: Mapped[str] = mapped_column(Text, default="")
     author: Mapped[str] = mapped_column(String, default="")
+    created_at: Mapped[str] = mapped_column(Text, default=_now_iso)
+    updated_at: Mapped[str] = mapped_column(Text, default=_now_iso)
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True, default="")
+
+
+class OpportunityLinkModel(Base):
+    """A user-added titled link on an opportunity (e.g. the LinkedIn post).
+
+    Immutable like notes: links are added and deleted, never edited. Mirrors
+    ``opportunity_notes`` one-to-one minus the note content/author columns.
+    """
+
+    __tablename__ = "opportunity_links"
+    __table_args__ = {"schema": "opportunity"}
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_new_id)
+    opportunity_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("opportunity.opportunities.id"), nullable=False, index=True
+    )
+    title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[str] = mapped_column(Text, default=_now_iso)
     updated_at: Mapped[str] = mapped_column(Text, default=_now_iso)
     user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True, default="")

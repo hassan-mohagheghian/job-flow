@@ -4,13 +4,14 @@
 
 An `Opportunity` (`opportunities` context, schema `opportunity`) is the aggregate root for an inbound recruiting message. It starts from a pasted message/email — which may be a full JD, a short recruiter note, a bare company name, or a bare job link — and is progressively enriched, resolved against existing entities, and evaluated against the canonical candidate profile.
 
-It never replaces the JD-first Job pipeline; it reuses it. An opportunity may link to an existing `job.jobs` row or `company.companies` row, but it never creates jobs, companies, or skills.
+It never replaces the JD-first Job pipeline; it reuses it. An opportunity may link to an existing `job.jobs` row or `company.companies` row, but it never creates companies or skills. **One deliberate exception:** `move_to_job` (see [Move to Job](#move-to-job)) creates a single `job.jobs` row on explicit user action.
 
 ## Storage
 
-- `opportunity.opportunities` — source/message metadata (`source`, `source_message_id`, sender, `received_at`, subject, `raw_content`), extracted URLs, `content_hash` (dedupe), `extracted` JSON, logical `company_id` / `job_id` (plain columns, no FK — AGENTS.md rule 15), denormalized `company_name` / `job_title`, lifecycle `status`, `evaluation_status` (`pending` / `complete`), nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path` JSON, `next_action`.
+- `opportunity.opportunities` — source/message metadata (`source`, `source_message_id`, sender, `received_at`, subject, `raw_content`), extracted URLs, nullable `base_url` (the canonical sourcing page, e.g. the LinkedIn post — validated http(s); folded into the extracted URLs for resolution), `content_hash` (dedupe), `extracted` JSON, logical `company_id` / `job_id` (plain columns, no FK — AGENTS.md rule 15), denormalized `company_name` / `job_title`, lifecycle `status`, `evaluation_status` (`pending` / `complete`), nullable fit/success/overall + recommendation, `evaluation` JSON, deterministic `application_path` JSON, `next_action`.
 - `opportunity.opportunity_evaluations` — immutable per-evaluation snapshot (FK within the schema only), newest first; reprocessing appends, never overwrites.
 - `opportunity.opportunity_notes` — follow-up trail: titled, timestamped notes recording later messages and new details for reassessment. Notes are immutable (add/delete, no edit); `author` is the display name stamped server-side from the authenticated user so it cannot be spoofed; rows are `user_id`-scoped like every other table.
+- `opportunity.opportunity_links` — user-saved source links: `title` (optional), `url` (validated http(s)), `FK` to the aggregate within the schema, `user_id`-scoped. Links are immutable (add/delete, no edit), mirroring the notes pattern.
 
 ## Lifecycle
 
@@ -41,6 +42,29 @@ A `dismissed` flag (0/1) hides an opportunity from the default list without dele
 ## Application path
 
 Derived deterministically from available information, never invented: extracted job URL → apply via posting; known sender → reply to sender / ask for JD or location; otherwise research first.
+
+## Notes, links & base URL
+
+Three user-owned attachments complement the AI extraction:
+
+- **Follow-up notes** (`opportunity.opportunity_notes`, see Storage) record later conversations and details.
+- **User links** (`opportunity.opportunity_links`) store titled URLs the user wants to keep with the opportunity — a LinkedIn post, a careers page, a company about page. Managed via `POST /api/opportunities/{id}/links` and `DELETE /api/opportunities/links/{link_id}`.
+- **Base URL** (`base_url`, nullable) marks the canonical page the opportunity came from — set via `PATCH /api/opportunities/{id}/base-url`. It feeds resolution: it is folded into the opportunity's extracted URLs, so it participates in job duplicate matching like any extracted URL. An empty value clears it.
+
+All three are user content: URLs must be valid http(s) (422 otherwise), and they are deleted together with the opportunity.
+
+## Move to Job
+
+An evaluated, scored opportunity can be moved into the Jobs bounded context on explicit user action (`POST /api/opportunities/{id}/move-to-job`, `OpportunityService.move_to_job`). Rules:
+
+- **Precondition**: `evaluation_status = complete` and an overall score exists. Unevaluated opportunities are rejected with 422.
+- **Create-or-link**: the extracted job URLs are matched with `find_duplicate_job`; a match only links the existing job. With no match, a new `job.jobs` row is created (status `imported`, never queued for processing) and kept consistent with the opportunity's evaluated state:
+  - `fit_score` / `success_score` / `overall_score` copied from the evaluation,
+  - `role` / `title` from the extracted role title, `company` / `company_id` from the linked company,
+  - the raw inbound message stored as the job's JD note (`notes`), with the extracted URL added as a link,
+  - `source = "opportunity"` so the origin of the job remains traceable.
+- **Postcondition**: the opportunity keeps its funnel status, with `job_id` / `job_title` set. The action is idempotent: a previously moved opportunity is returned unchanged with no duplicate job.
+- No URL in the extraction → 422 ("nothing to link or create").
 
 # Related Documents
 

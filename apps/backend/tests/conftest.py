@@ -141,6 +141,7 @@ def client(sa_session):
     from applications.infrastructure.repositories.sa_document_repository import SQLAlchemyDocumentRepository
     from opportunities.infrastructure.repositories.sa_opportunity_repository import (
         SQLAlchemyOpportunityEvaluationRepository,
+        SQLAlchemyOpportunityLinkRepository,
         SQLAlchemyOpportunityNoteRepository,
         SQLAlchemyOpportunityRepository,
     )
@@ -199,6 +200,7 @@ def client(sa_session):
         profile_repo=SQLAlchemyCandidateProfileRepository(sa_session),
         rule_repo=SQLAlchemyRuleRepository(sa_session, user_id="test-user"),
         note_repo=SQLAlchemyOpportunityNoteRepository(sa_session, user_id="test-user"),
+        link_repo=SQLAlchemyOpportunityLinkRepository(sa_session, user_id="test-user"),
     )
     app.dependency_overrides[get_follow_up_repo] = lambda: SQLAlchemyFollowUpRepository(sa_session)
     app.dependency_overrides[get_document_repo] = lambda: SQLAlchemyDocumentRepository(sa_session)

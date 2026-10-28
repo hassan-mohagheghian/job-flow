@@ -1,8 +1,10 @@
 import { api } from '@/shared/api'
 import type {
+  CreateOpportunityLinkRequest,
   CreateOpportunityNoteRequest,
   CreateOpportunityRequest,
   OpportunityDetail,
+  OpportunityLink,
   OpportunityListQuery,
   OpportunityListResult,
   OpportunityNote,
@@ -27,6 +29,7 @@ export const opportunityApi = {
   getDetail: (id: string) => api.get<OpportunityDetail>(`/opportunities/${id}`),
   process: (id: string) => api.post<OpportunityDetail>(`/opportunities/${id}/process`),
   reprocess: (id: string) => api.post<OpportunityDetail>(`/opportunities/${id}/reprocess`),
+  moveToJob: (id: string) => api.post<OpportunityDetail>(`/opportunities/${id}/move-to-job`),
   setLinks: (id: string, data: UpdateOpportunityLinksRequest) =>
     api.patch<OpportunityDetail>(`/opportunities/${id}/links`, data),
   setStatus: (id: string, status: OpportunityStatus) =>
@@ -36,5 +39,10 @@ export const opportunityApi = {
   addNote: (id: string, data: CreateOpportunityNoteRequest) =>
     api.post<OpportunityNote>(`/opportunities/${id}/notes`, data),
   deleteNote: (noteId: string) => api.delete<void>(`/opportunities/notes/${noteId}`),
+  addLink: (id: string, data: CreateOpportunityLinkRequest) =>
+    api.post<OpportunityLink>(`/opportunities/${id}/links`, data),
+  deleteLink: (linkId: string) => api.delete<void>(`/opportunities/links/${linkId}`),
+  setBaseUrl: (id: string, baseUrl: string | null) =>
+    api.patch<OpportunityDetail>(`/opportunities/${id}/base-url`, { base_url: baseUrl }),
   remove: (id: string) => api.delete<void>(`/opportunities/${id}`),
 }

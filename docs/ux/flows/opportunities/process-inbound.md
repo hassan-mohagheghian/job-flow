@@ -7,7 +7,7 @@ Turn a pasted recruiter message into an evaluated, actionable opportunity.
 ## Steps
 
 1. Open **Opportunities** → **＋ New**.
-2. Paste the message; add sender, subject, received date when known.
+2. Paste the message; add sender, subject, received date when known. Optionally add a **Base URL** (the canonical page, e.g. the LinkedIn post), **Notes** (extra context text) and **Links** (titled URLs to keep).
 3. Save → the opportunity appears as `new`.
 4. Open it → **Process**: the system extracts fields, links any existing job/company, and evaluates against the candidate profile and rules.
 5. Read the score + reasons, missing information, and next action.

@@ -7,6 +7,8 @@ Covers:
 - Link validation (unknown job/company → 404)
 - Status transitions (invalid → 422, missing → 404)
 - Delete (204) with evaluation history removed
+- Move to Job (unevaluated → 422, missing → 404)
+- Notes / links / base URL at create, user links API, base-url API
 """
 
 from __future__ import annotations
@@ -151,3 +153,104 @@ class TestOpportunityDismissAPI:
         assert [i["id"] for i in only_dismissed["items"]] == [first["id"]]
         only_active = client.get("/api/opportunities", params={"dismissed": "false"}).json()
         assert [i["id"] for i in only_active["items"]] == [second["id"]]
+
+
+class TestOpportunityLinksAndBaseUrlAPI:
+    def test_create_with_base_url_notes_and_links(self, client):
+        resp = client.post(
+            "/api/opportunities",
+            json=_payload(
+                base_url="https://www.linkedin.com/posts/jane-hiring-123",
+                notes=[{"title": "Context", "content": "Came from a LinkedIn post."}],
+                links=[{"title": "Company site", "url": "https://acme.example"}],
+            ),
+        )
+        assert resp.status_code == 201
+        body = resp.json()
+        assert body["base_url"] == "https://www.linkedin.com/posts/jane-hiring-123"
+        assert [n["content"] for n in body["notes"]] == ["Came from a LinkedIn post."]
+        assert body["notes"][0]["author"] == "Test User"
+        assert [l["url"] for l in body["links"]] == ["https://acme.example"]
+
+    def test_create_rejects_non_http_base_url(self, client):
+        resp = client.post("/api/opportunities", json=_payload(base_url="ftp://acme.example"))
+        assert resp.status_code == 422
+
+    def test_create_rejects_non_http_link(self, client):
+        resp = client.post(
+            "/api/opportunities", json=_payload(links=[{"url": "acme.example/careers"}])
+        )
+        assert resp.status_code == 422
+
+    def test_add_and_delete_link(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.post(
+            f"/api/opportunities/{created['id']}/links",
+            json={"title": "Recruiter post", "url": "https://www.linkedin.com/posts/jane-123"},
+        )
+        assert resp.status_code == 201
+        link = resp.json()
+        assert link["title"] == "Recruiter post"
+        assert link["url"] == "https://www.linkedin.com/posts/jane-123"
+
+        detail = client.get(f"/api/opportunities/{created['id']}").json()
+        assert len(detail["links"]) == 1
+        assert detail["links"][0]["id"] == link["id"]
+
+        deleted = client.delete(f"/api/opportunities/links/{link['id']}")
+        assert deleted.status_code == 204
+        detail = client.get(f"/api/opportunities/{created['id']}").json()
+        assert detail["links"] == []
+
+    def test_add_link_requires_http_url(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.post(
+            f"/api/opportunities/{created['id']}/links", json={"url": "acme.example"}
+        )
+        assert resp.status_code == 422
+
+    def test_add_link_missing_opportunity_404(self, client):
+        resp = client.post(
+            "/api/opportunities/opp-missing/links", json={"url": "https://acme.example"}
+        )
+        assert resp.status_code == 404
+
+    def test_delete_missing_link_404(self, client):
+        resp = client.delete("/api/opportunities/links/link-missing")
+        assert resp.status_code == 404
+
+    def test_patch_base_url(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.patch(
+            f"/api/opportunities/{created['id']}/base-url",
+            json={"base_url": "https://www.linkedin.com/posts/jane-42"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["base_url"] == "https://www.linkedin.com/posts/jane-42"
+
+        cleared = client.patch(
+            f"/api/opportunities/{created['id']}/base-url", json={"base_url": ""}
+        )
+        assert cleared.json()["base_url"] is None
+
+    def test_patch_base_url_invalid_422(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.patch(
+            f"/api/opportunities/{created['id']}/base-url", json={"base_url": "mailto:jane"}
+        )
+        assert resp.status_code == 422
+
+    def test_patch_base_url_missing_404(self, client):
+        resp = client.patch("/api/opportunities/opp-missing/base-url", json={"base_url": None})
+        assert resp.status_code == 404
+
+
+class TestOpportunityMoveToJobAPI:
+    def test_move_requires_evaluated_score_422(self, client):
+        created = client.post("/api/opportunities", json=_payload()).json()
+        resp = client.post(f"/api/opportunities/{created['id']}/move-to-job")
+        assert resp.status_code == 422
+
+    def test_move_missing_opportunity_404(self, client):
+        resp = client.post("/api/opportunities/opp-missing/move-to-job")
+        assert resp.status_code == 404

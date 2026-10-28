@@ -76,6 +76,30 @@ flowchart LR
 - **Fires when**: the user removes a follow-up note.
 - **Consumers**: none yet.
 
+### `opportunity.link.added`
+
+- **Event**: `OpportunityLinkAdded`
+- **Trigger**: `OpportunityService.add_link`.
+- **Payload**: `opportunity_id`, `link_id`.
+- **Fires when**: the user attaches a titled source link (e.g. the LinkedIn post) to the opportunity. Link URLs must be http(s).
+- **Consumers**: none yet.
+
+### `opportunity.link.deleted`
+
+- **Event**: `OpportunityLinkDeleted`
+- **Trigger**: `OpportunityService.delete_link`.
+- **Payload**: `opportunity_id`, `link_id`.
+- **Fires when**: the user removes a source link.
+- **Consumers**: none yet.
+
+### `opportunity.moved_to_job`
+
+- **Event**: `OpportunityMovedToJob`
+- **Trigger**: `OpportunityService.move_to_job` links an existing job or creates one from the opportunity (manual "Move to Jobs" action).
+- **Payload**: `opportunity_id`, `job_id`, `job_title`, `overall_score`, `recommendation`, `created_job`.
+- **Fires when**: an evaluated opportunity is successfully linked to (or materialized as) a `job.jobs` row. Repeated moves are idempotent and fire nothing.
+- **Consumers**: none yet (a future consumer could queue the new job for processing or notify dashboards).
+
 ## Emission Rules
 
 - Events are emitted by the service that performs the state change — never by callers (rule 16b).

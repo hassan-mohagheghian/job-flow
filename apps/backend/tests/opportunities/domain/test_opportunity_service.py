@@ -7,10 +7,12 @@ Covers:
 - Evaluate with deterministic overall/recommendation reuse
 - Pending evaluation when information is insufficient
 - Status transitions and evaluation history
+- Move to Job (manual conversion: create-or-link, score carry-over, events)
 """
 
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -21,7 +23,10 @@ from opportunities.domain.events import (
     OpportunityCreated,
     OpportunityEvaluated,
     OpportunityExtracted,
+    OpportunityLinkAdded,
+    OpportunityLinkDeleted,
     OpportunityLinked,
+    OpportunityMovedToJob,
     OpportunityNoteAdded,
     OpportunityNoteDeleted,
 )
@@ -106,12 +111,41 @@ class FakeEvaluationRepo:
 class FakeJobRepo:
     def __init__(self, jobs=None):
         self._jobs = {j["id"]: j for j in (jobs or [])}
+        self._next = 1
+        self.created = []
 
     def get_by_id(self, job_id):
         return self._jobs.get(job_id)
 
     def get_by_url_fragment(self, fragment):
         return next((j for j in self._jobs.values() if fragment in (j.get("url") or "")), None)
+
+    def create_job(self, url, title=None, notes="[]", links="[]", source="api"):
+        self._next += 1
+        job = {
+            "id": f"job-new-{self._next}",
+            "url": url,
+            "title": title,
+            "notes": notes,
+            "links": links,
+            "source": source,
+            "status": "imported",
+        }
+        self._jobs[job["id"]] = job
+        self.created.append(dict(job))
+        return dict(job)
+
+    def add(self, job):
+        """Insert a job later — simulates a job created between evaluation and move."""
+        self._jobs[job["id"]] = dict(job)
+        return dict(job)
+
+    def update_fields(self, item_id, **fields):
+        job = self._jobs.get(item_id)
+        if not job:
+            return False
+        job.update(fields)
+        return True
 
 
 class FakeCompanyRepo:
@@ -167,6 +201,30 @@ class FakeNoteRepo:
         return self._rows.pop(note_id, None) is not None
 
 
+class FakeLinkRepo:
+    def __init__(self):
+        self._rows = {}
+        self._next = 1
+
+    def create(self, data):
+        row = dict(data)
+        row["id"] = f"link-{self._next}"
+        self._next += 1
+        self._rows[row["id"]] = row
+        return dict(row)
+
+    def get_by_id(self, link_id):
+        row = self._rows.get(link_id)
+        return dict(row) if row else None
+
+    def list_for_opportunity(self, opportunity_id):
+        rows = [dict(r) for r in self._rows.values() if r["opportunity_id"] == opportunity_id]
+        return list(reversed(rows))
+
+    def delete(self, link_id):
+        return self._rows.pop(link_id, None) is not None
+
+
 class RecordingCollector:
     def __init__(self):
         self._events = []
@@ -220,6 +278,7 @@ def _make_service(llm_payloads=None, **kwargs):
         else FakeProfileRepo({"id": "profile-1", "name": "Hassan"}),
         rule_repo=kwargs.get("rule_repo") or FakeRuleRepo(),
         note_repo=kwargs.get("note_repo") or FakeNoteRepo(),
+        link_repo=kwargs.get("link_repo") or FakeLinkRepo(),
         llm=FakeLLM(llm_payloads or []),
         event_publisher=collector,
     )
@@ -263,6 +322,65 @@ class TestCreate:
         second, duplicate = service.create_manual(_create_input())
         assert duplicate is True
         assert second["id"] == first["id"]
+
+    def test_create_with_base_url_notes_and_links(self):
+        service, collector = _make_service()
+        created, _ = service.create_manual(
+            _create_input(
+                base_url="https://www.linkedin.com/posts/jane-hiring-123",
+                notes=[{"title": "Context", "content": "Came from a LinkedIn post."}],
+                links=[{"title": "Company site", "url": "https://acme.example"}],
+            ),
+            author="Hassan",
+        )
+        assert created["base_url"] == "https://www.linkedin.com/posts/jane-hiring-123"
+        detail = service.get_detail(created["id"])
+        assert [n["content"] for n in detail["notes"]] == ["Came from a LinkedIn post."]
+        assert detail["notes"][0]["author"] == "Hassan"
+        assert [l["url"] for l in detail["links"]] == ["https://acme.example"]
+        assert [l["title"] for l in detail["links"]] == ["Company site"]
+        kinds = {type(e) for e in collector.events}
+        assert {OpportunityNoteAdded, OpportunityLinkAdded} <= kinds
+
+    def test_duplicate_create_ignores_notes_links(self):
+        service, _ = _make_service()
+        first, _ = service.create_manual(_create_input())
+        second, duplicate = service.create_manual(
+            _create_input(
+                notes=[{"content": "Should be ignored"}],
+                links=[{"url": "https://other.example"}],
+            )
+        )
+        assert duplicate is True
+        assert second["id"] == first["id"]
+        detail = service.get_detail(first["id"])
+        assert detail["notes"] == []
+        assert detail["links"] == []
+
+    def test_create_rejects_non_http_base_url(self):
+        service, _ = _make_service()
+        with pytest.raises(ValidationError):
+            service.create_manual(_create_input(base_url="ftp://acme.example/jd"))
+
+    def test_create_rejects_non_http_link(self):
+        service, _ = _make_service()
+        with pytest.raises(ValidationError):
+            service.create_manual(_create_input(links=[{"url": "acme.example"}]))
+
+    def test_create_rejects_empty_note_content(self):
+        service, _ = _make_service()
+        with pytest.raises(ValidationError):
+            service.create_manual(_create_input(notes=[{"content": "   "}]))
+
+    def test_process_includes_base_url_in_extracted_urls(self):
+        thin = dict(_extract_payload())
+        thin["job_urls"] = []
+        service, _ = _make_service([thin, _evaluate_payload()])
+        created, _ = service.create_manual(
+            _create_input(base_url="https://www.linkedin.com/jobs/view/4333938709/")
+        )
+        result = service.process(created["id"])
+        assert "https://www.linkedin.com/jobs/view/4333938709/" in result["extracted_urls"]
 
 
 class TestProcess:
@@ -372,6 +490,82 @@ class TestNotes:
             service.delete_note("note-missing")
 
 
+class TestLinks:
+    def test_add_link(self):
+        service, collector = _make_service()
+        created, _ = service.create_manual(_create_input())
+        link = service.add_link(created["id"], title="Recruiter post", url="https://www.linkedin.com/posts/jane-123")
+        assert link["title"] == "Recruiter post"
+        assert link["url"] == "https://www.linkedin.com/posts/jane-123"
+        assert link["opportunity_id"] == created["id"]
+        assert isinstance(collector.events[-1], OpportunityLinkAdded)
+
+    def test_add_link_title_optional(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        link = service.add_link(created["id"], title=None, url="https://acme.example/careers")
+        assert link["title"] is None
+
+    def test_add_link_requires_http_url(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        with pytest.raises(ValidationError):
+            service.add_link(created["id"], title="Bad", url="acme.example/careers")
+        with pytest.raises(ValidationError):
+            service.add_link(created["id"], title="Empty", url="   ")
+
+    def test_add_link_missing_opportunity_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.add_link("opp-missing", title="T", url="https://acme.example")
+
+    def test_links_listed_in_detail_newest_first(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        service.add_link(created["id"], title="First", url="https://one.example")
+        service.add_link(created["id"], title="Second", url="https://two.example")
+        detail = service.get_detail(created["id"])
+        assert [l["title"] for l in detail["links"]] == ["Second", "First"]
+
+    def test_delete_link(self):
+        service, collector = _make_service()
+        created, _ = service.create_manual(_create_input())
+        link = service.add_link(created["id"], title="T", url="https://acme.example")
+        service.delete_link(link["id"])
+        assert service.get_detail(created["id"])["links"] == []
+        assert isinstance(collector.events[-1], OpportunityLinkDeleted)
+
+    def test_delete_missing_link_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.delete_link("link-missing")
+
+
+class TestBaseUrl:
+    def test_set_base_url(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        result = service.set_base_url(created["id"], "https://www.linkedin.com/posts/jane-9")
+        assert result["base_url"] == "https://www.linkedin.com/posts/jane-9"
+
+    def test_set_base_url_empty_clears(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input(base_url="https://acme.example/jd"))
+        result = service.set_base_url(created["id"], "   ")
+        assert result["base_url"] is None
+
+    def test_set_base_url_rejects_non_http(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())
+        with pytest.raises(ValidationError):
+            service.set_base_url(created["id"], "not-a-url")
+
+    def test_set_base_url_missing_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.set_base_url("opp-missing", "https://acme.example")
+
+
 class TestDismiss:
     def test_dismiss_sets_flag(self):
         service, _ = _make_service()
@@ -401,3 +595,129 @@ class TestDismiss:
         service, _ = _make_service()
         with pytest.raises(NotFoundError):
             service.set_dismissed("opp-missing", True)
+
+
+class TestMoveToJob:
+    def test_move_to_job_creates_job_and_links(self):
+        jobs = FakeJobRepo()  # no matching job → create path
+        llm = FakeLLM([_extract_payload(), _evaluate_payload()])
+        collector = RecordingCollector()
+        service = OpportunityService(
+            opportunity_repo=FakeOpportunityRepo(),
+            evaluation_repo=FakeEvaluationRepo(),
+            job_repo=jobs,
+            company_repo=FakeCompanyRepo(),
+            skill_repo=FakeSkillRepo(),
+            profile_repo=FakeProfileRepo({"id": "profile-1", "name": "Hassan"}),
+            rule_repo=FakeRuleRepo(),
+            note_repo=FakeNoteRepo(),
+            llm=llm,
+            event_publisher=collector,
+        )
+        created, _ = service.create_manual(_create_input())
+        service.process(created["id"])  # evaluate + score
+
+        result = service.move_to_job(created["id"])
+
+        assert result["job_id"]
+        assert result["job_title"] == "Senior Backend Engineer"
+        assert result["created_job"] is True
+        assert len(jobs.created) == 1
+        job = jobs._jobs[result["job_id"]]
+        assert job["url"] == "https://www.linkedin.com/jobs/view/4333938709/"
+        assert job["title"] == "Senior Backend Engineer"
+        assert job["source"] == "opportunity"
+        assert job["company"] == "Acme GmbH"
+        assert job["fit_score"] == 85
+        assert job["success_score"] == 70
+        assert job["overall_score"] == 79
+        note = json.loads(job["notes"])[0]
+        assert "Senior Backend Engineer" in note["content"]
+        assert json.loads(job["links"])[0]["url"] == job["url"]
+        event = collector.events[-1]
+        assert isinstance(event, OpportunityMovedToJob)
+        assert event.opportunity_id == created["id"]
+        assert event.job_id == result["job_id"]
+        assert event.overall_score == 79
+        assert event.created_job is True
+
+    def test_move_to_job_is_idempotent(self):
+        jobs = FakeJobRepo()
+        llm = FakeLLM([_extract_payload(), _evaluate_payload()])
+        service = OpportunityService(
+            opportunity_repo=FakeOpportunityRepo(),
+            evaluation_repo=FakeEvaluationRepo(),
+            job_repo=jobs,
+            company_repo=FakeCompanyRepo(),
+            skill_repo=FakeSkillRepo(),
+            profile_repo=FakeProfileRepo({"id": "profile-1", "name": "Hassan"}),
+            rule_repo=FakeRuleRepo(),
+            note_repo=FakeNoteRepo(),
+            llm=llm,
+            event_publisher=RecordingCollector(),
+        )
+        created, _ = service.create_manual(_create_input())
+        service.process(created["id"])
+        first = service.move_to_job(created["id"])
+        second = service.move_to_job(created["id"])
+        assert second["job_id"] == first["job_id"]
+        assert len(jobs.created) == 1
+
+    def test_move_to_job_links_existing_duplicate(self):
+        # The job is created between evaluation and move, so nothing was
+        # linked during the pipeline's resolve step.
+        jobs = FakeJobRepo()
+        service, collector = _make_service(
+            [_extract_payload(), _evaluate_payload()],
+            job_repo=jobs,
+        )
+        created, _ = service.create_manual(_create_input())
+        service.process(created["id"])  # evaluated; no job existed yet
+        jobs.add({
+            "id": "job-1",
+            "title": "Senior Backend Engineer",
+            "url": "https://www.linkedin.com/jobs/view/4333938709/",
+        })
+
+        result = service.move_to_job(created["id"])
+
+        assert result["job_id"] == "job-1"
+        assert result["created_job"] is False
+        assert isinstance(collector.events[-1], OpportunityMovedToJob)
+        assert collector.events[-1].created_job is False
+
+    def test_move_to_job_already_linked_fires_nothing(self):
+        job = {"id": "job-1", "title": "Senior Backend Engineer", "url": "https://www.linkedin.com/jobs/view/4333938709/"}
+        service, collector = _make_service(
+            [_extract_payload(), _evaluate_payload()],
+            job_repo=FakeJobRepo([job]),
+        )
+        created, _ = service.create_manual(_create_input())
+        service.process(created["id"])  # resolve already links job-1
+        before = len(collector.events)
+
+        result = service.move_to_job(created["id"])
+
+        assert result["job_id"] == "job-1"
+        assert result["created_job"] is False
+        assert len(collector.events) == before  # idempotent re-move fires nothing
+
+    def test_move_to_job_requires_evaluated_score(self):
+        service, _ = _make_service()
+        created, _ = service.create_manual(_create_input())  # never processed
+        with pytest.raises(ValidationError):
+            service.move_to_job(created["id"])
+
+    def test_move_to_job_requires_url(self):
+        thin = dict(_extract_payload())
+        thin["job_urls"] = []
+        service, _ = _make_service([thin, _evaluate_payload()])
+        created, _ = service.create_manual(_create_input())
+        service.process(created["id"])  # scored via role_title only
+        with pytest.raises(ValidationError):
+            service.move_to_job(created["id"])
+
+    def test_move_to_job_missing_404(self):
+        service, _ = _make_service()
+        with pytest.raises(NotFoundError):
+            service.move_to_job("opp-missing")

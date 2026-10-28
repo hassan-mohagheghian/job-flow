@@ -71,6 +71,49 @@ horizontal gutter (`px-2`, `lg:px-3`); there is no fixed max-width cap
 
 Rows show title (extracted role, else subject, else `Unknown role`), linked company, source, score (or `—` with a pending note), status badge, and updated time. Every row has a delete button. Default sort is newest first (`created_at desc`).
 
+### New Opportunity drawer
+
+`＋ New` opens a form that starts an opportunity from a pasted message, with optional user content added up front:
+
+```text
+┌─ New Opportunity ─────────────────────────────────────┐
+│ Source [manual ▾]        Received [date picker]       │
+│ Sender [________]  Sender email [_________________]   │
+│ Subject [______________]                              │
+│ Base URL (optional)                                   │
+│ [https://www.linkedin.com/posts/…                   ] │
+│ ↳ canonical page the opportunity came from            │
+│ Message                                               │
+│ [Paste the inbound message or email here…           ] │
+│ ┌ Notes (optional) ────────────────────────────────┐  │
+│ │ ▪ [note chip: title — content excerpt]      [✕]  │  │
+│ │ Title [Note title (e.g. Extra context)        ]  │  │
+│ │ [Paste extra text (JD snippets, requirements)… ] │  │
+│ │ [+ note]                                         │  │
+│ └──────────────────────────────────────────────────┘  │
+│ ┌ Links (optional) ────────────────────────────────┐  │
+│ │ ▪ [link chip: URL — title]                  [✕]  │  │
+│ │ URL [https://…      ] Title [LinkedIn post, …  ] │  │
+│ │ [+ Add link]                                     │  │
+│ └──────────────────────────────────────────────────┘  │
+│                                     [Cancel] [Create] │
+└───────────────────────────────────────────────────────┘
+```
+
+| Element | Behavior |
+| ------- | -------- |
+| Base URL | Optional; left-blank stores no base URL; `https://` is coerced for values like `www…`. |
+| Notes | Repeatable chip list: title + content, each removable with `✕`; `Enter` in the textarea also adds. |
+| Links | Repeatable chip list: URL (required, http(s)) + optional title (presets e.g. `LinkedIn post`); `Enter` also adds. |
+| Create | Disabled until `Message` is non-empty; creates the opportunity (duplicate content opens the existing one). |
+
+```mermaid
+flowchart LR
+    Form[Create form] -->|Create| API[POST /api/opportunities]
+    API --> Fresh[Fresh opportunity: notes + links + base_url stored]
+    API -->|duplicate content| Existing[Existing opportunity opened · duplicate:true]
+```
+
 ## States
 
 - **Empty**: illustration + `No opportunities yet` + `Add your first inbound message`.

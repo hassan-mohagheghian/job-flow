@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { opportunityApi } from './api'
 import type {
+  CreateOpportunityLinkRequest,
   CreateOpportunityNoteRequest,
   CreateOpportunityRequest,
   OpportunityListQuery,
@@ -55,6 +56,22 @@ export function useProcessOpportunity() {
       if (variables?.id) {
         qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
       }
+    },
+  })
+}
+
+export function useMoveOpportunityToJob() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => opportunityApi.moveToJob(id),
+    onSettled: (_data, _error, id) => {
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY })
+      if (id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(id) })
+      }
+      // The created/linked job must show up in the Jobs lists too.
+      qc.invalidateQueries({ queryKey: ['jobs'] })
+      qc.invalidateQueries({ queryKey: ['jobs-v2-infinite'] })
     },
   })
 }
@@ -130,6 +147,46 @@ export function useDeleteOpportunityNote() {
     mutationFn: ({ id, noteId }: { id: string; noteId: string }) =>
       opportunityApi.deleteNote(noteId).then(() => noteId),
     onSettled: (_data, _error, variables) => {
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
+    },
+  })
+}
+
+export function useAddOpportunityLink() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateOpportunityLinkRequest }) =>
+      opportunityApi.addLink(id, data),
+    onSettled: (_data, _error, variables) => {
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
+    },
+  })
+}
+
+export function useDeleteOpportunityLink() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, linkId }: { id: string; linkId: string }) =>
+      opportunityApi.deleteLink(linkId).then(() => linkId),
+    onSettled: (_data, _error, variables) => {
+      if (variables?.id) {
+        qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
+      }
+    },
+  })
+}
+
+export function useSetOpportunityBaseUrl() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, baseUrl }: { id: string; baseUrl: string | null }) =>
+      opportunityApi.setBaseUrl(id, baseUrl),
+    onSettled: (_data, _error, variables) => {
+      qc.invalidateQueries({ queryKey: OPPORTUNITIES_KEY })
       if (variables?.id) {
         qc.invalidateQueries({ queryKey: opportunityDetailKey(variables.id) })
       }

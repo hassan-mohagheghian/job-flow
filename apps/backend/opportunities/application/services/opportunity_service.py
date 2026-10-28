@@ -15,7 +15,10 @@ LLM calls (``opportunity.extract``, ``opportunity.evaluate``) inline and
 returns the updated opportunity. All AI calls go through LLMService (rule #1).
 
 The context never creates jobs, companies, or skills — resolution only links
-existing rows. Domain events are emitted through the OpportunityEventPublisher
+existing rows. One deliberate exception: ``move_to_job`` (explicit user action)
+links the matching job or creates a single ``job.jobs`` row from the extracted
+URL with the evaluation scores and the raw message (JD note) carried over.
+Domain events are emitted through the OpportunityEventPublisher
 port (in-memory collector by default — EDD is incremental, no pub/sub yet).
 """
 
@@ -67,7 +70,10 @@ from opportunities.domain.events import (
     OpportunityCreated,
     OpportunityEvaluated,
     OpportunityExtracted,
+    OpportunityLinkAdded,
+    OpportunityLinkDeleted,
     OpportunityLinked,
+    OpportunityMovedToJob,
     OpportunityNoteAdded,
     OpportunityNoteDeleted,
     OpportunityStatusChanged,
@@ -115,6 +121,16 @@ def _find_urls(text: str) -> list[str]:
     return seen
 
 
+def _validate_user_url(value: Any, label: str) -> str:
+    """User-supplied URLs must be explicit http(s) links (jobs parity)."""
+    text = str(value or "").strip()
+    if not text:
+        raise ValidationError(f"{label} URL must not be empty")
+    if not text.startswith(("http://", "https://")):
+        raise ValidationError(f"{label} must start with http:// or https://")
+    return text
+
+
 def _coerce_payload(content: Any) -> dict[str, Any]:
     if isinstance(content, dict):
         return content
@@ -152,6 +168,7 @@ class OpportunityService:
         profile_repo: Any = None,
         rule_repo: Any = None,
         note_repo: Any = None,
+        link_repo: Any = None,
         llm: Any | None = None,
         event_publisher: OpportunityEventPublisher | None = None,
     ):
@@ -163,17 +180,25 @@ class OpportunityService:
         self._profiles = profile_repo
         self._rules = rule_repo
         self._notes = note_repo
+        self._links = link_repo
         self._llm = llm
         self.event_publisher = event_publisher or InMemoryEventCollector()
 
     # ── Create ────────────────────────────────────────────────────
 
-    def create_manual(self, data: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    def create_manual(
+        self, data: dict[str, Any], author: str = ""
+    ) -> tuple[dict[str, Any], bool]:
         """Store a manually pasted inbound message.
 
         Idempotent: an identical message (or the same external message id)
         returns the existing opportunity with ``duplicate=True`` instead of a
-        new row. Returns (opportunity, duplicate).
+        new row (initial ``notes`` / ``links`` / ``base_url`` are ignored on
+        the duplicate path). Optional initial context — a sourcing ``base_url``
+        (e.g. the LinkedIn post), follow-up ``notes`` and user ``links`` — is
+        stored like jobs' optional context. The ``author`` display name is
+        stamped by the API layer from the authenticated user.
+        Returns (opportunity, duplicate).
         """
         source = str(data.get("source") or OpportunitySource.MANUAL).strip().lower()
         if source not in OpportunitySource.ALL:
@@ -183,6 +208,15 @@ class OpportunityService:
         raw_content = str(data.get("raw_content") or "").strip()
         if not raw_content:
             raise ValidationError("raw_content must not be empty")
+
+        base_url_text = str(data.get("base_url") or "").strip()
+        base_url = _validate_user_url(base_url_text, "Base URL") if base_url_text else None
+        notes = data.get("notes") or []
+        links = data.get("links") or []
+        for link in links:
+            url_text = str(link.get("url") or "").strip()
+            if url_text:
+                _validate_user_url(url_text, "Link")
 
         source_message_id = (str(data.get("source_message_id") or "").strip() or None)
         if source_message_id:
@@ -206,6 +240,7 @@ class OpportunityService:
                 "subject": (str(data.get("subject") or "").strip() or None),
                 "raw_content": raw_content,
                 "content_hash": content_hash,
+                "base_url": base_url,
                 "extracted_urls": [],
                 "extracted": {},
                 "company_id": None,
@@ -228,6 +263,10 @@ class OpportunityService:
             }
         )
         self._emit(OpportunityCreated(aggregate_id=stored["id"], opportunity_id=stored["id"], source=source))
+        for note in notes:
+            self.add_note(stored["id"], title=note.get("title"), content=note.get("content") or "", author=author)
+        for link in links:
+            self.add_link(stored["id"], title=link.get("title"), url=str(link.get("url") or "").strip())
         return self._present(stored), False
 
     # ── Read ──────────────────────────────────────────────────────
@@ -236,8 +275,10 @@ class OpportunityService:
         row = self._get_or_raise(opportunity_id)
         evaluations = self._evaluations.list_for_opportunity(opportunity_id)
         notes = self._notes.list_for_opportunity(opportunity_id) if self._notes else []
+        links = self._links.list_for_opportunity(opportunity_id) if self._links else []
         presented = self._present(row, evaluations)
         presented["notes"] = notes
+        presented["links"] = links
         return presented
 
     def list(
@@ -272,6 +313,117 @@ class OpportunityService:
     def reprocess(self, opportunity_id: str) -> dict[str, Any]:
         """Re-run the full pipeline (appends a new evaluation snapshot)."""
         return self.process(opportunity_id)
+
+    # ── Move to job ───────────────────────────────────────────────
+
+    def move_to_job(self, opportunity_id: str) -> dict[str, Any]:
+        """Move an evaluated, scored opportunity into the Jobs context.
+
+        The one deliberate exception to "never creates jobs" (docs/domain/
+        opportunities/opportunity.md): on explicit user action the matching
+        existing job is linked, or a ``job.jobs`` row is created from the
+        extracted URL — status ``imported``, never queued for processing —
+        with the three evaluation scores, the extracted role/company context,
+        the raw inbound message (JD note) and the posting URL carried over so
+        the job stays consistent with the opportunity's evaluated state.
+
+        Idempotent: an already-linked opportunity returns unchanged with
+        ``created_job=False``. The opportunity keeps its funnel status; only
+        ``job_id`` / ``job_title`` change.
+        """
+        row = self._get_or_raise(opportunity_id)
+
+        if row.get("job_id"):
+            detail = self.get_detail(opportunity_id)
+            detail["created_job"] = False
+            return detail
+
+        if (
+            row.get("evaluation_status") != EvaluationStatus.COMPLETE
+            or row.get("overall_score") is None
+        ):
+            raise ValidationError(
+                "Opportunity must be evaluated and scored before it can be moved to a job"
+            )
+
+        url = self._primary_job_url(row)
+        if not url:
+            raise ValidationError(
+                "No job URL in the opportunity — nothing to link or create"
+            )
+
+        job_id, job_title, created_job = self._link_or_create_job(row, url)
+
+        stored = self._opportunities.update(
+            opportunity_id,
+            {"job_id": job_id, "job_title": job_title, "updated_at": _now_iso()},
+        ) or row
+        self._emit(
+            OpportunityMovedToJob(
+                aggregate_id=opportunity_id,
+                opportunity_id=opportunity_id,
+                job_id=job_id,
+                job_title=job_title,
+                overall_score=stored.get("overall_score"),
+                recommendation=stored.get("recommendation"),
+                created_job=created_job,
+            )
+        )
+        detail = self.get_detail(opportunity_id)
+        detail["created_job"] = created_job
+        return detail
+
+    def _primary_job_url(self, row: dict[str, Any]) -> str | None:
+        """Best extracted URL for linking/creating a job."""
+        extracted = row.get("extracted") or {}
+        urls = [str(u).strip() for u in (extracted.get("job_urls") or []) if u and str(u).strip()]
+        if not urls:
+            urls = [str(u).strip() for u in (row.get("extracted_urls") or []) if u and str(u).strip()]
+        return urls[0] if urls else None
+
+    def _link_or_create_job(self, row: dict[str, Any], url: str) -> tuple[str, str, bool]:
+        """Link an existing match or create a job consistent with the evaluation.
+
+        Returns (job_id, job_title, created_job). Creation copies the three
+        scores, role/company context and the raw message (JD note); it never
+        queues the job for processing.
+        """
+        existing_id, existing_title = self._resolve_job([url])
+        if existing_id:
+            return existing_id, existing_title or _display_title(row), False
+
+        if not self._jobs:
+            raise ValidationError("Jobs repository is not available")
+
+        title = _display_title(row)
+        notes = json.dumps(
+            [{"title": "Inbound message (JD context)", "content": str(row.get("raw_content") or "")}],
+            ensure_ascii=False,
+        )
+        links = json.dumps([{"title": "Opportunity posting", "url": url}], ensure_ascii=False)
+        created = self._jobs.create_job(url=url, title=title, notes=notes, links=links, source="opportunity")
+
+        extracted = row.get("extracted") or {}
+        fields: dict[str, Any] = {
+            "fit_score": row.get("fit_score"),
+            "success_score": row.get("success_score"),
+            "overall_score": row.get("overall_score"),
+        }
+        company_name = str(
+            row.get("company_name") or (extracted.get("company") or {}).get("name") or ""
+        ).strip()
+        if company_name:
+            fields["company"] = company_name
+        if row.get("company_id"):
+            fields["company_id"] = row["company_id"]
+        role_title = extracted.get("role_title")
+        if role_title:
+            fields["role"] = str(role_title)
+        try:
+            self._jobs.update_fields(created["id"], **fields)
+        except Exception:  # noqa: BLE001 — scores carry-over is best-effort after the job exists
+            log.warning("opportunity.move_to_job: job score carry-over failed", job_id=created.get("id"))
+        return created["id"], title, True
 
     # ── Manual corrections ────────────────────────────────────────
 
@@ -396,6 +548,74 @@ class OpportunityService:
             )
         )
 
+    # ── User links ────────────────────────────────────────────────
+
+    def add_link(
+        self,
+        opportunity_id: str,
+        title: str | None,
+        url: str,
+    ) -> dict[str, Any]:
+        """Attach a titled source link (e.g. the LinkedIn post, careers page).
+
+        Immutable like notes: links are added and deleted, never edited. The
+        URL must be a valid http(s) URL.
+        """
+        if self._links is None:
+            raise ValidationError("Links are not available")
+        self._get_or_raise(opportunity_id)
+        value = _validate_user_url(url, "Link")
+        url_title = str(title or "").strip() or None
+        now = _now_iso()
+        stored = self._links.create(
+            {
+                "opportunity_id": opportunity_id,
+                "title": url_title,
+                "url": value,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+        self._emit(
+            OpportunityLinkAdded(
+                aggregate_id=opportunity_id,
+                opportunity_id=opportunity_id,
+                link_id=stored["id"],
+            )
+        )
+        return stored
+
+    def delete_link(self, link_id: str) -> None:
+        if self._links is None:
+            raise ValidationError("Links are not available")
+        current = self._links.get_by_id(link_id)
+        if not current:
+            raise NotFoundError(f"Link {link_id} not found")
+        self._links.delete(link_id)
+        self._emit(
+            OpportunityLinkDeleted(
+                aggregate_id=current.get("opportunity_id"),
+                opportunity_id=current.get("opportunity_id") or "",
+                link_id=link_id,
+            )
+        )
+
+    # ── Base URL ──────────────────────────────────────────────────
+
+    def set_base_url(self, opportunity_id: str, base_url: str | None) -> dict[str, Any]:
+        """Set or clear the opportunity's sourcing base URL (nullable).
+
+        The base URL is the canonical page the opportunity came from — e.g.
+        the LinkedIn post. Must be http(s); an empty value clears it.
+        """
+        row = self._get_or_raise(opportunity_id)
+        base_url_text = str(base_url or "").strip()
+        value = _validate_user_url(base_url_text, "Base URL") if base_url_text else None
+        stored = self._opportunities.update(
+            opportunity_id, {"base_url": value, "updated_at": _now_iso()}
+        ) or row
+        return self._present(stored)
+
     # ── Dismiss ───────────────────────────────────────────────────
 
     def set_dismissed(
@@ -442,6 +662,8 @@ class OpportunityService:
 
         llm_urls = [u for u in (extracted.get("job_urls") or []) if u]
         urls = _find_urls(row.get("raw_content") or "")
+        if row.get("base_url"):
+            urls.append(str(row["base_url"]).strip())
         for url in llm_urls:
             if url not in urls:
                 urls.append(url)

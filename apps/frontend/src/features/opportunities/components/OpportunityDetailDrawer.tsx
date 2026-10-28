@@ -1,17 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import NextLink from 'next/link'
+import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader } from '@/shared/components/Drawer'
 import {
+  useAddOpportunityLink,
   useAddOpportunityNote,
   useDeleteOpportunity,
+  useDeleteOpportunityLink,
   useDeleteOpportunityNote,
   useDismissOpportunity,
+  useMoveOpportunityToJob,
   useOpportunityDetailQuery,
   useProcessOpportunity,
+  useSetOpportunityBaseUrl,
   useUpdateOpportunityStatus,
 } from '@/entities/opportunity/hooks'
 import type { OpportunityStatus } from '@/entities/opportunity/types'
@@ -51,13 +57,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityDetailDrawerProps) {
   const detailQuery = useOpportunityDetailQuery(opportunityId)
   const processMutation = useProcessOpportunity()
+  const moveMutation = useMoveOpportunityToJob()
   const statusMutation = useUpdateOpportunityStatus()
   const deleteMutation = useDeleteOpportunity()
   const dismissMutation = useDismissOpportunity()
   const addNoteMutation = useAddOpportunityNote()
   const deleteNoteMutation = useDeleteOpportunityNote()
+  const addLinkMutation = useAddOpportunityLink()
+  const deleteLinkMutation = useDeleteOpportunityLink()
+  const baseUrlMutation = useSetOpportunityBaseUrl()
   const [noteTitle, setNoteTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
+  const [linkTitle, setLinkTitle] = useState('')
+  const [linkUrl, setLinkUrl] = useState('')
+  const [editingBaseUrl, setEditingBaseUrl] = useState(false)
+  const [baseUrlInput, setBaseUrlInput] = useState('')
   const [dismissOpen, setDismissOpen] = useState(false)
 
   const opportunity = detailQuery.data
@@ -77,6 +91,41 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
       },
     )
   }
+
+  const handleAddLink = () => {
+    if (!opportunityId || !linkUrl.trim() || addLinkMutation.isPending) return
+    const url = linkUrl.trim().startsWith('http') ? linkUrl.trim() : 'https://' + linkUrl.trim()
+    addLinkMutation.mutate(
+      { id: opportunityId, data: { title: linkTitle.trim() || null, url } },
+      {
+        onSuccess: () => {
+          setLinkTitle('')
+          setLinkUrl('')
+        },
+      },
+    )
+  }
+
+  const handleSaveBaseUrl = () => {
+    if (!opportunityId || baseUrlMutation.isPending) return
+    const raw = baseUrlInput.trim()
+    const normalized = raw && !raw.startsWith('http') ? 'https://' + raw : raw
+    baseUrlMutation.mutate(
+      { id: opportunityId, baseUrl: normalized || null },
+      { onSuccess: () => setEditingBaseUrl(false) },
+    )
+  }
+
+  useEffect(() => {
+    if (opportunityId === null) {
+      setEditingBaseUrl(false)
+      setBaseUrlInput('')
+      setLinkTitle('')
+      setLinkUrl('')
+      setNoteTitle('')
+      setNoteContent('')
+    }
+  }, [opportunityId])
 
   return (
     <Drawer open={opportunityId !== null} onOpenChange={(open) => !open && onClose()}>
@@ -104,6 +153,31 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
                 <span className="text-xs text-muted-foreground">{opportunity.company_name}</span>
               )}
               <span className="flex-1" />
+              {!opportunity.job_id && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title={
+                    opportunity.evaluation_status === 'complete'
+                      ? 'Link or create the job in Jobs'
+                      : 'Run Process first — the opportunity must be evaluated and scored'
+                  }
+                  disabled={moveMutation.isPending || opportunity.evaluation_status !== 'complete'}
+                  onClick={() =>
+                    opportunityId &&
+                    moveMutation.mutate(opportunityId, {
+                      onSuccess: (data) =>
+                        toast.success(
+                          data.created_job ? 'Opportunity moved to Jobs' : 'Linked to the existing job in Jobs',
+                        ),
+                      onError: (err) =>
+                        toast.error(err instanceof Error ? err.message : 'Could not move to Jobs'),
+                    })
+                  }
+                >
+                  {moveMutation.isPending ? 'Moving…' : 'Move to Jobs'}
+                </Button>
+              )}
               <Button
                 size="sm"
                 onClick={() => opportunityId && processMutation.mutate({ id: opportunityId })}
@@ -168,6 +242,59 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
               </p>
             </Section>
 
+            <Section title="Base URL">
+              {editingBaseUrl ? (
+                <div className="space-y-2">
+                  <Input
+                    aria-label="Edit base URL"
+                    type="url"
+                    placeholder="https://www.linkedin.com/posts/…"
+                    value={baseUrlInput}
+                    onChange={(e) => setBaseUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveBaseUrl()}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" disabled={baseUrlMutation.isPending} onClick={handleSaveBaseUrl}>
+                      {baseUrlMutation.isPending ? 'Saving…' : 'Save'}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingBaseUrl(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    {opportunity.base_url ? (
+                      <a
+                        href={opportunity.base_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary hover:underline break-all"
+                      >
+                        {opportunity.base_url}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No source page set — e.g. the LinkedIn post the message came from
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Edit base URL"
+                    onClick={() => {
+                      setBaseUrlInput(opportunity.base_url ?? '')
+                      setEditingBaseUrl(true)
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              )}
+            </Section>
+
             {Object.keys(opportunity.extracted ?? {}).length > 0 && (
               <Section title="Extracted">
                 <dl className="text-xs space-y-1">
@@ -211,15 +338,93 @@ export function OpportunityDetailDrawer({ opportunityId, onClose }: OpportunityD
             )}
 
             {(opportunity.job_id || opportunity.company_id) && (
-              <Section title="Links">
+              <Section title="Linked Records">
                 <div className="text-xs space-y-1">
-                  {opportunity.job_id && <p>Job: {opportunity.job_title ?? opportunity.job_id}</p>}
+                  {opportunity.job_id && (
+                    <p>
+                      Job:{' '}
+                      <NextLink
+                        href="/jobs"
+                        className="underline underline-offset-2 hover:text-primary"
+                      >
+                        {opportunity.job_title ?? opportunity.job_id}
+                      </NextLink>
+                    </p>
+                  )}
                   {opportunity.company_id && (
                     <p>Company: {opportunity.company_name ?? opportunity.company_id}</p>
                   )}
                 </div>
               </Section>
             )}
+
+            <Section title="Links">
+              {opportunity.links?.length ? (
+                <ul className="space-y-1 mb-2">
+                  {opportunity.links.map((link) => (
+                    <li
+                      key={link.id}
+                      className="flex items-start gap-2 rounded bg-muted/50 px-2 py-1"
+                    >
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 min-w-0 text-xs text-primary hover:underline break-all"
+                      >
+                        {link.url}
+                        {link.title ? (
+                          <span className="text-2xs text-muted-foreground"> — {link.title}</span>
+                        ) : null}
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Delete link ${link.title || link.id}`}
+                        disabled={deleteLinkMutation.isPending}
+                        onClick={() =>
+                          opportunityId &&
+                          deleteLinkMutation.mutate({ id: opportunityId, linkId: link.id })
+                        }
+                      >
+                        Delete
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-2xs text-muted-foreground mb-2">
+                  No links yet — add the LinkedIn post, careers page or other sources.
+                </p>
+              )}
+              <div className="space-y-2">
+                <Input
+                  aria-label="New link title"
+                  placeholder="Title (e.g. LinkedIn post)"
+                  value={linkTitle}
+                  onChange={(e) => setLinkTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddLink()}
+                />
+                <div className="flex gap-1">
+                  <Input
+                    aria-label="New link URL"
+                    type="url"
+                    placeholder="https://…"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddLink()}
+                  />
+                  <Button
+                    size="sm"
+                    disabled={!linkUrl.trim() || addLinkMutation.isPending}
+                    onClick={handleAddLink}
+                    className="shrink-0"
+                  >
+                    {addLinkMutation.isPending ? 'Adding…' : 'Add link'}
+                  </Button>
+                </div>
+              </div>
+            </Section>
 
               {(opportunity.evaluation?.missing_requirements as string[] | undefined)?.length ? (
               <Section title="Missing">

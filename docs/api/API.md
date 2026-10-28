@@ -231,12 +231,15 @@ Endpoints:
 
 - `POST /api/opportunities` — create from a manual message (`201`; duplicate content returns the existing row, `200` + `duplicate: true`).
 - `GET /api/opportunities` — list newest first (`status` / `source` / `query` filters).
-- `GET /api/opportunities/{id}` — detail with extracted info, evaluation, application path, and evaluation history.
+- `GET /api/opportunities/{id}` — detail with extracted info, evaluation, application path, saved links, `base_url`, and evaluation history.
 - `POST /api/opportunities/{id}/process` (or `/reprocess`) — synchronous extract → resolve → evaluate.
 - `PATCH /api/opportunities/{id}/links` — link/unlink an existing job or company.
 - `PATCH /api/opportunities/{id}/status` — move along the funnel.
 - `POST /api/opportunities/{id}/notes` / `DELETE /api/opportunities/notes/{note_id}` — follow-up trail.
+- `POST /api/opportunities/{id}/links` / `DELETE /api/opportunities/links/{link_id}` — user-saved source links (titled URLs, http(s)).
+- `PATCH /api/opportunities/{id}/base-url` — set / clear the canonical sourcing base URL (feeds job URL resolution).
 - `PUT /api/opportunities/{id}/dismissed` — dismiss / undismiss (optional reason saved as a `Dismissed` follow-up note).
+- `POST /api/opportunities/{id}/move-to-job` — move an evaluated opportunity into Jobs (link-or-create; scores + JD note carried over; 422 before evaluation).
 - `DELETE /api/opportunities/{id}` — hard-delete (204).
 
 ## Placeholders API (`/api/placeholders`)

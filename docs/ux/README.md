@@ -78,7 +78,7 @@ docs/ux/
 │       └── workflow-progress.md
 │   ├── opportunities/
 │       ├── page.md            Opportunities page (inbound list, toolbar, drawers)
-│       └── opportunity-detail.md  Opportunity Detail drawer (message, extracted, score, path, history)
+│       └── opportunity-detail.md  Opportunity Detail drawer (message, base URL, extracted, score, path, user links, history, Move to Jobs)
 │   ├── rules/
 │       ├── page.md            Rules page (scopes, columns, priority/badge, reorder)
 │       └── rule-form-drawer.md  Add / Edit Rule right drawer

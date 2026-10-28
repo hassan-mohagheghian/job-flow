@@ -18,12 +18,15 @@ from opportunities.application.services.opportunity_service import (
     OpportunityService,
 )
 from opportunities.presentation.api.schemas.opportunities import (
+    CreateLinkRequest,
     CreateNoteRequest,
     CreateOpportunityRequest,
     DismissOpportunityRequest,
     OpportunityDetailResponse,
+    OpportunityLinkSchema,
     OpportunityListResponse,
     OpportunityNoteSchema,
+    UpdateOpportunityBaseUrlRequest,
     UpdateOpportunityLinksRequest,
     UpdateOpportunityStatusRequest,
     build_detail_response,
@@ -37,7 +40,8 @@ router = APIRouter()
 def _detail(service: OpportunityService, opportunity_id: str, duplicate: bool = False) -> OpportunityDetailResponse:
     detail = service.get_detail(opportunity_id)
     return build_detail_response(
-        detail, detail.get("evaluations"), duplicate=duplicate, notes=detail.get("notes")
+        detail, detail.get("evaluations"), duplicate=duplicate,
+        notes=detail.get("notes"), links=detail.get("links"),
     )
 
 
@@ -45,10 +49,13 @@ def _detail(service: OpportunityService, opportunity_id: str, duplicate: bool = 
 def create_opportunity(
     body: CreateOpportunityRequest,
     service: OpportunityService = Depends(get_opportunity_service),
+    current_user: User = Depends(get_current_user),
 ):
     from fastapi.responses import JSONResponse
 
-    stored, duplicate = service.create_manual(body.model_dump())
+    stored, duplicate = service.create_manual(
+        body.model_dump(), author=current_user.display_name
+    )
     detail = _detail(service, stored["id"], duplicate)
     if duplicate:
         return JSONResponse(status_code=http_status.HTTP_200_OK, content=detail.model_dump())
@@ -85,7 +92,9 @@ def _run_pipeline(service: OpportunityService, opportunity_id: str, reprocess: b
         detail = service.reprocess(opportunity_id) if reprocess else service.process(opportunity_id)
     except OpportunityPipelineError as exc:
         raise ExternalServiceError(str(exc)) from exc
-    return build_detail_response(detail, detail.get("evaluations"), notes=detail.get("notes"))
+    return build_detail_response(
+        detail, detail.get("evaluations"), notes=detail.get("notes"), links=detail.get("links")
+    )
 
 
 @router.post("/{opportunity_id}/process", response_model=OpportunityDetailResponse)
@@ -102,6 +111,27 @@ def reprocess_opportunity(
     service: OpportunityService = Depends(get_opportunity_service),
 ):
     return _run_pipeline(service, opportunity_id, reprocess=True)
+
+
+@router.post("/{opportunity_id}/move-to-job", response_model=OpportunityDetailResponse)
+def move_opportunity_to_job(
+    opportunity_id: str,
+    service: OpportunityService = Depends(get_opportunity_service),
+):
+    """Move an evaluated, scored opportunity into the Jobs context.
+
+    Links the matching existing job or creates one from the extracted URL
+    (evaluation scores + JD note carried over); the opportunity keeps its
+    funnel status with ``job_id`` / ``job_title`` set.
+    """
+    try:
+        detail = service.move_to_job(opportunity_id)
+    except OpportunityPipelineError as exc:
+        raise ExternalServiceError(str(exc)) from exc
+    return build_detail_response(
+        detail, detail.get("evaluations"), notes=detail.get("notes"),
+        links=detail.get("links"), created_job=detail.get("created_job", False),
+    )
 
 
 @router.patch("/{opportunity_id}/links", response_model=OpportunityDetailResponse)
@@ -121,6 +151,17 @@ def update_opportunity_status(
     service: OpportunityService = Depends(get_opportunity_service),
 ):
     stored = service.set_status(opportunity_id, body.status)
+    return _detail(service, stored["id"])
+
+
+@router.patch("/{opportunity_id}/base-url", response_model=OpportunityDetailResponse)
+def update_opportunity_base_url(
+    opportunity_id: str,
+    body: UpdateOpportunityBaseUrlRequest,
+    service: OpportunityService = Depends(get_opportunity_service),
+):
+    """Set or clear the opportunity's sourcing base URL (empty clears)."""
+    stored = service.set_base_url(opportunity_id, body.base_url)
     return _detail(service, stored["id"])
 
 
@@ -154,6 +195,25 @@ def delete_note(
     service: OpportunityService = Depends(get_opportunity_service),
 ):
     service.delete_note(note_id)
+    return Response(status_code=http_status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{opportunity_id}/links", status_code=http_status.HTTP_201_CREATED, response_model=OpportunityLinkSchema)
+def add_link(
+    opportunity_id: str,
+    body: CreateLinkRequest,
+    service: OpportunityService = Depends(get_opportunity_service),
+):
+    """Attach a titled source link (e.g. the LinkedIn post, careers page)."""
+    return service.add_link(opportunity_id, title=body.title, url=body.url)
+
+
+@router.delete("/links/{link_id}", status_code=http_status.HTTP_204_NO_CONTENT)
+def delete_link(
+    link_id: str,
+    service: OpportunityService = Depends(get_opportunity_service),
+):
+    service.delete_link(link_id)
     return Response(status_code=http_status.HTTP_204_NO_CONTENT)
 
 

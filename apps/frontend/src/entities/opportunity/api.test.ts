@@ -80,6 +80,35 @@ describe('opportunityApi', () => {
     expect(result.dismissed).toBe(true)
   })
 
+  it('adds and deletes links', async () => {
+    fetchMock.mockResolvedValue(ok({ id: 'link-1', url: 'https://acme.example' }))
+    const link = await opportunityApi.addLink('opp-1', { title: 'Company site', url: 'https://acme.example' })
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/opportunities/opp-1/links')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+    expect(link.id).toBe('link-1')
+
+    fetchMock.mockResolvedValue({ ok: true, status: 204, json: () => Promise.resolve(undefined) })
+    await opportunityApi.deleteLink('link-1')
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/opportunities/links/link-1')
+  })
+
+  it('sets and clears the base URL', async () => {
+    fetchMock.mockResolvedValue(ok({ id: 'opp-1', base_url: 'https://linkedin.com/posts/x' }))
+    const result = await opportunityApi.setBaseUrl('opp-1', 'https://linkedin.com/posts/x')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/opportunities/opp-1/base-url')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('PATCH')
+    expect(result.base_url).toBe('https://linkedin.com/posts/x')
+  })
+
+  it('moves an evaluated opportunity into Jobs', async () => {
+    fetchMock.mockResolvedValue(ok({ id: 'opp-1', job_id: 'job-1', created_job: true }))
+    const result = await opportunityApi.moveToJob('opp-1')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/opportunities/opp-1/move-to-job')
+    expect(fetchMock.mock.calls[0][1]?.method).toBe('POST')
+    expect(result.job_id).toBe('job-1')
+    expect(result.created_job).toBe(true)
+  })
+
   it('passes the dismissed filter on list', async () => {
     fetchMock.mockResolvedValue(ok({ items: [], total: 0 }))
     await opportunityApi.list({ dismissed: false })

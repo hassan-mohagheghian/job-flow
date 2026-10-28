@@ -891,10 +891,15 @@ My Roadmaps (/roadmaps)                                    Detail (/roadmaps/{id
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Rows open the Opportunity Detail drawer (original message, extracted info
-with uncertainty, linked job/company, scores + reasons, missing info,
-application path, next action, evaluation history). Incomplete opportunities
-show `Evaluation pending` instead of invented scores.
+Rows open the Opportunity Detail drawer (original message, base URL, extracted info
+with uncertainty, linked records (job/company), user links, scores + reasons,
+missing info, application path, next action, evaluation history). Incomplete
+opportunities show `Evaluation pending` instead of invented scores. The
+drawer header has a `Move to Jobs` action (enabled after evaluation): it links
+the matching job or creates one in the Jobs context (scores + the raw message
+as the JD note) and marks the opportunity as linked while it stays in the
+funnel. The `＋ New` drawer accepts optional notes, links and a base URL up
+front (see `docs/ux/features/opportunities/page.md`).
 
 ---
 

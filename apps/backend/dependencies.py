@@ -241,6 +241,11 @@ def get_opportunity_note_repo(session: Session = Depends(get_session), current_u
     return SQLAlchemyOpportunityNoteRepository(session, user_id=current_user.id)
 
 
+def get_opportunity_link_repo(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    from opportunities.infrastructure import SQLAlchemyOpportunityLinkRepository
+    return SQLAlchemyOpportunityLinkRepository(session, user_id=current_user.id)
+
+
 def get_opportunity_service(
     opportunity_repo=Depends(get_opportunity_repo),
     evaluation_repo=Depends(get_opportunity_evaluation_repo),
@@ -250,6 +255,7 @@ def get_opportunity_service(
     profile_repo=Depends(get_candidate_profile_repo),
     rule_repo=Depends(get_rule_repo),
     note_repo=Depends(get_opportunity_note_repo),
+    link_repo=Depends(get_opportunity_link_repo),
 ):
     from opportunities.application.services.opportunity_service import OpportunityService
     from opportunities.domain.event_publisher import InMemoryEventCollector
@@ -262,6 +268,7 @@ def get_opportunity_service(
         profile_repo=profile_repo,
         rule_repo=rule_repo,
         note_repo=note_repo,
+        link_repo=link_repo,
         event_publisher=InMemoryEventCollector(),
     )
 

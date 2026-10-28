@@ -13,6 +13,35 @@ from opportunities.domain.entities.opportunity import (
 )
 
 
+class CreateLinkRequest(BaseModel):
+    """A user-added titled link on an opportunity (e.g. the LinkedIn post)."""
+
+    title: str | None = None
+    url: str
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        value = str(v or "").strip()
+        if not value:
+            raise ValueError("url must not be empty")
+        if not value.startswith(("http://", "https://")):
+            raise ValueError("url must start with http:// or https://")
+        return value
+
+
+class CreateNoteRequest(BaseModel):
+    title: str | None = None
+    content: str
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if not str(v or "").strip():
+            raise ValueError("content must not be empty")
+        return str(v)
+
+
 class CreateOpportunityRequest(BaseModel):
     source: str = OpportunitySource.MANUAL
     source_message_id: str | None = None
@@ -21,6 +50,9 @@ class CreateOpportunityRequest(BaseModel):
     received_at: str | None = None
     subject: str | None = None
     raw_content: str
+    base_url: str | None = None
+    notes: list[CreateNoteRequest] | None = None
+    links: list[CreateLinkRequest] | None = None
 
     @field_validator("source")
     @classmethod
@@ -37,10 +69,36 @@ class CreateOpportunityRequest(BaseModel):
             raise ValueError("raw_content must not be empty")
         return str(v)
 
+    @field_validator("base_url")
+    @classmethod
+    def validate_base_url(cls, v: str | None) -> str | None:
+        value = str(v or "").strip()
+        if not value:
+            return None
+        if not value.startswith(("http://", "https://")):
+            raise ValueError("base_url must start with http:// or https://")
+        return value
+
 
 class UpdateOpportunityLinksRequest(BaseModel):
     job_id: str | None = None
     company_id: str | None = None
+
+
+class UpdateOpportunityBaseUrlRequest(BaseModel):
+    """Set or clear the opportunity's sourcing base URL (empty clears)."""
+
+    base_url: str | None = None
+
+    @field_validator("base_url")
+    @classmethod
+    def validate_base_url(cls, v: str | None) -> str | None:
+        value = str(v or "").strip()
+        if not value:
+            return None
+        if not value.startswith(("http://", "https://")):
+            raise ValueError("base_url must start with http:// or https://")
+        return value
 
 
 class UpdateOpportunityStatusRequest(BaseModel):
@@ -51,18 +109,6 @@ class UpdateOpportunityStatusRequest(BaseModel):
     def validate_status(cls, v: str) -> str:
         if str(v) not in OpportunityStatus.ALL:
             raise ValueError(f"status must be one of {', '.join(OpportunityStatus.ALL)}")
-        return str(v)
-
-
-class CreateNoteRequest(BaseModel):
-    title: str | None = None
-    content: str
-
-    @field_validator("content")
-    @classmethod
-    def validate_content(cls, v: str) -> str:
-        if not str(v or "").strip():
-            raise ValueError("content must not be empty")
         return str(v)
 
 
@@ -121,6 +167,15 @@ class OpportunityNoteSchema(BaseModel):
     updated_at: str | None = None
 
 
+class OpportunityLinkSchema(BaseModel):
+    id: str
+    opportunity_id: str
+    title: str | None = None
+    url: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
 class OpportunityDetailResponse(BaseModel):
     id: str
     title: str = "Unknown role"
@@ -131,6 +186,7 @@ class OpportunityDetailResponse(BaseModel):
     received_at: str | None = None
     subject: str | None = None
     raw_content: str = ""
+    base_url: str | None = None
     extracted_urls: list[str] = Field(default_factory=list)
     extracted: dict[str, Any] = Field(default_factory=dict)
     company_id: str | None = None
@@ -151,8 +207,10 @@ class OpportunityDetailResponse(BaseModel):
     created_at: str | None = None
     updated_at: str | None = None
     duplicate: bool = False
+    created_job: bool = False
     evaluations: list[OpportunityEvaluationSchema] = Field(default_factory=list)
     notes: list[OpportunityNoteSchema] = Field(default_factory=list)
+    links: list[OpportunityLinkSchema] = Field(default_factory=list)
 
 
 def build_list_item(row: dict[str, Any]) -> OpportunityListItemSchema:
@@ -182,6 +240,7 @@ def build_detail_response(
     evaluations: list[dict[str, Any]] | None = None,
     duplicate: bool = False,
     notes: list[dict[str, Any]] | None = None,
+    links: list[dict[str, Any]] | None = None,
 ) -> OpportunityDetailResponse:
     return OpportunityDetailResponse(
         id=row["id"],
@@ -193,6 +252,7 @@ def build_detail_response(
         received_at=row.get("received_at"),
         subject=row.get("subject"),
         raw_content=row.get("raw_content") or "",
+        base_url=row.get("base_url"),
         extracted_urls=list(row.get("extracted_urls") or []),
         extracted=dict(row.get("extracted") or {}),
         company_id=row.get("company_id"),
@@ -213,21 +273,26 @@ def build_detail_response(
         created_at=row.get("created_at"),
         updated_at=row.get("updated_at"),
         duplicate=duplicate,
+        created_job=bool(row.get("created_job", False)),
         evaluations=[OpportunityEvaluationSchema(**e) for e in (evaluations or [])],
         notes=[OpportunityNoteSchema(**n) for n in (notes or [])],
+        links=[OpportunityLinkSchema(**l) for l in (links or [])],
     )
 
 
 __all__ = [
     "CreateOpportunityRequest",
-    "UpdateOpportunityLinksRequest",
-    "UpdateOpportunityStatusRequest",
     "CreateNoteRequest",
+    "CreateLinkRequest",
+    "UpdateOpportunityLinksRequest",
+    "UpdateOpportunityBaseUrlRequest",
+    "UpdateOpportunityStatusRequest",
     "DismissOpportunityRequest",
     "OpportunityListItemSchema",
     "OpportunityListResponse",
     "OpportunityEvaluationSchema",
     "OpportunityNoteSchema",
+    "OpportunityLinkSchema",
     "OpportunityDetailResponse",
     "build_list_item",
     "build_detail_response",
